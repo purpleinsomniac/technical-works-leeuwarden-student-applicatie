@@ -7,15 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserState extends Model
 {
-    protected $fillable = ['user_id', 'data'];
+    protected $table = 'gebruiker_statussen';
+
+    protected $fillable = ['gebruiker_id', 'gegevens'];
 
     protected function casts(): array
     {
-        return ['data' => 'array'];
+        return ['gegevens' => 'array'];
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'gebruiker_id');
     }
 }

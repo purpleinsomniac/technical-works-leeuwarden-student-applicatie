@@ -12,15 +12,15 @@ class DashboardController extends Controller
         $user = $request->user();
         $user?->loadMissing('appState');
 
-        $roleView = match ($user?->role) {
+        $roleView = match ($user?->rol) {
             'student' => 'roles.student',
             'coach' => 'roles.coach',
-            'manager' => 'roles.teamleider',
-            'admin' => 'roles.beheerder',
+            'teamleider' => 'roles.teamleider',
+            'beheerder' => 'roles.beheerder',
             default => null,
         };
 
-        $roleAssets = match ($user?->role) {
+        $roleAssets = match ($user?->rol) {
             'student' => [
                 'style' => 'css/roles/student.css',
                 'scripts' => ['js/roles/student.js'],
@@ -29,11 +29,11 @@ class DashboardController extends Controller
                 'style' => null,
                 'scripts' => ['js/common.js', 'js/roles/coach.js'],
             ],
-            'manager' => [
+            'teamleider' => [
                 'style' => null,
                 'scripts' => ['js/common.js', 'js/roles/teamleider.js'],
             ],
-            'admin' => [
+            'beheerder' => [
                 'style' => null,
                 'scripts' => ['js/common.js', 'js/roles/beheerder.js'],
             ],
@@ -49,10 +49,10 @@ class DashboardController extends Controller
             'roleAssets' => $roleAssets,
             'frontendUser' => $user ? [
                 'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role,
+                'name' => $user->naam,
+                'role' => $user->rol,
             ] : null,
-            'frontendState' => $user?->appState?->data ?? [],
+            'frontendState' => $user?->appState?->gegevens ?? [],
         ]);
     }
 }

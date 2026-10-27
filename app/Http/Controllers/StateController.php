@@ -10,7 +10,7 @@ class StateController extends Controller
 {
     public function update(Request $request)
     {
-        abort_unless($request->user()->role === 'student', 403);
+        abort_unless($request->user()->rol === 'student', 403);
 
         $payload = $request->validate([
             'data' => ['required', 'array'],
@@ -60,8 +60,8 @@ class StateController extends Controller
         }
 
         UserState::updateOrCreate(
-            ['user_id' => $request->user()->id],
-            ['data' => $data],
+            ['gebruiker_id' => $request->user()->id],
+            ['gegevens' => $data],
         );
 
         return response()->json(['saved' => true]);

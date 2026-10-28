@@ -40,43 +40,58 @@ function loadLocalState(key) {
   return localStorage.getItem("laravel-" + window.LARAVEL_USER.id + "-" + key);
 }
 let syncTimer;
+const pendingStateChanges = new Map();
+
+function parseStoredState(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+async function syncLocalState() {
+  if (!window.LARAVEL_SAVE_URL || pendingStateChanges.size === 0) return;
+
+  const changes = Object.fromEntries(pendingStateChanges);
+
+  try {
+    await apiRequest(window.LARAVEL_SAVE_URL, {
+      method: "PUT",
+      body: JSON.stringify({ data: changes }),
+    });
+
+    // Verwijder alleen waarden die tijdens het verzoek niet opnieuw zijn gewijzigd.
+    for (const [key, savedValue] of Object.entries(changes)) {
+      const pendingValue = pendingStateChanges.get(key);
+      if (JSON.stringify(pendingValue) === JSON.stringify(savedValue)) {
+        pendingStateChanges.delete(key);
+      }
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("student-state-saved", { detail: { keys: Object.keys(changes) } }),
+    );
+
+    // Een wijziging die tijdens het verzoek binnenkwam, wordt direct daarna opgeslagen.
+    if (pendingStateChanges.size > 0) {
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(syncLocalState, 250);
+    }
+  } catch (error) {
+    document.dispatchEvent(
+      new CustomEvent("student-state-save-failed", { detail: { error } }),
+    );
+    hint(error.message || "Opslaan op de server is mislukt. Probeer het opnieuw.");
+  }
+}
+
 function saveLocalState(key, value) {
   if (!window.LARAVEL_USER) return;
   localStorage.setItem("laravel-" + window.LARAVEL_USER.id + "-" + key, value);
+  pendingStateChanges.set(key, parseStoredState(value));
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => {
-    const data = {};
-    for (const key of persistentKeys) {
-      const raw = loadLocalState(key);
-      if (raw !== null) {
-        try {
-          data[key] = JSON.parse(raw);
-        } catch {
-          data[key] = raw;
-        }
-      }
-    }
-    fetch(window.LARAVEL_SAVE_URL, {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-CSRF-TOKEN": window.LARAVEL_CSRF,
-      },
-      body: JSON.stringify({ data }),
-    })
-      .then((response) => {
-        if (!response.ok) throw Error("Opslaan mislukt");
-      })
-      .catch(() => {
-        const x = document.getElementById("hint");
-        if (x) {
-          x.textContent = "Opslaan op de server is mislukt. Probeer het opnieuw.";
-          x.classList.remove("hidden");
-        }
-      });
-  }, 250);
+  syncTimer = setTimeout(syncLocalState, 250);
 }
 // -----------------------------------------------------------------------------
 // Vaste demo- en leeruitkomstgegevens
@@ -894,6 +909,7 @@ let role = window.LARAVEL_USER?.role || "student",
   reflectionReturnToOutcome = false,
   feedbackReturnToOutcome = false,
   catalogAttentionOnly = false,
+  catalogPage = 1,
   selectedRegistrationCode = null,
   selectedAssignmentId = null,
   outcomeReturnPage = "learningOutcomes";
@@ -1097,6 +1113,17 @@ const defaultDashboardPreferences = Object.freeze({
 });
 let dashboardSettingsMessageTimer;
 
+document.addEventListener("student-state-saved", (event) => {
+  if (!event.detail.keys.includes(dashboardSettingsKey)) return;
+
+  const message = document.getElementById("dashboardSettingsSaved");
+  if (!message) return;
+
+  message.classList.add("visible");
+  clearTimeout(dashboardSettingsMessageTimer);
+  dashboardSettingsMessageTimer = setTimeout(() => message.classList.remove("visible"), 2200);
+});
+
 function getDashboardPreferences() {
   try {
     const saved = JSON.parse(loadLocalState(dashboardSettingsKey) || "{}");
@@ -1136,11 +1163,6 @@ function updateDashboardPreference(key, enabled) {
   const preferences = { ...getDashboardPreferences(), [key]: Boolean(enabled) };
   saveLocalState(dashboardSettingsKey, JSON.stringify(preferences));
   applyDashboardPreferences();
-
-  const message = document.getElementById("dashboardSettingsSaved");
-  message.classList.add("visible");
-  clearTimeout(dashboardSettingsMessageTimer);
-  dashboardSettingsMessageTimer = setTimeout(() => message.classList.remove("visible"), 2200);
 }
 
 function resetDashboardPreferences() {
@@ -1408,55 +1430,188 @@ async function saveGoal() {
   }
 }
 
+const catalogPageSize = 4;
+
+function getOutcomeProgress(outcome) {
+  const percentage = Number(outcome.pct);
+  return Number.isFinite(percentage) ? Math.max(0, Math.min(100, percentage)) : 0;
+}
+
+function getOutcomeStatus(outcome) {
+  const percentage = getOutcomeProgress(outcome);
+  if (percentage >= 80) return "completed";
+  if (percentage > 0) return "active";
+  return "todo";
+}
+
+function resetCatalogAndRender() {
+  catalogPage = 1;
+  renderCatalog();
+}
+
+function selectCatalogPhase(selectedPhase) {
+  document.getElementById("catalogPhase").value = selectedPhase;
+  catalogPage = 1;
+  renderCatalog();
+}
+
+function setCatalogPage(pageNumber) {
+  catalogPage = pageNumber;
+  renderCatalog();
+  document.getElementById("catalogList")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderCatalogSummary(selectedPhase) {
+  const selectedPhaseData = phases.find((item) => item[0] === selectedPhase);
+  const phaseOutcomes = outcomes.filter((outcome) => outcome.phase === selectedPhase);
+  const total = phaseOutcomes.length;
+  const completed = phaseOutcomes.filter((outcome) => getOutcomeStatus(outcome) === "completed").length;
+  const active = phaseOutcomes.filter((outcome) => getOutcomeStatus(outcome) === "active").length;
+  const todo = total - completed - active;
+  const percentage = total ? Math.round((completed / total) * 100) : 0;
+
+  document.getElementById("catalogTotalPill").textContent = total + " LEERUITKOMSTEN";
+  document.getElementById("catalogProgressTitle").textContent = "Jouw voortgang · " + (selectedPhaseData?.[1] || "Fase");
+  document.getElementById("catalogProgressPercent").textContent = percentage + "%";
+  document.getElementById("catalogProgressText").textContent = completed + " van de " + total + " leeruitkomsten afgerond";
+  document.getElementById("catalogProgressBar").style.width = percentage + "%";
+  document.getElementById("catalogProgressRing").style.setProperty("--catalog-progress", percentage * 3.6 + "deg");
+  document.getElementById("catalogCompletedCount").textContent = completed;
+  document.getElementById("catalogActiveCount").textContent = active;
+  document.getElementById("catalogTodoCount").textContent = todo;
+}
+
+function renderCatalogPhaseTabs(selectedPhase) {
+  document.getElementById("catalogPhaseTabs").innerHTML = phases
+    .map(
+      (item) =>
+        '<button class="learning-phase-tab ' +
+        (item[0] === selectedPhase ? "active" : "") +
+        '" type="button" onclick="selectCatalogPhase(\'' +
+        item[0] +
+        "')\">" +
+        esc(item[1]) +
+        "</button>",
+    )
+    .join("");
+}
+
+function renderCatalogPagination(totalPages) {
+  const pagination = document.getElementById("catalogPagination");
+  if (totalPages <= 1) {
+    pagination.innerHTML = "";
+    return;
+  }
+
+  let buttons =
+    '<button type="button" aria-label="Vorige pagina" ' +
+    (catalogPage === 1 ? "disabled" : 'onclick="setCatalogPage(' + (catalogPage - 1) + ')"') +
+    ">‹</button>";
+
+  for (let page = 1; page <= totalPages; page++) {
+    buttons +=
+      '<button type="button" class="' +
+      (page === catalogPage ? "active" : "") +
+      '" ' +
+      (page === catalogPage ? 'aria-current="page"' : "") +
+      ' onclick="setCatalogPage(' +
+      page +
+      ')">' +
+      page +
+      "</button>";
+  }
+
+  buttons +=
+    '<button type="button" aria-label="Volgende pagina" ' +
+    (catalogPage === totalPages ? "disabled" : 'onclick="setCatalogPage(' + (catalogPage + 1) + ')"') +
+    ">›</button>";
+  pagination.innerHTML = buttons;
+}
+
 function renderCatalog() {
-  const q = document.getElementById("outcomeSearch").value.toLowerCase(),
-    p = document.getElementById("catalogPhase").value;
-  const list = outcomes.filter(
-    (x) =>
-      (p === "all" || x.phase === p) &&
-      (!catalogAttentionOnly || attentionOutcomeCodes.includes(x.code)) &&
-      (x.code + " " + x.short + " " + x.description).toLowerCase().includes(q),
-  );
+  const search = document.getElementById("outcomeSearch").value.trim().toLowerCase();
+  const selectedPhase = document.getElementById("catalogPhase").value;
+  const selectedStatus = document.getElementById("catalogArchiveFilter").value;
+  const selectedSort = document.getElementById("catalogSort").value;
+  const archived = getArchivedOutcomes();
+
+  renderCatalogSummary(selectedPhase);
+  renderCatalogPhaseTabs(selectedPhase);
+
+  const phaseOutcomes = outcomes.filter((outcome) => outcome.phase === selectedPhase);
+
+  let filtered = phaseOutcomes.filter((outcome) => {
+    const isArchived = archived.includes(outcome.code);
+    const matchesStatus =
+      selectedStatus === "archived" ? isArchived : !isArchived && (selectedStatus === "all" || getOutcomeStatus(outcome) === selectedStatus);
+    const searchable = (outcome.code + " " + outcome.short + " " + outcome.description).toLowerCase();
+    return matchesStatus && (!catalogAttentionOnly || attentionOutcomeCodes.includes(outcome.code)) && searchable.includes(search);
+  });
+
+  if (selectedSort === "progress-desc") filtered.sort((a, b) => getOutcomeProgress(b) - getOutcomeProgress(a));
+  if (selectedSort === "progress-asc") filtered.sort((a, b) => getOutcomeProgress(a) - getOutcomeProgress(b));
+  if (selectedSort === "alphabetical") filtered.sort((a, b) => a.short.localeCompare(b.short, "nl"));
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / catalogPageSize));
+  catalogPage = Math.min(catalogPage, totalPages);
+  const start = (catalogPage - 1) * catalogPageSize;
+  const visibleOutcomes = filtered.slice(start, start + catalogPageSize);
+
   document.getElementById("catalogAttentionNotice").classList.toggle("hidden", !catalogAttentionOnly);
-  document.getElementById("catalogCount").textContent = list.length + (catalogAttentionOnly ? " aandachtspunten" : " leeruitkomsten gevonden");
-  document.getElementById("catalogList").innerHTML = list.length
-    ? list
-        .map((x) => {
-          const hasProgress = x.pct !== null;
+  document.getElementById("archiveFilterNotice").classList.toggle("hidden", selectedStatus !== "archived");
+  document.getElementById("catalogCount").textContent = filtered.length
+    ? "Toont " + (start + 1) + " t/m " + Math.min(start + catalogPageSize, filtered.length) + " van de " + filtered.length + " leeruitkomsten"
+    : "Geen leeruitkomsten gevonden";
+
+  document.getElementById("catalogList").innerHTML = visibleOutcomes.length
+    ? visibleOutcomes
+        .map((outcome) => {
+          const percentage = getOutcomeProgress(outcome);
+          const status = getOutcomeStatus(outcome);
+          const statusIcon = status === "completed" ? "✓" : status === "active" ? "◷" : "";
+          const hours = outcome.hours === null ? 0 : outcome.hours;
           return (
-            '<button class="catalog-card" onclick="openOutcome(\'' +
-            x.code +
-            '\')"><span class="catalog-phase-label">' +
-            esc((phases.find((p) => p[0] === x.phase) || [])[1] || "") +
-            '</span><span class="catalog-arrow">↗</span><h2>' +
-            esc(x.short) +
-            '</h2><span class="code catalog-code">' +
-            esc(x.code) +
-            "</span><p>" +
-            esc(x.description) +
-            '</p><div class="outcome-progress"><div class="outcome-progress-label"><span>Voortgang</span><b>' +
-            (hasProgress ? x.pct + "%" : "Nog geen voortgang") +
-            '</b></div><div class="bar"><span style="width:' +
-            (x.pct || 0) +
-            '%"></span></div><span class="outcome-hours">' +
-            (x.hours === null ? "Nog geen uren" : x.hours + " uur") +
-            " · Richtwaarde 80%</span></div></button>"
+            '<button class="catalog-outcome-row ' +
+            status +
+            (archived.includes(outcome.code) ? " archived" : "") +
+            '" type="button" onclick="openOutcome(\'' +
+            outcome.code +
+            '\')"><span class="catalog-status-icon" aria-hidden="true">' +
+            statusIcon +
+            '</span><span class="catalog-outcome-name"><strong>' +
+            esc(outcome.short) +
+            '</strong><span class="code catalog-code">' +
+            esc(outcome.code) +
+            '</span></span><span class="catalog-outcome-description">' +
+            esc(outcome.description) +
+            '</span><span class="catalog-row-progress"><span class="catalog-progress-line"><span class="bar"><span style="width:' +
+            percentage +
+            '%"></span></span><b>' +
+            percentage +
+            '%</b></span><small>' +
+            hours +
+            ' uur · Richtwaarde 80%</small></span><span class="catalog-row-arrow" aria-hidden="true">›</span></button>'
           );
         })
         .join("")
-    : '<div class="card">Geen aandachtspunten gevonden binnen deze filters.</div>';
+    : '<div class="catalog-empty-archive"><h2>Geen leeruitkomsten gevonden</h2><p>Pas je zoekopdracht of filters aan.</p></div>';
+
+  renderCatalogPagination(filtered.length ? totalPages : 0);
 }
 
 function showAttentionOutcomes() {
   catalogAttentionOnly = true;
   document.getElementById("catalogPhase").value = phase;
   document.getElementById("outcomeSearch").value = "";
+  document.getElementById("catalogArchiveFilter").value = "all";
+  catalogPage = 1;
   renderCatalog();
   show("learningOutcomes");
 }
 
 function clearAttentionOutcomes() {
   catalogAttentionOnly = false;
+  catalogPage = 1;
   renderCatalog();
 }
 function renderHours() {
@@ -2224,7 +2379,8 @@ function toggleOutcomeArchive() {
     updated = wasArchived ? archived.filter((code) => code !== currentOutcomeCode) : [...archived, currentOutcomeCode];
   saveLocalState(archivedOutcomesKey, JSON.stringify(updated));
   const filter = document.getElementById("catalogArchiveFilter");
-  filter.value = wasArchived ? "active" : "archived";
+  filter.value = wasArchived ? "all" : "archived";
+  catalogPage = 1;
   renderCatalog();
   show("learningOutcomes");
   hint(wasArchived ? "De leeruitkomst staat weer bij je actieve leeruitkomsten." : "De leeruitkomst is gearchiveerd en blijft hier makkelijk terug te vinden.");
@@ -2234,37 +2390,6 @@ const openOutcomeWithArchiveState = openOutcome;
 openOutcome = function (code) {
   openOutcomeWithArchiveState(code);
   updateOutcomeArchiveControls();
-};
-
-const renderCatalogWithArchiveFilter = renderCatalog;
-renderCatalog = function () {
-  renderCatalogWithArchiveFilter();
-  const mode = document.getElementById("catalogArchiveFilter")?.value || "active",
-    archived = getArchivedOutcomes(),
-    list = document.getElementById("catalogList"),
-    cards = [...list.querySelectorAll(".catalog-card")];
-  let visible = 0;
-  cards.forEach((card) => {
-    const code = card.querySelector(".catalog-code")?.textContent.trim(),
-      isArchived = archived.includes(code),
-      showCard = mode === "all" || (mode === "archived" ? isArchived : !isArchived);
-    card.classList.toggle("hidden", !showCard);
-    card.classList.toggle("archived", isArchived);
-    if (isArchived && !card.querySelector(".catalog-archive-badge"))
-      card.insertAdjacentHTML("afterbegin", '<span class="catalog-archive-badge">Gearchiveerd</span>');
-    if (showCard) visible++;
-  });
-  document.getElementById("archiveFilterNotice").classList.toggle("hidden", mode !== "archived");
-  document.getElementById("catalogCount").textContent = visible + " " + (visible === 1 ? "leeruitkomst" : "leeruitkomsten") + " gevonden";
-  if (!visible)
-    list.insertAdjacentHTML(
-      "beforeend",
-      '<div class="card catalog-empty-archive"><h2>' +
-        (mode === "archived" ? "Je archief is nog leeg" : "Geen leeruitkomsten gevonden") +
-        "</h2><p>" +
-        (mode === "archived" ? "Zodra je een afgeronde leeruitkomst archiveert, verschijnt die hier." : "Pas je zoekopdracht of filters aan.") +
-        "</p></div>",
-    );
 };
 
 const renderHoursWithUpdatedLabels = renderHours;

@@ -198,41 +198,63 @@
         </section>
 
         <section id="learningOutcomes" class="view hidden">
-          <div class="head">
+          <div class="head learning-catalog-head">
             <div>
               <p class="eyebrow">ONTDEK JE LEERROUTE</p>
               <h1>Leeruitkomsten</h1>
               <p class="dim">Wat ga je leren? Ontdek de kennis en vaardigheden van jouw opleiding.</p>
             </div>
-            <span class="pill">48 LEERUITKOMSTEN</span>
+            <span id="catalogTotalPill" class="pill">48 LEERUITKOMSTEN</span>
           </div>
-          <div class="catalog-intro">
-            <span class="catalog-symbol">✧</span>
-            <div>
-              <h2>Een helder beeld van wat je leert</h2>
-              <p>Bekijk per leeruitkomst de beschrijving, je voortgang en je uren.</p>
+
+          {{-- Eén samenvatting toont de totale voortgang en de drie statussen. --}}
+          <section class="learning-summary" aria-label="Samenvatting leeruitkomsten">
+            <div id="catalogProgressRing" class="learning-progress-ring" aria-label="Totale voortgang">
+              <strong id="catalogProgressPercent">0%</strong>
             </div>
+            <div class="learning-summary-copy">
+              <h2 id="catalogProgressTitle">Jouw voortgang</h2>
+              <p id="catalogProgressText">0 leeruitkomsten afgerond</p>
+              <div class="bar"><span id="catalogProgressBar" style="width:0%"></span></div>
+            </div>
+            <div class="learning-summary-stats">
+              <div class="learning-summary-stat completed"><span aria-hidden="true">✓</span><strong id="catalogCompletedCount">0</strong><small>Afgerond</small></div>
+              <div class="learning-summary-stat active"><span aria-hidden="true">◷</span><strong id="catalogActiveCount">0</strong><small>Bezig</small></div>
+              <div class="learning-summary-stat todo"><span aria-hidden="true">!</span><strong id="catalogTodoCount">0</strong><small>Nog te doen</small></div>
+            </div>
+          </section>
+
+          {{-- De fasekeuze bepaalt welke voortgang en leeruitkomsten worden getoond. --}}
+          <div class="learning-phase-row">
+            <div id="catalogPhaseTabs" class="learning-phase-tabs" aria-label="Fase kiezen"></div>
           </div>
-          <div class="filter catalog-filter">
-            <label class="label search-label"
-              >Zoeken<input id="outcomeSearch" class="input" type="search" placeholder="Zoek op onderwerp of code…" oninput="renderCatalog()" />
+          <input id="catalogPhase" type="hidden" value="OF">
+
+          <div class="catalog-filter learning-catalog-filter">
+            <label class="learning-search">
+              <span class="learning-search-icon" aria-hidden="true">⌕</span>
+              <span class="sr-only">Zoeken</span>
+              <input id="outcomeSearch" class="input" type="search" placeholder="Zoek op leeruitkomst, code of onderwerp…" oninput="resetCatalogAndRender()">
             </label>
-            <label class="label"
-              >Fase<select id="catalogPhase" class="input" onchange="renderCatalog()">
-                <option value="OF">Oriëntatiefase</option>
-                <option value="VF">Verdiepingsfase</option>
-                <option value="AF">Afrondingsfase</option>
-                <option value="all">Alle fasen</option>
-              </select>
-            </label>
-            <label class="label"
-              >Weergave<select id="catalogArchiveFilter" class="input" onchange="renderCatalog()">
-                <option value="active">Actieve leeruitkomsten</option>
+            <label class="label">Status
+              <select id="catalogArchiveFilter" class="input" onchange="resetCatalogAndRender()">
+                <option value="all">Alle statussen</option>
+                <option value="completed">Afgerond</option>
+                <option value="active">Bezig</option>
+                <option value="todo">Nog te doen</option>
                 <option value="archived">Gearchiveerde leeruitkomsten</option>
-                <option value="all">Alles tonen</option>
+              </select>
+            </label>
+            <label class="label">Sorteer op
+              <select id="catalogSort" class="input" onchange="resetCatalogAndRender()">
+                <option value="standard">Standaard</option>
+                <option value="progress-desc">Meeste voortgang</option>
+                <option value="progress-asc">Minste voortgang</option>
+                <option value="alphabetical">Alfabetisch</option>
               </select>
             </label>
           </div>
+
           <div id="archiveFilterNotice" class="archive-filter-notice hidden">
             <div>
               <span>✓</span>
@@ -246,8 +268,11 @@
             </div>
             <button type="button" onclick="clearAttentionOutcomes()">Toon alle leeruitkomsten</button>
           </div>
-          <p id="catalogCount" class="small dim" role="status"></p>
-          <div id="catalogList" class="catalog-grid"></div>
+          <div id="catalogList" class="catalog-grid learning-outcome-list"></div>
+          <div class="learning-catalog-footer">
+            <p id="catalogCount" class="small dim" role="status"></p>
+            <nav id="catalogPagination" class="catalog-pagination" aria-label="Pagina's leeruitkomsten"></nav>
+          </div>
         </section>
         <section id="outcomeDetail" class="view hidden">
           <button id="outcomeBackButton" class="mutedlink" type="button" onclick="backFromOutcome()">← Terug naar leeruitkomsten</button>

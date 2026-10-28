@@ -1,8 +1,5 @@
 // Laravel synchronisatie: opgeslagen gebruikersgegevens worden bij het openen ingeladen.
 const persistentKeys = [
-  "ontwikkeling-reflecties",
-  "ontwikkeling-feedback",
-  "ontwikkeling-opdracht-statussen",
   "archived-learning-outcomes",
   "hours-processing-2026-09-12-read",
   "ontwikkeling-dashboard-instellingen",
@@ -13,6 +10,30 @@ if (window.LARAVEL_USER) {
       localStorage.setItem("laravel-" + window.LARAVEL_USER.id + "-" + key, JSON.stringify(value));
     }
   }
+}
+
+// Verstuur onderwijsgegevens via beveiligde Laravel-routes naar MySQL.
+async function apiRequest(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "same-origin",
+    ...options,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-CSRF-TOKEN": window.LARAVEL_CSRF,
+      ...(options.headers || {}),
+    },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const validationMessage = Object.values(body.errors || {}).flat()[0];
+    throw new Error(validationMessage || body.message || "Opslaan is mislukt.");
+  }
+  return body;
+}
+
+function apiUrl(template, id) {
+  return template.replace("__ID__", String(id));
 }
 function loadLocalState(key) {
   if (!window.LARAVEL_USER) return localStorage.getItem(key);
@@ -60,7 +81,7 @@ function saveLocalState(key, value) {
 // -----------------------------------------------------------------------------
 // Vaste demo- en leeruitkomstgegevens
 // -----------------------------------------------------------------------------
-const outcomes = [
+let outcomes = [
   {
     code: "IT_OF_LU_Hardskills_001",
     phase: "OF",
@@ -678,11 +699,18 @@ outcomes.forEach((outcome) => {
   outcome.short = outcomeTitles[outcome.code] || outcome.short;
 });
 
-const phases = [
+if (Array.isArray(window.LARAVEL_DATA?.outcomes)) {
+  outcomes = window.LARAVEL_DATA.outcomes;
+}
+
+let phases = [
   ["OF", "Oriëntatiefase", 60, 342],
   ["VF", "Verdiepingsfase", 61, 221],
   ["AF", "Afrondingsfase", 27, 115],
 ];
+if (window.LARAVEL_DATA?.phases?.length) {
+  phases = window.LARAVEL_DATA.phases;
+}
 
 const currentWorkByPhase = {
   OF: {
@@ -707,7 +735,7 @@ const currentWorkByPhase = {
 
 // Demo-opdrachten. De outcomeCodes vormen later de koppeling met
 // de tabel opdracht_leeruitkomst in de database.
-const assignments = [
+let assignments = [
   {
     id: 1,
     title: "Werkplek installeren",
@@ -753,6 +781,21 @@ const assignments = [
     outcomeCodes: ["IT_AF_LU_Hardskills_004", "IT_AF_LU_Hardskills_005", "IT_AF_LU_Hardskills_006"],
   },
 ];
+if (Array.isArray(window.LARAVEL_DATA?.assignments)) {
+  assignments = window.LARAVEL_DATA.assignments;
+  for (const phaseCode of ["OF", "VF", "AF"]) {
+    const assignment = assignments.find((item) => item.phase === phaseCode && item.status !== "completed")
+      || assignments.find((item) => item.phase === phaseCode);
+    if (!assignment) continue;
+    const linkedOutcome = outcomes.find((item) => assignment.outcomeCodes.includes(item.code));
+    currentWorkByPhase[phaseCode] = {
+      title: assignment.title,
+      type: assignment.type,
+      code: assignment.outcomeCodes[0] || "",
+      pct: linkedOutcome?.pct || 0,
+    };
+  }
+}
 
 const assignmentStatuses = {
   active: "Actief",
@@ -760,19 +803,7 @@ const assignmentStatuses = {
   completed: "Afgerond",
 };
 
-const assignmentStatusKey = "ontwikkeling-opdracht-statussen";
-try {
-  const savedAssignmentStatuses = JSON.parse(loadLocalState(assignmentStatusKey) || "{}");
-  assignments.forEach((assignment) => {
-    if (["active", "review", "completed"].includes(savedAssignmentStatuses[assignment.id])) {
-      assignment.status = savedAssignmentStatuses[assignment.id];
-    }
-  });
-} catch {
-  // Ongeldige lokale demogegevens worden genegeerd; de standaardstatus blijft staan.
-}
-
-const records = [
+let records = [
   ["Werkplek installeren", "Installatieopdracht", "IT_OF_LU_Hardskills_001", 42, 1],
   ["Software configureren", "Configuratieopdracht", "IT_OF_LU_Hardskills_001", 35, 1],
   ["Werkproces plannen", "Planning en uitvoering", "IT_OF_LU_Hardskills_005", 40, 1],
@@ -788,13 +819,19 @@ const records = [
   ["Testplan opstellen", "Testopdracht", "IT_AF_LU_Hardskills_005", 54, 4],
   ["Gebruikersinstructie", "Documentatieopdracht", "IT_AF_LU_Softskills_005", 38, 4],
 ];
+if (Array.isArray(window.LARAVEL_DATA?.records)) {
+  records = window.LARAVEL_DATA.records;
+}
 
-const hoursByYear = {
+let hoursByYear = {
   1: { total: 510, orientation: 410, deepening: 80, completion: 20 },
   2: { total: 620, orientation: 160, deepening: 390, completion: 70 },
   3: { total: 735, orientation: 70, deepening: 345, completion: 320 },
   4: { total: 680, orientation: 20, deepening: 130, completion: 530 },
 };
+if (window.LARAVEL_DATA?.hoursByYear) {
+  hoursByYear = window.LARAVEL_DATA.hoursByYear;
+}
 
 const registrationMeta = [
   ["12 september 2026", "Mevrouw Jansen · docent"],
@@ -1221,18 +1258,23 @@ function openAssignment(id) {
   show("assignmentDetail");
 }
 
-function submitAssignment() {
+async function submitAssignment() {
   const assignment = assignments.find((item) => item.id === selectedAssignmentId);
   if (!assignment || assignment.status !== "active") return;
 
-  assignment.status = "review";
-  const statuses = Object.fromEntries(assignments.map((item) => [item.id, item.status]));
-  saveLocalState(assignmentStatusKey, JSON.stringify(statuses));
-
-  document.getElementById("assignmentStatus").value = "review";
-  renderAssignments();
-  openAssignment(assignment.id);
-  hint("Je opdracht is ingeleverd en staat nu bij Beoordeling.");
+  try {
+    const result = await apiRequest(apiUrl(window.LARAVEL_API.assignmentSubmit, assignment.id), {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    assignment.status = result.status;
+    document.getElementById("assignmentStatus").value = "review";
+    renderAssignments();
+    openAssignment(assignment.id);
+    hint("Je opdracht is ingeleverd en staat nu bij Beoordeling.");
+  } catch (error) {
+    hint(error.message);
+  }
 }
 
 function practicalExplanation(outcome) {
@@ -1332,6 +1374,40 @@ function showGoalOutcomePreview() {
     esc(outcome.description) +
     "</p>";
 }
+
+function renderActiveGoal(goal = window.LARAVEL_DATA?.goals?.find((item) => item.status === "actief")) {
+  if (!goal) return;
+  document.getElementById("activeGoalStatus").textContent = "ACTIEF LEERDOEL";
+  document.getElementById("activeGoalTitle").textContent = goal.title;
+  document.getElementById("activeGoalDescription").textContent = goal.description;
+  document.getElementById("activeGoalOutcome").textContent = goal.outcome || "Leeruitkomst";
+  document.getElementById("activeGoalCode").textContent = goal.code || "—";
+}
+
+async function saveGoal() {
+  const description = document.getElementById("goalText").value.trim();
+  const code = document.getElementById("goalCodes").value;
+  const message = document.getElementById("goalMessage");
+  if (description.length < 10 || !code) {
+    message.textContent = "Beschrijf je leerdoel in minimaal 10 tekens en kies een leeruitkomst.";
+    message.className = "form-message error";
+    return;
+  }
+  try {
+    const goal = await apiRequest(window.LARAVEL_API.goalStore, {
+      method: "POST",
+      body: JSON.stringify({ description, code }),
+    });
+    renderActiveGoal(goal);
+    document.getElementById("goalText").value = "";
+    message.textContent = "Je leerdoel is opgeslagen.";
+    message.className = "form-message success";
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "form-message error";
+  }
+}
+
 function renderCatalog() {
   const q = document.getElementById("outcomeSearch").value.toLowerCase(),
     p = document.getElementById("catalogPhase").value;
@@ -1533,7 +1609,6 @@ function openRegistrationOutcome() {
 // -----------------------------------------------------------------------------
 // Reflecties
 // -----------------------------------------------------------------------------
-const reflectionKey = "ontwikkeling-reflecties";
 const defaultReflections = [
   {
     id: "demo-1",
@@ -1545,13 +1620,12 @@ const defaultReflections = [
   },
 ];
 
+let reflections = Array.isArray(window.LARAVEL_DATA?.reflections)
+  ? [...window.LARAVEL_DATA.reflections]
+  : [...defaultReflections];
+
 function getReflections() {
-  try {
-    const saved = JSON.parse(loadLocalState(reflectionKey));
-    return Array.isArray(saved) ? saved : defaultReflections;
-  } catch {
-    return defaultReflections;
-  }
+  return reflections;
 }
 
 function renderOutcomeReflections() {
@@ -1704,7 +1778,7 @@ function filterReflectionsByPhase(phaseCode) {
   renderReflections();
 }
 
-function saveReflection(event) {
+async function saveReflection(event) {
   event.preventDefault();
   const title = document.getElementById("reflectionTitle").value.trim();
   const code = document.getElementById("reflectionOutcome").value;
@@ -1718,35 +1792,25 @@ function saveReflection(event) {
     message.className = "form-message error";
     return;
   }
-  const list = getReflections();
-  list.unshift({
-    id: "reflection-" + Date.now(),
-    title,
-    code,
-    situation,
-    good,
-    improve,
-    next,
-    date: new Intl.DateTimeFormat("nl-NL", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-      .format(new Date())
-      .replace(" om ", " om "),
-  });
-  saveLocalState(reflectionKey, JSON.stringify(list));
-  event.target.reset();
-  message.textContent = "Je reflectie is bewaard.";
-  message.className = "form-message success";
-  updateReflectionOutcomeOptions();
-  renderReflections();
-  renderOutcomeReflections();
-  const returnToOutcome = reflectionReturnToOutcome;
-  closeReflectionForm();
-  if (returnToOutcome) show("outcomeDetail");
+  try {
+    const saved = await apiRequest(window.LARAVEL_API.reflectionStore, {
+      method: "POST",
+      body: JSON.stringify({ title, code, situation, good, improve, next }),
+    });
+    reflections.unshift(saved);
+    event.target.reset();
+    message.textContent = "Je reflectie is bewaard.";
+    message.className = "form-message success";
+    updateReflectionOutcomeOptions();
+    renderReflections();
+    renderOutcomeReflections();
+    const returnToOutcome = reflectionReturnToOutcome;
+    closeReflectionForm();
+    if (returnToOutcome) show("outcomeDetail");
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "form-message error";
+  }
 }
 
 function renderReflectionOptions() {
@@ -1850,17 +1914,20 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !document.getElementById("registrationDetailModal").classList.contains("hidden")) closeRegistrationDetail();
 });
 
-function deleteReflection(id) {
-  const list = getReflections().filter((item) => item.id !== id);
-  saveLocalState(reflectionKey, JSON.stringify(list));
-  renderReflections();
-  renderOutcomeReflections();
+async function deleteReflection(id) {
+  try {
+    await apiRequest(apiUrl(window.LARAVEL_API.reflectionDelete, id), { method: "DELETE" });
+    reflections = reflections.filter((item) => item.id !== id);
+    renderReflections();
+    renderOutcomeReflections();
+  } catch (error) {
+    hint(error.message);
+  }
 }
 
 // -----------------------------------------------------------------------------
 // Feedback
 // -----------------------------------------------------------------------------
-const feedbackKey = "ontwikkeling-feedback";
 const defaultFeedback = [
   {
     id: "feedback-demo-1",
@@ -1876,13 +1943,12 @@ const defaultFeedback = [
   },
 ];
 
+let feedbackItems = Array.isArray(window.LARAVEL_DATA?.feedback)
+  ? [...window.LARAVEL_DATA.feedback]
+  : [...defaultFeedback];
+
 function getFeedback() {
-  try {
-    const saved = JSON.parse(loadLocalState(feedbackKey));
-    return Array.isArray(saved) ? saved : defaultFeedback;
-  } catch {
-    return defaultFeedback;
-  }
+  return feedbackItems;
 }
 
 function renderOutcomeFeedback() {
@@ -2073,7 +2139,7 @@ function closeFeedbackForm() {
   feedbackReturnToOutcome = false;
 }
 
-function saveFeedback(event) {
+async function saveFeedback(event) {
   event.preventDefault();
   const type = document.getElementById("feedbackType").value,
     person = document.getElementById("feedbackPerson").value.trim(),
@@ -2088,40 +2154,36 @@ function saveFeedback(event) {
     message.className = "form-message error";
     return;
   }
-  const list = getFeedback();
-  list.unshift({
-    id: "feedback-" + Date.now(),
-    type,
-    person,
-    title,
-    code,
-    positive,
-    improve,
-    action,
-    date: new Intl.DateTimeFormat("nl-NL", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date()),
-  });
-  saveLocalState(feedbackKey, JSON.stringify(list));
-  event.target.reset();
-  message.textContent = "De feedback is bewaard.";
-  message.className = "form-message success";
-  updateFeedbackOutcomeOptions();
-  renderFeedback();
-  renderOutcomeFeedback();
-  const returnToOutcome = feedbackReturnToOutcome;
-  closeFeedbackForm();
-  if (returnToOutcome) show("outcomeDetail");
+  try {
+    const saved = await apiRequest(window.LARAVEL_API.feedbackStore, {
+      method: "POST",
+      body: JSON.stringify({ type, person, title, code, positive, improve, action }),
+    });
+    feedbackItems.unshift(saved);
+    event.target.reset();
+    message.textContent = "De feedback is bewaard.";
+    message.className = "form-message success";
+    updateFeedbackOutcomeOptions();
+    renderFeedback();
+    renderOutcomeFeedback();
+    const returnToOutcome = feedbackReturnToOutcome;
+    closeFeedbackForm();
+    if (returnToOutcome) show("outcomeDetail");
+  } catch (error) {
+    message.textContent = error.message;
+    message.className = "form-message error";
+  }
 }
 
-function deleteFeedback(id) {
-  saveLocalState(feedbackKey, JSON.stringify(getFeedback().filter((item) => item.id !== id)));
-  renderFeedback();
-  renderOutcomeFeedback();
+async function deleteFeedback(id) {
+  try {
+    await apiRequest(apiUrl(window.LARAVEL_API.feedbackDelete, id), { method: "DELETE" });
+    feedbackItems = feedbackItems.filter((item) => item.id !== id);
+    renderFeedback();
+    renderOutcomeFeedback();
+  } catch (error) {
+    hint(error.message);
+  }
 }
 
 document.addEventListener("keydown", (event) => {
@@ -2215,6 +2277,7 @@ renderHours = function () {
 if (window.LARAVEL_USER) {
   if (role === "student") {
     renderGoalOptions();
+    renderActiveGoal();
     renderReflectionOptions();
     showReflectionOutcomePreview();
     updateFeedbackOutcomeOptions();

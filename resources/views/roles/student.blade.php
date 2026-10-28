@@ -551,13 +551,13 @@
           <div class="notice">De naam van de leeruitkomst staat steeds voorop; de officiële code staat eronder ter herkenning.</div>
           <div class="grid2 goal-layout">
             <div class="card active-goal">
-              <span class="goal-status">ACTIEF LEERDOEL · DEMO</span>
-              <h2>Technische keuzes zelfstandig uitleggen</h2>
-              <p>Ik wil na een installatie duidelijk kunnen toelichten welke keuzes ik heb gemaakt en waarom.</p>
+              <span id="activeGoalStatus" class="goal-status">ACTIEF LEERDOEL</span>
+              <h2 id="activeGoalTitle">Nog geen actief leerdoel</h2>
+              <p id="activeGoalDescription">Maak hiernaast een leerdoel aan en koppel het aan een leeruitkomst.</p>
               <div class="linked-outcome">
                 <span class="small dim">Gekoppelde leeruitkomst</span>
-                <strong>Eenvoudige vakgerichte taken uitvoeren</strong>
-                <span class="code">IT_OF_LU_Hardskills_001</span>
+                <strong id="activeGoalOutcome">Nog niet gekoppeld</strong>
+                <span id="activeGoalCode" class="code">—</span>
               </div>
               <div class="goal-meta">
                 <span>
@@ -593,7 +593,8 @@
               <select class="hidden" id="goalCodes" aria-hidden="true" tabindex="-1"></select>
               <div id="goalOutcomeChoices" class="goal-outcome-choices" role="listbox" aria-label="Beschikbare leeruitkomsten"></div>
               <div id="goalOutcomePreview" class="goal-preview"></div>
-              <button class="button dark" onclick="hint('Leerdoel opslaan is nog niet gekoppeld.')">Leerdoel bewaren</button>
+              <p id="goalMessage" class="form-message" aria-live="polite"></p>
+              <button class="button dark" type="button" onclick="saveGoal()">Leerdoel bewaren</button>
             </div>
           </div>
         </section>

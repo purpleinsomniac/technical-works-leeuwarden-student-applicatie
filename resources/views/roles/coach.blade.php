@@ -1,71 +1,88 @@
 <section id="coachStudents" class="view hidden">
-          <h1>Mijn studenten</h1>
-          <p class="dim">Bekijk uitsluitend studenten die aan deze coach zijn toegewezen.</p>
-          <div class="notice">Namen, resultaten en signaleringen zijn demogegevens. Toegangsrechten moeten worden vastgesteld en technisch afgedwongen.</div>
-          <div class="card">
-            <h2>Begeleide studenten</h2>
-            <div class="simple click" onclick="show('coachStudent')">
-              <b>Sam de Vries</b>
-              <span>Oriëntatiefase · 342 uur (demo)</span>
-              <span>2 leeruitkomsten vragen aandacht →</span>
-            </div>
-            <div class="simple">
-              <b>Noor Bakker</b>
-              <span>Verdiepingsfase · 221 uur (demo)</span>
-              <span>Bijgewerkt: 12 sep (demo)</span>
-            </div>
-          </div>
-        </section>
+  <div class="head">
+    <div>
+      <h1>Mijn studenten</h1>
+      <p class="dim">Bekijk de actuele voortgang die in de database staat.</p>
+    </div>
+    <span class="pill">{{ count($roleData) }} STUDENTEN</span>
+  </div>
 
-        <section id="coachStudent" class="view hidden">
-          <div class="head">
-            <div>
-              <h1>Sam de Vries</h1>
-              <p class="dim">Coachoverzicht: ontwikkelfase, leerdoelen, onderbouwing en gespreksgeschiedenis.</p>
-            </div>
-            <button class="button" onclick="show('coachStudents')">← Studenten</button>
-          </div>
-          <div class="notice">Demogegevens. Persoonlijke reflecties worden alleen getoond als de vastgestelde rechten dit toestaan.</div>
-          <div class="grid3">
-            <div class="card">
-              <div class="big">60%</div>
-              <span class="dim">oriëntatie · voorbeeld</span>
-            </div>
-            <div class="card">
-              <div class="big">342 uur</div>
-              <span class="dim">gevalideerd · demo</span>
-            </div>
-            <div class="card">
-              <div class="big">12 sep 2026</div>
-              <span class="dim">laatst bijgewerkt · demo</span>
-            </div>
-          </div>
-          <div class="grid2">
-            <div class="card">
-              <h2>Voor gesprek</h2>
-              <p><b>Vraagt aandacht:</b> samenwerken en reflecteren, lerende houding (demo).</p>
-              <p><b>Persoonlijk leerdoel:</b> technische keuzes zelfstandig uitleggen.</p>
-              <p><b>Onderbouwing:</b> bekijk opdrachten en uren per leeruitkomst.</p>
-            </div>
-            <div class="card">
-              <h2>Coachnotitie</h2>
-              <label class="label">Opmerking voor begeleiding</label>
-              <textarea class="input" placeholder="Noteer een observatie of afspraak"></textarea>
-              <button class="button" onclick="hint('Coachnotities worden nog niet opgeslagen.')">Notitie bewaren</button>
-            </div>
-          </div>
-          <div class="card">
-            <h2>Eerdere gesprekken</h2>
-            <div class="kv">
-              <b>4 sep 2026</b>
-              <span>Installatieopdracht besproken; vervolgstap afgesproken (demo).</span>
-            </div>
-            <div class="kv">
-              <b>22 aug 2026</b>
-              <span>Leerdoel voor zelfstandiger werken vastgelegd (demo).</span>
-            </div>
-          </div>
-        </section>
+  @if (session('status'))
+    <div class="notice">{{ session('status') }}</div>
+  @endif
 
-        {{-- Managementweergaven. --}}
+  <div class="card">
+    <h2>Studentenoverzicht</h2>
+    @forelse ($roleData as $student)
+      <button class="simple click" type="button" onclick="show('coachStudent-{{ $student['id'] }}')">
+        <b>{{ $student['name'] }}</b>
+        <span>{{ $student['phase'] ?? 'Geen fase' }} · {{ $student['hours'] }} gevalideerde uren</span>
+        <span>{{ count($student['outcomes']) }} leeruitkomsten →</span>
+      </button>
+    @empty
+      <p class="dim">Er staan nog geen studenten in de database.</p>
+    @endforelse
+  </div>
+</section>
 
+@foreach ($roleData as $student)
+  <section id="coachStudent-{{ $student['id'] }}" class="view hidden">
+    <div class="head">
+      <div>
+        <h1>{{ $student['name'] }}</h1>
+        <p class="dim">Pas uren en status per leeruitkomst aan.</p>
+      </div>
+      <button class="button" type="button" onclick="show('coachStudents')">← Studenten</button>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <div class="big">{{ $student['hours'] }} uur</div>
+        <span class="dim">Totaal gevalideerd</span>
+      </div>
+      <div class="card">
+        <div class="big">{{ count($student['outcomes']) }}</div>
+        <span class="dim">Leeruitkomsten</span>
+      </div>
+      <div class="card">
+        <div class="big">{{ $student['phase'] ?? '—' }}</div>
+        <span class="dim">Huidige studiefase</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Voortgang aanpassen</h2>
+      <p class="dim">Wijzig alleen de gegevens die je met de student hebt besproken.</p>
+      @foreach ($student['outcomes'] as $outcome)
+        <form class="kv" method="POST" action="{{ route('progress.update', [$student['id'], $outcome['id']]) }}">
+          @csrf
+          @method('PATCH')
+          <div>
+            <b>{{ $outcome['title'] }}</b>
+            <span class="code">{{ $outcome['code'] }}</span>
+          </div>
+          <label class="label">
+            Uren
+            <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
+          </label>
+          <label class="label">
+            Status
+            <select class="input" name="status" required>
+              @foreach ([
+                'niet_gestart' => 'Niet gestart',
+                'gestart' => 'Gestart',
+                'in_ontwikkeling' => 'In ontwikkeling',
+                'behaald' => 'Behaald',
+              ] as $waarde => $label)
+                <option value="{{ $waarde }}" @selected($outcome['status'] === $waarde)>{{ $label }}</option>
+              @endforeach
+            </select>
+          </label>
+          <button class="button dark" type="submit">Opslaan</button>
+        </form>
+      @endforeach
+    </div>
+  </section>
+@endforeach
+
+{{-- Managementweergaven. --}}

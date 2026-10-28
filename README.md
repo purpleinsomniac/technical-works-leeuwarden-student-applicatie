@@ -1,6 +1,6 @@
 # Ontwikkeling — Laravel
 
-Laravel 12 starterproject op basis van de drie aangeleverde mock-upbestanden. De originele interface, rollen, navigatie en voorbeeldgegevens zijn overgenomen.
+Laravel 12-starterproject voor de persoonlijke leeromgeving Ontwikkeling. De aangeleverde interface, rollen, navigatie en voorbeeldgegevens zijn hierin verwerkt.
 
 ## Installatie
 
@@ -36,6 +36,6 @@ Testgebruikers (uitsluitend voor lokaal gebruik):
 
 ## Nog te bouwen voor productie
 
-De mock-up heeft demonstratiedata. Uren en voortgang, autorisatie van coach/manager/admin, individuele leerlingdossiers, import en validatie van uren, auditlog, leerdoelen en formele berekeningsregels moeten op echte databasemodellen en bedrijfsregels worden aangesloten. Niet gebruiken met echte leerlinggegevens voordat beveiliging, AVG, privacy, objectautorisatie en tests zijn uitgewerkt. Demo-gegevens zijn zichtbaar in de huidige JavaScript en geen echte organisatiegegevens.
+De applicatie bevat demonstratiedata. Uren en voortgang, autorisatie van coach/manager/admin, individuele leerlingdossiers, import en validatie van uren, auditlog, leerdoelen en formele berekeningsregels moeten op echte databasemodellen en bedrijfsregels worden aangesloten. Niet gebruiken met echte leerlinggegevens voordat beveiliging, AVG, privacy, objectautorisatie en tests zijn uitgewerkt. Demogegevens zijn zichtbaar in de huidige JavaScript en zijn geen echte organisatiegegevens.
 
 Voor nu is `user_states.data` een JSON opslagmodel voor de persoonlijke invoer; dit is een pragmatische tussenstap en geen uitgewerkt domeinmodel. Browseropslag wordt alleen als lokale cache gebruikt (per account-ID); voor productie bij voorkeur geheel verwijderen en REST endpoints per entiteit gebruiken.

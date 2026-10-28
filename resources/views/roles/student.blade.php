@@ -1,51 +1,99 @@
-<section id="studentDashboard" class="view">
-          <div class="head">
+<section id="studentDashboard" class="view student-dashboard">
+          {{-- Welkomstregel en snelle toegang tot persoonlijke dashboardinstellingen. --}}
+          <div class="dashboard-welcome">
             <div>
-              <p class="eyebrow">JOUW PERSOONLIJKE LEEROMGEVING</p>
-              <h1>Goed bezig, Sam <span class="wave">✦</span></h1>
-              <p class="dim">Elke stap telt. Hier zie je waar je staat en hoe je verder groeit.</p>
+              <h1>Goed bezig, {{ $frontendUser['name'] }} <span class="wave">👋</span></h1>
+              <p>Hier zie je waar je staat en wat je volgende stap is.</p>
             </div>
-            <span class="pill">STUDENT</span>
+            <button class="dashboard-settings-shortcut" type="button" onclick="show('dashboardSettings')">
+              <span class="ui-icon" data-icon="settings" aria-hidden="true"></span>
+              Dashboard instellen
+            </button>
           </div>
-          <div class="notice">
-            <b>Demogegevens:</b> de 48 codes en leeruitkomstteksten komen uit het aangeleverde overzicht. Percentages, uren, opdrachten, datums en resultaten
-            zijn voorbeelden. De opdrachtgever moet de berekening en urennormen nog vaststellen.
-          </div>
-          <div class="tabs" id="phaseTabs"></div>
-          <div class="grid3">
-            <div class="card">
-              <span class="metric-label">Jouw algemene voortgang</span>
+
+          <div class="tabs dashboard-phase-tabs" id="phaseTabs" aria-label="Studiefase kiezen"></div>
+
+          {{-- De drie belangrijkste gegevens blijven altijd zichtbaar. --}}
+          <div class="dashboard-primary-grid">
+            <article class="dashboard-metric-card dashboard-progress-card">
+              <div class="dashboard-card-heading">
+                <span class="metric-label">Algemene voortgang</span>
+                <span class="dashboard-card-icon" data-icon="progress" aria-hidden="true"></span>
+              </div>
               <div class="big" id="phasePercent"></div>
-              <div class="dim">voorbeeldvoortgang</div>
+              <div class="dim" id="phaseProgressLabel">van deze fase behaald</div>
               <div class="bar" id="phaseBar"></div>
-            </div>
-            <div class="card">
-              <span class="metric-label">Waar ben je nu mee bezig?</span>
+            </article>
+
+            <article class="dashboard-metric-card dashboard-assignment-card">
+              <div class="dashboard-card-heading">
+                <span class="metric-label">Huidige opdracht</span>
+                <span class="dashboard-card-icon" data-icon="assignment" aria-hidden="true"></span>
+              </div>
               <h2 class="dashboard-card-title" id="currentWorkTitle">Werkplek installeren</h2>
               <div class="dim" id="currentWorkMeta">Installatieopdracht · Oriëntatiefase</div>
-              <div class="dashboard-inline-progress">
-                <div class="bar">
-                  <span id="currentWorkBar" style="width: 65%"></span>
-                </div>
-                <b id="currentWorkPercent">65%</b>
+              <button class="card-link" type="button" onclick="show('assignments')">Bekijk opdracht <span aria-hidden="true">→</span></button>
+            </article>
+
+            <article class="dashboard-metric-card dashboard-attention-card">
+              <div class="dashboard-card-heading">
+                <span class="metric-label">Aandachtspunt</span>
+                <span class="dashboard-card-icon" data-icon="idea" aria-hidden="true"></span>
               </div>
-              <button class="card-link" onclick="openCurrentWorkOutcome()">Bekijk leeruitkomst →</button>
-            </div>
-            <div class="card">
-              <span class="metric-label">Vraagt jouw aandacht</span>
               <div class="big" id="attentionCount">1</div>
               <div class="dim" id="attentionText">leeruitkomst om verder aan te werken</div>
-              <button class="card-link" onclick="showAttentionOutcomes()">Bekijk aandachtspunten →</button>
-            </div>
+              <button class="card-link" type="button" onclick="showAttentionOutcomes()">Bekijk leeruitkomst <span aria-hidden="true">→</span></button>
+            </article>
           </div>
-          <div class="card dashboard-summary">
-            <div>
-              <h2>Bekijk je voortgang per leeruitkomst</h2>
-              <p>Op de pagina Leeruitkomsten zie je per vaardigheid je percentage en uren.</p>
-              <p class="small dim">Laatst verwerkt: 12 september 2026, 09:30 (demo).</p>
-            </div>
-            <button class="button" onclick="show('learningOutcomes')">Naar leeruitkomsten ↗</button>
+
+          {{-- Deze onderdelen kan de student via Instellingen tonen of verbergen. --}}
+          <div class="dashboard-widget-grid">
+            <section class="dashboard-panel dashboard-widget" data-dashboard-widget="outcomes">
+              <div class="dashboard-panel-head">
+                <div class="dashboard-panel-title">
+                  <span class="panel-icon" data-icon="outcomes" aria-hidden="true"></span>
+                  <h2>Voortgang per leeruitkomst</h2>
+                </div>
+                <button class="card-link" type="button" onclick="show('learningOutcomes')">Alle leeruitkomsten →</button>
+              </div>
+              <div id="dashboardOutcomeProgress" class="dashboard-outcome-list"></div>
+            </section>
+
+            <section class="dashboard-panel dashboard-widget" data-dashboard-widget="actions">
+              <div class="dashboard-panel-head">
+                <div class="dashboard-panel-title">
+                  <span class="panel-icon" data-icon="list" aria-hidden="true"></span>
+                  <h2>Eerstvolgende acties</h2>
+                </div>
+                <button class="card-link" type="button" onclick="show('assignments')">Alle opdrachten →</button>
+              </div>
+              <div id="dashboardActionList" class="dashboard-action-list"></div>
+            </section>
+
+            <section class="dashboard-panel dashboard-widget" data-dashboard-widget="feedback">
+              <div class="dashboard-panel-head">
+                <div class="dashboard-panel-title">
+                  <span class="panel-icon panel-icon-green" data-icon="feedback" aria-hidden="true"></span>
+                  <h2>Recente feedback</h2>
+                </div>
+                <button class="card-link" type="button" onclick="show('feedback')">Alle feedback →</button>
+              </div>
+              <blockquote class="dashboard-feedback-quote">“Je hebt een mooie start gemaakt. Onderbouw je keuzes bij de volgende stap nog iets duidelijker.”</blockquote>
+              <p class="dashboard-feedback-author"><strong>Mevrouw Jansen</strong><span>Docent · 10 september 2026</span></p>
+            </section>
+
+            <section class="dashboard-panel dashboard-widget" data-dashboard-widget="deadlines">
+              <div class="dashboard-panel-head">
+                <div class="dashboard-panel-title">
+                  <span class="panel-icon panel-icon-orange" data-icon="calendar" aria-hidden="true"></span>
+                  <h2>Aankomende deadlines</h2>
+                </div>
+                <button class="card-link" type="button" onclick="show('assignments')">Bekijk opdrachten →</button>
+              </div>
+              <div id="dashboardDeadlineList" class="dashboard-deadline-list"></div>
+            </section>
           </div>
+
           <div id="hoursApprovalModal" class="card hours-approval-modal hidden" role="dialog" aria-modal="true" aria-labelledby="hoursApprovalTitle">
             <div class="approval-modal-head">
               <div>
@@ -90,12 +138,62 @@
               </article>
             </div>
             <div class="approval-modal-footer">
-              <span class="small dim">Deze gegevens zijn onderdeel van de mock-up.</span>
+              <span class="small dim">Deze gegevens zijn demogegevens.</span>
               <div class="approval-footer-actions">
                 <button id="markProcessingReadButton" class="button" type="button" onclick="markHoursProcessingRead()">✓ Markeer als gelezen</button
                 ><button class="button dark" type="button" onclick="closeHoursApprovalModal();show('hours')">Volledig urenoverzicht →</button>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section id="dashboardSettings" class="view hidden dashboard-settings-page">
+          <div class="settings-page-head">
+            <button class="back-link" type="button" onclick="show('studentDashboard')">← Terug naar dashboard</button>
+            <p class="eyebrow">PERSOONLIJKE VOORKEUREN</p>
+            <h1>Dashboard instellen</h1>
+            <p class="dim">Kies zelf hoeveel informatie je op het dashboard wilt zien. Deze voorkeuren worden alleen voor jouw account bewaard.</p>
+          </div>
+
+          <div class="settings-layout">
+            <section class="card settings-card">
+              <div class="settings-card-head">
+                <span class="settings-card-icon" data-icon="layout" aria-hidden="true"></span>
+                <div>
+                  <h2>Weergave</h2>
+                  <p>Maak de onderdelen compacter als je meer rust op het scherm wilt.</p>
+                </div>
+              </div>
+              <label class="settings-option">
+                <span><strong>Compacte weergave</strong><small>Minder witruimte en lagere dashboardkaarten.</small></span>
+                <input id="settingCompact" type="checkbox" onchange="updateDashboardPreference('compact', this.checked)">
+              </label>
+              <label class="settings-option">
+                <span><strong>Donkere modus</strong><small>Gebruikt donkere kleuren met een rustig contrast.</small></span>
+                <input id="settingDarkMode" type="checkbox" onchange="updateDashboardPreference('darkMode', this.checked)">
+              </label>
+            </section>
+
+            <section class="card settings-card">
+              <div class="settings-card-head">
+                <span class="settings-card-icon" data-icon="eye" aria-hidden="true"></span>
+                <div>
+                  <h2>Zichtbare onderdelen</h2>
+                  <p>Zet onderdelen uit die je niet iedere dag nodig hebt.</p>
+                </div>
+              </div>
+              <div class="settings-options">
+                <label class="settings-option"><span><strong>Voortgang per leeruitkomst</strong><small>Toont de vier belangrijkste leeruitkomsten.</small></span><input id="settingOutcomes" type="checkbox" onchange="updateDashboardPreference('outcomes', this.checked)"></label>
+                <label class="settings-option"><span><strong>Eerstvolgende acties</strong><small>Toont je opdrachten en vervolgstappen.</small></span><input id="settingActions" type="checkbox" onchange="updateDashboardPreference('actions', this.checked)"></label>
+                <label class="settings-option"><span><strong>Recente feedback</strong><small>Toont het laatste feedbackmoment.</small></span><input id="settingFeedback" type="checkbox" onchange="updateDashboardPreference('feedback', this.checked)"></label>
+                <label class="settings-option"><span><strong>Aankomende deadlines</strong><small>Toont de eerstvolgende inleverdatums.</small></span><input id="settingDeadlines" type="checkbox" onchange="updateDashboardPreference('deadlines', this.checked)"></label>
+              </div>
+            </section>
+          </div>
+
+          <div class="settings-footer">
+            <span id="dashboardSettingsSaved" class="settings-saved" role="status">Je voorkeuren zijn opgeslagen.</span>
+            <button class="button" type="button" onclick="resetDashboardPreferences()">Standaardinstellingen herstellen</button>
           </div>
         </section>
 
@@ -152,7 +250,7 @@
           <div id="catalogList" class="catalog-grid"></div>
         </section>
         <section id="outcomeDetail" class="view hidden">
-          <button class="mutedlink" onclick="show('learningOutcomes')">← Terug naar leeruitkomsten</button>
+          <button id="outcomeBackButton" class="mutedlink" type="button" onclick="backFromOutcome()">← Terug naar leeruitkomsten</button>
           <div class="head">
             <div>
               <p class="eyebrow" id="outcomeMeta"></p>
@@ -265,6 +363,89 @@
             </div>
           </div>
         </section>
+
+        {{-- Opdrachtenoverzicht met de leeruitkomsten die per opdracht worden ontwikkeld. --}}
+        <section id="assignments" class="view hidden">
+          <div class="head">
+            <div>
+              <p class="eyebrow">JOUW WERK EN BEWIJSSTUKKEN</p>
+              <h1>Opdrachten</h1>
+              <p class="dim">Bekijk waar je aan werkt en welke leeruitkomsten bij iedere opdracht horen.</p>
+            </div>
+            <span class="pill" id="assignmentTotal">0 OPDRACHTEN</span>
+          </div>
+
+          <div class="assignment-summary">
+            <div class="assignment-summary-item active">
+              <span>Actief</span><strong id="assignmentActiveCount">0</strong><small>opdrachten in uitvoering</small>
+            </div>
+            <div class="assignment-summary-item review">
+              <span>Beoordeling</span><strong id="assignmentReviewCount">0</strong><small>wacht op beoordeling</small>
+            </div>
+            <div class="assignment-summary-item completed">
+              <span>Afgerond</span><strong id="assignmentCompletedCount">0</strong><small>opdrachten voltooid</small>
+            </div>
+          </div>
+
+          <div class="assignment-toolbar">
+            <label class="label assignment-search"
+              >Zoeken<input id="assignmentSearch" class="input" type="search" placeholder="Zoek op opdracht of leeruitkomst…" oninput="renderAssignments()" />
+            </label>
+            <label class="label"
+              >Status<select id="assignmentStatus" class="input" onchange="renderAssignments()">
+                <option value="active">Actief</option>
+                <option value="review">Beoordeling</option>
+                <option value="completed">Afgerond</option>
+              </select>
+            </label>
+          </div>
+
+          <p id="assignmentCount" class="small dim" role="status"></p>
+          <div id="assignmentList" class="assignment-list"></div>
+        </section>
+
+        {{-- Detailpagina van één opdracht; de inhoud wordt vanuit student.js ingevuld. --}}
+        <section id="assignmentDetail" class="view hidden">
+          <button class="mutedlink" type="button" onclick="show('assignments')">← Terug naar opdrachten</button>
+          <div class="head assignment-detail-head">
+            <div>
+              <p class="eyebrow" id="assignmentDetailType"></p>
+              <h1 id="assignmentDetailTitle"></h1>
+              <p class="dim" id="assignmentDetailIntro"></p>
+            </div>
+            <span class="assignment-status" id="assignmentDetailStatus"></span>
+          </div>
+          <div class="assignment-detail-grid">
+            <article class="card assignment-detail-main">
+              <h2>Over deze opdracht</h2>
+              <p id="assignmentDetailDescription"></p>
+              <div class="assignment-detail-information">
+                <div><span>Fase</span><b id="assignmentDetailPhase"></b></div>
+                <div><span>Inleverdatum</span><b id="assignmentDetailDueDate"></b></div>
+                <div><span>Gevalideerde uren</span><b id="assignmentDetailHours"></b></div>
+              </div>
+              <div class="assignment-submit-panel">
+                <div>
+                  <h3>Opdracht gereed?</h3>
+                  <p id="assignmentSubmissionNote">Lever je opdracht in wanneer alle onderdelen klaar zijn.</p>
+                </div>
+                <button id="assignmentSubmitButton" class="button dark" type="button" onclick="submitAssignment()">Opdracht inleveren</button>
+              </div>
+            </article>
+            <aside class="card assignment-detail-outcomes">
+              <div class="assignment-outcomes-head">
+                <div>
+                  <p class="eyebrow">ONTWIKKELING</p>
+                  <h2>Gekoppelde leeruitkomsten</h2>
+                </div>
+                <span id="assignmentDetailOutcomeCount">0</span>
+              </div>
+              <p class="small dim">Klik op een leeruitkomst om de volledige beschrijving en voortgang te bekijken.</p>
+              <div id="assignmentDetailOutcomeList"></div>
+            </aside>
+          </div>
+        </section>
+
         <section id="hours" class="view hidden">
           <div class="head">
             <div>
@@ -370,13 +551,13 @@
           <div class="notice">De naam van de leeruitkomst staat steeds voorop; de officiële code staat eronder ter herkenning.</div>
           <div class="grid2 goal-layout">
             <div class="card active-goal">
-              <span class="goal-status">ACTIEF LEERDOEL · DEMO</span>
-              <h2>Technische keuzes zelfstandig uitleggen</h2>
-              <p>Ik wil na een installatie duidelijk kunnen toelichten welke keuzes ik heb gemaakt en waarom.</p>
+              <span id="activeGoalStatus" class="goal-status">ACTIEF LEERDOEL</span>
+              <h2 id="activeGoalTitle">Nog geen actief leerdoel</h2>
+              <p id="activeGoalDescription">Maak hiernaast een leerdoel aan en koppel het aan een leeruitkomst.</p>
               <div class="linked-outcome">
                 <span class="small dim">Gekoppelde leeruitkomst</span>
-                <strong>Eenvoudige vakgerichte taken uitvoeren</strong>
-                <span class="code">IT_OF_LU_Hardskills_001</span>
+                <strong id="activeGoalOutcome">Nog niet gekoppeld</strong>
+                <span id="activeGoalCode" class="code">—</span>
               </div>
               <div class="goal-meta">
                 <span>
@@ -412,7 +593,8 @@
               <select class="hidden" id="goalCodes" aria-hidden="true" tabindex="-1"></select>
               <div id="goalOutcomeChoices" class="goal-outcome-choices" role="listbox" aria-label="Beschikbare leeruitkomsten"></div>
               <div id="goalOutcomePreview" class="goal-preview"></div>
-              <button class="button dark" onclick="hint('Leerdoel opslaan is in deze mock-up nog niet gekoppeld.')">Leerdoel bewaren</button>
+              <p id="goalMessage" class="form-message" aria-live="polite"></p>
+              <button class="button dark" type="button" onclick="saveGoal()">Leerdoel bewaren</button>
             </div>
           </div>
         </section>
@@ -494,7 +676,7 @@
               </div>
               <div id="reflectionMessage" class="form-message hidden" role="status"></div>
               <button class="button dark" type="submit">Reflectie bewaren</button>
-              <p class="privacy-note">Deze mock-up bewaart je reflectie alleen in deze browser.</p>
+              <p class="privacy-note">Je reflectie wordt voorlopig alleen in deze browser bewaard.</p>
             </form>
           </div>
         </section>
@@ -577,7 +759,7 @@
             </div>
             <div id="feedbackMessage" class="form-message hidden" role="status"></div>
             <button class="button dark" type="submit">Feedback bewaren</button>
-            <p class="privacy-note">Deze mock-up bewaart feedback alleen in deze browser.</p>
+            <p class="privacy-note">Feedback wordt voorlopig alleen in deze browser bewaard.</p>
           </form>
         </section>
 

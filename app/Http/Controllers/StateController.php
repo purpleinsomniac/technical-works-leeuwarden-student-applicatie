@@ -17,18 +17,13 @@ class StateController extends Controller
         ]);
 
         $allowedKeys = [
-            'ontwikkeling-reflecties',
-            'ontwikkeling-feedback',
             'archived-learning-outcomes',
             'hours-processing-read',
+            'ontwikkeling-dashboard-instellingen',
         ];
         $data = array_intersect_key($payload['data'], array_flip($allowedKeys));
 
-        $collectionKeys = [
-            'ontwikkeling-reflecties',
-            'ontwikkeling-feedback',
-            'archived-learning-outcomes',
-        ];
+        $collectionKeys = ['archived-learning-outcomes'];
 
         foreach ($collectionKeys as $key) {
             if (isset($data[$key]) && (! is_array($data[$key]) || count($data[$key]) > 250)) {
@@ -38,20 +33,23 @@ class StateController extends Controller
             }
         }
 
-        $outcomes = json_decode(file_get_contents(base_path('database/outcomes.json')), true);
-        $validCodes = array_column($outcomes, 'code');
+        if (isset($data['ontwikkeling-dashboard-instellingen'])) {
+            $instellingen = $data['ontwikkeling-dashboard-instellingen'];
+            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'actions', 'feedback', 'deadlines'];
 
-        foreach (['ontwikkeling-reflecties', 'ontwikkeling-feedback'] as $key) {
-            foreach ($data[$key] ?? [] as $item) {
-                $hasValidCode = is_array($item)
-                    && isset($item['code'])
-                    && in_array($item['code'], $validCodes, true);
+            if (! is_array($instellingen) || array_diff(array_keys($instellingen), $toegestaneInstellingen)) {
+                throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstellingen.']);
+            }
 
-                if (! $hasValidCode) {
-                    throw ValidationException::withMessages(['data' => 'Ongeldige leeruitkomst.']);
+            foreach ($instellingen as $waarde) {
+                if (! is_bool($waarde)) {
+                    throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstelling.']);
                 }
             }
         }
+
+        $outcomes = json_decode(file_get_contents(base_path('database/outcomes.json')), true);
+        $validCodes = array_column($outcomes, 'code');
 
         foreach ($data['archived-learning-outcomes'] ?? [] as $code) {
             if (! in_array($code, $validCodes, true)) {

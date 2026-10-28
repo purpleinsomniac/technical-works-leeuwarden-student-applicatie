@@ -9,9 +9,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
+        // Retrieve the currently authenticated user and eagerly load the app state.
         $user = $request->user();
         $user?->loadMissing('appState');
 
+        // Map the user's role to the corresponding Blade view.
         $roleView = match ($user?->rol) {
             'student' => 'roles.student',
             'coach' => 'roles.coach',
@@ -20,6 +22,7 @@ class DashboardController extends Controller
             default => null,
         };
 
+        // Load the role-specific frontend assets for the dashboard shell.
         $roleAssets = match ($user?->rol) {
             'student' => [
                 'style' => 'css/roles/student.css',
@@ -43,6 +46,7 @@ class DashboardController extends Controller
             ],
         };
 
+        // Pass the resolved role, user data, and app state to the shared app template.
         return view('app', [
             'user' => $user,
             'roleView' => $roleView,

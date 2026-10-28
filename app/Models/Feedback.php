@@ -15,6 +15,7 @@ class Feedback extends Model
         'opdracht_id',
         'leeruitkomst_id',
         'type',
+        'persoon',
         'onderwerp',
         'wat_ging_goed',
         'wat_kan_beter',

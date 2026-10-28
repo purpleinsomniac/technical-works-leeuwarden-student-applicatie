@@ -11,7 +11,7 @@ class Assignment extends Model
 {
     protected $table = 'opdrachten';
 
-    protected $fillable = ['gebruiker_id', 'onderwerp', 'omschrijving', 'gevalideerde_uren', 'inleverdatum', 'status'];
+    protected $fillable = ['gebruiker_id', 'onderwerp', 'type', 'omschrijving', 'gevalideerde_uren', 'inleverdatum', 'status'];
 
     protected function casts(): array
     {

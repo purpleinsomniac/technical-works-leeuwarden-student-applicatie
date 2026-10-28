@@ -1,3 +1,35 @@
+/**
+ * Studentomgeving
+ *
+ * Dit bestand bevat alleen onderdelen die specifiek zijn voor de student.
+ * Algemene onderdelen, zoals knoppen, kaarten en navigatie, staan in common.css.
+ *
+ * Indeling:
+ * 01. Basis en leeruitkomstencatalogus
+ * 02. Eerste responsive aanpassingen
+ * 03. Reflectieoverzicht
+ * 04. Voortgang op het dashboard
+ * 05. Leerdoelen, uren en leeruitkomstdetails
+ * 06. Begeleid reflectieformulier
+ * 07. Reflectievenster
+ * 08. Compacte reflectiekaarten
+ * 09. Studentdashboard en filters
+ * 10. Feedbackpagina
+ * 11. Opdrachten en gekoppelde leeruitkomsten
+ * 12. Urenverdeling en urenvensters
+ * 13. Algemene visuele afwerking
+ * 14. Historie bij een leeruitkomst
+ * 15. Detailvensters voor reflectie en feedback
+ * 16. Dashboardactiviteit en notificaties
+ * 17. Jaaroverzicht en urenregistraties
+ * 18. Archiveren van leeruitkomsten
+ * 19. Tijdelijke bevestigingsmelding
+ */
+
+/* ================================================================
+   01. Basis en leeruitkomstencatalogus
+   Zorgt voor de cataloguskaarten, filters en detailweergave.
+   ================================================================ */
 #outcomes { display: grid; gap: 0; }
 #outcomes .card:nth-child(2) .bar span { background: #8a7bcc; }
 #outcomes h2 .small { float: right; font-weight: 400; }
@@ -8,15 +40,15 @@
 .catalog-intro h2 { margin: 0 0 5px; }
 .catalog-intro p { color: #526f6d; margin: 0; }
 .catalog-symbol { font-size: 40px; color: #168479; line-height: 1.3; }
-.catalog-filter { gap: 17px; margin: 24px 0 15px; }
+.catalog-filter { display: grid; grid-template-columns: minmax(220px, 1fr) 190px 220px; gap: 17px; margin: 24px 0 15px; padding: 14px 16px; border: 1px solid #e0e8ef; border-radius: 12px; background: #fff; }
 .catalog-filter .input { margin: 7px 0 0; }
 .search-label { flex: 1; }
 .catalog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 16px; }
-.catalog-card { position: relative; text-align: left; border: 1px solid #dee6ee; border-radius: 14px; background: #fff; padding: 25px; display: flex; flex-direction: column; align-items: start; }
+.catalog-card { position: relative; display: flex; min-height: 390px; flex-direction: column; align-items: start; padding: 25px; border: 1px solid #dee6ee; border-radius: 14px; background: #fff; text-align: left; }
 .catalog-card:hover { border-color: #73b8a9; box-shadow: 0 8px 22px #2349380b; transform: translateY(-2px); }
 .skill-tag { font-size: 10px; font-weight: 650; background: #e6f4f0; color: #16756b; border-radius: 5px; padding: 4px 9px; margin-bottom: 20px; }
 .skill-tag.soft { background: #f0ecfb; color: #735da5; }
-.catalog-card h2 { margin-bottom: 10px; }
+.catalog-card h2 { margin-bottom: 5px; }
 .catalog-card p { color: #65788a; font-size: 13px; margin-bottom: 20px; }
 .catalog-card .code { margin-top: auto; }
 .catalog-arrow { position: absolute; right: 24px; top: 24px; color: #7d93a3; font-size: 20px; }
@@ -24,14 +56,21 @@
 .detail-card h2 { margin-top: 25px; }
 .detail-card p { font-size: 18px; line-height: 1.85; }
 .mutedlink { color: #127c70; }
+
+/* Kleine student-specifieke aanpassingen aan algemene onderdelen. */
 .login .intro { background: #122b3d; color: white; }
 .login .intro h1 { color: white; margin: 40px 0 20px; }
 .login .intro .dim { color: #aac3d3; }
-.printlabel { color: #8293a4; font-size: 10px; }
+.printlabel { padding-top: 15px; border-top: 1px solid #dfe7ed; color: #8293a4; font-size: 10px; }
 .simple,
 .kv { border-color: #e7edf3; }
 .timeline { border-color: #86bcb0; }
 .warning { background: #fff6e5; border-color: #efdbb6; }
+
+/* ================================================================
+   02. Eerste responsive aanpassingen
+   Past de algemene lay-out aan voor desktop, tablet en telefoon.
+   ================================================================ */
 @media (min-width: 1550px) {
   .main { max-width: 1390px; }
 }
@@ -65,21 +104,24 @@
   .tab { font-size: 12px; }
   .row { grid-template-columns: 1fr 55px; }
   .row > .code { grid-column: 1/-1; }
-  .catalog-filter { align-items: stretch; }
+  .catalog-filter { align-items: stretch; padding: 12px; }
   .catalog-filter label { min-width: 0; width: 100%; flex: auto; }
   .catalog-intro { padding: 20px; }
   .simple { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 1fr; gap: 5px; }
 }
 
-/* Reflectie-ervaring */
+/* ================================================================
+   03. Reflectieoverzicht
+   Verdeelt de opgeslagen reflecties en het formulier over twee kolommen.
+   ================================================================ */
 .reflection-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr); gap: 28px; align-items: start; }
 .reflection-list { display: grid; gap: 14px; }
 .reflection-list .card { margin: 0; }
 .reflection-card { border-left: 4px solid #66c9b7; }
 .reflection-card-head { display: flex; justify-content: space-between; gap: 20px; align-items: start; }
 .reflection-card h2 { margin: 4px 0 14px; }
-.reflection-date { color: #718497; font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; }
+.reflection-date { color: #718497; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; text-transform: uppercase; letter-spacing: 0.7px; }
 .reflection-card p { white-space: pre-wrap; color: #42576b; line-height: 1.75; }
 .reflection-form { position: sticky; top: 24px; margin: 0; padding: 28px; }
 .reflection-form .button { width: 100%; margin-top: 4px; }
@@ -96,10 +138,9 @@
   .reflection-card-head { align-items: start; }
 }
 
-/* Voortgang op de juiste plek */
-.dashboard-summary { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 24px; background: linear-gradient(135deg, #fff 0%, #f1f8f6 100%); }
-.dashboard-summary p:last-child { margin-bottom: 0; }
-.dashboard-summary .button { flex: none; }
+/* ================================================================
+   04. Voortgang bij leeruitkomsten
+   ================================================================ */
 .outcome-progress { width: 100%; margin: 4px 0 20px; padding-top: 16px; border-top: 1px solid #edf1f5; }
 .outcome-progress-label { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; font-size: 12px; color: #607487; }
 .outcome-progress-label b { color: #1c4c51; }
@@ -107,14 +148,11 @@
 .outcome-hours { font-size: 10px; color: #75889a; }
 .catalog-card:has(.skill-tag.soft) .outcome-progress .bar span { background: #8a7bcc; }
 .catalog-card .catalog-code { margin: 0 0 16px; color: #557086; background: #f1f5f8; border-radius: 5px; padding: 4px 7px; }
-.catalog-card h2 { margin-bottom: 5px; }
 .catalog-card .catalog-code + p { margin-top: 0; }
-@media (max-width: 760px) {
-  .dashboard-summary { align-items: flex-start; flex-direction: column; }
-  .dashboard-summary .button { width: 100%; }
-}
-
-/* Leerdoelen, uren en uitgebreide leeruitkomsten */
+/* ================================================================
+   05. Leerdoelen, uren en leeruitkomstdetails
+   Stijlen voor doelen kiezen, uren bekijken en één leeruitkomst openen.
+   ================================================================ */
 .goal-layout { align-items: start; }
 .active-goal { border-top: 4px solid #279b89; }
 .goal-status { display: inline-block; color: #16756b; background: #e6f4f0; border-radius: 5px; padding: 5px 9px; font-size: 10px; font-weight: 750; letter-spacing: 0.7px; margin-bottom: 17px; }
@@ -126,12 +164,11 @@
 .goal-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; border-top: 1px solid #e8eef2; padding-top: 17px; font-size: 12px; color: #5e7284; }
 .goal-form textarea { min-height: 115px; }
 .goal-form .button { width: 100%; }
-.goal-preview { margin-top: 0; }
 .goal-preview p { font-size: 11px; color: #677b8d; margin: 5px 0 0; line-height: 1.55; }
 .goal-outcome-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 15px; margin-top: 18px; }
 .goal-outcome-heading .label { margin: 0; }
 .goal-choice-count { flex: none; border-radius: 99px; background: #edf3f6; color: #587081; padding: 5px 9px; font-size: 9px; font-weight: 750; }
-.goal-outcome-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.goal-outcome-filters { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 10px 0; }
 .goal-outcome-filters .label { margin: 0; }
 .goal-outcome-filters .input { margin-top: 5px; }
 .goal-outcome-choices { display: grid; gap: 7px; max-height: 270px; overflow-y: auto; padding-right: 3px; scrollbar-width: thin; }
@@ -158,7 +195,7 @@
 .hours-total p { margin: 5px 0 0; }
 .hours-progress .bar { height: 12px; }
 .hours-scale { display: flex; justify-content: space-between; gap: 12px; margin-top: 9px; color: #718397; font-size: 11px; }
-.hours-scale b { color: #236b63; }
+.hours-scale b { padding: 4px 10px; border-radius: 99px; background: #e5f4ef; color: #176f65; font-size: 10px; }
 .hours-phases { margin-bottom: 22px; }
 .hours-phases .card { background: #fff !important; }
 .outcome-detail-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.65fr); gap: 24px; align-items: start; }
@@ -166,7 +203,7 @@
 .detail-section { border-top: 1px solid #e5ecf1; margin-top: 26px; padding-top: 24px; }
 .detail-section p { font-size: 14px; }
 .evidence-list { padding-left: 20px; color: #4e6374; line-height: 1.9; }
-.outcome-detail-stats { position: sticky; top: 24px; margin: 0; }
+.outcome-detail-stats { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; margin: 0; scrollbar-width: thin; }
 .outcome-detail-stats > .bar { margin: 12px 0 22px; }
 .detail-stat { display: flex; justify-content: space-between; gap: 15px; border-top: 1px solid #e7edf2; padding: 14px 0; font-size: 12px; }
 .detail-stat span { color: #708295; }
@@ -175,7 +212,7 @@
 @media (max-width: 900px) {
   .hours-overview,
   .outcome-detail-grid { grid-template-columns: 1fr; }
-  .outcome-detail-stats { position: static; }
+  .outcome-detail-stats { position: static; max-height: none; overflow: visible; }
   .hours-overview { gap: 20px; }
 }
 @media (max-width: 600px) {
@@ -184,8 +221,10 @@
   .hours-scale b { order: 3; width: 100%; }
 }
 
-/* Begeleide reflectie */
-#reflections .reflection-layout { grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr); }
+/* ================================================================
+   06. Begeleid reflectieformulier
+   Maakt van de reflectievragen een duidelijk formulier in stappen.
+   ================================================================ */
 #reflections .reflection-form { position: static; }
 .form-heading { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 22px; }
 .step-number { display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 50%; background: #1b8b7d; color: #fff; font-weight: 750; }
@@ -211,16 +250,20 @@
   .reflection-card-head > div { min-width: 0; }
 }
 
-/* Reflectieformulier als venster */
+/* ================================================================
+   07. Reflectievenster
+   Plaatst het reflectieformulier als modal boven de huidige pagina.
+   ================================================================ */
 #reflections .reflection-layout { grid-template-columns: minmax(0, 900px); justify-content: center; }
-.reflection-head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
-.reflection-modal {
+.reflection-head-actions,
+.feedback-head-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.reflection-modal,
+.feedback-modal {
   position: fixed !important;
   z-index: 1000;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(720px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   margin: 0 !important;
@@ -229,23 +272,23 @@
   box-shadow:
     0 0 0 100vmax rgba(8, 27, 39, 0.58),
     0 24px 70px rgba(8, 27, 39, 0.3);
-  border-color: #d8e4eb;
 }
+.reflection-modal { width: min(720px, calc(100vw - 32px)); border-color: #d8e4eb; }
 .modal-open { overflow: hidden; }
-.reflection-modal .form-heading { position: sticky; top: -30px; z-index: 2; background: #fff; padding: 2px 0 16px; border-bottom: 1px solid #e5ebef; }
+.reflection-modal .form-heading,
+.feedback-modal .form-heading { position: sticky; z-index: 2; top: -30px; padding: 2px 0 16px; border-bottom: 1px solid #e5ebef; background: #fff; }
 .modal-close { margin-left: auto; border: 0; background: #edf3f5; color: #294855; width: 34px; height: 34px; border-radius: 50%; font-size: 24px; line-height: 1; }
 .modal-close:hover { background: #dfe9ed; }
 .reflection-modal .reflection-questions textarea { min-height: 74px; }
 .reflection-modal .privacy-note { padding-bottom: 2px; }
 @media (max-width: 680px) {
-  .reflection-head-actions { justify-content: flex-start; margin-top: 16px; }
-  .reflection-head-actions .button { width: 100%; }
-  .reflection-modal { width: calc(100vw - 20px); max-height: calc(100vh - 20px); padding: 22px !important; }
-  .reflection-modal .form-heading { top: -22px; }
   .reflection-modal .step-number { display: none; }
 }
 
-/* Compact en herkenbaar reflectieoverzicht */
+/* ================================================================
+   08. Compacte reflectiekaarten
+   Gebruikt uitklapbare kaarten zodat lange reflecties overzichtelijk blijven.
+   ================================================================ */
 #reflectionList { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 .reflection-accordion { background: #fff; border: 1px solid #dfe8ee; border-left: 4px solid #55b5a5; border-radius: 13px; overflow: hidden; box-shadow: 0 3px 12px rgba(22, 51, 74, 0.04); }
 .reflection-accordion summary { list-style: none; display: flex; align-items: center; gap: 16px; padding: 20px; cursor: pointer; }
@@ -273,7 +316,10 @@
   .reflection-accordion[open] { grid-column: auto; }
 }
 
-/* Studentgericht dashboard en reflecties per fase */
+/* ================================================================
+   09. Studentdashboard en filters
+   Vormgeving voor dashboardkaarten, urenmelding en fasefilters.
+   ================================================================ */
 .dashboard-card-title { font-size: 19px; line-height: 1.35; margin: 17px 0 7px; color: #193b48; }
 .card-link { border: 0; background: transparent; color: #177e72; font-size: 11px; font-weight: 700; padding: 14px 0 0; text-align: left; }
 .card-link:hover { text-decoration: underline; }
@@ -296,15 +342,21 @@
   .reflection-filter-button { flex: none; }
 }
 
-/* Professionele feedbackpagina */
-.feedback-head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+/* ================================================================
+   10. Feedbackpagina
+   Bevat de introductie, filters, feedbackkaarten en het feedbackvenster.
+   ================================================================ */
 .feedback-intro { display: flex; align-items: center; gap: 18px; background: linear-gradient(135deg, #eef1fc, #f7f4ff); border: 1px solid #e0e3f4; border-radius: 14px; padding: 22px 24px; margin: 20px 0 24px; }
 .feedback-intro-icon { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border-radius: 12px; background: #8170c6; color: #fff; font-size: 25px; }
 .feedback-intro h2 { margin: 0 0 3px; }
 .feedback-intro p { margin: 0; color: #68728b; }
+
+/* Filtert de feedback op het gekozen type. */
 .feedback-toolbar { display: flex; justify-content: space-between; gap: 20px; align-items: start; margin-bottom: 18px; }
 .feedback-type-filter { font-size: 11px; font-weight: 700; color: #5c7082; min-width: 180px; }
 .feedback-type-filter .input { margin: 5px 0 0; padding: 8px 10px; }
+
+/* Uitklapbare kaarten met ontvangen en gegeven feedback. */
 .feedback-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .feedback-accordion { background: #fff; border: 1px solid #dfe6ed; border-left: 4px solid #8170c6; border-radius: 13px; overflow: hidden; box-shadow: 0 3px 12px rgba(22, 51, 74, 0.04); }
 .feedback-accordion summary { list-style: none; display: flex; gap: 16px; align-items: center; padding: 21px; cursor: pointer; }
@@ -335,23 +387,9 @@
 .feedback-accordion[open] { grid-column: span 2; }
 .feedback-accordion[open] .accordion-toggle { transform: rotate(180deg); }
 .feedback-accordion[open] summary { background: #faf9fe; }
-.feedback-modal {
-  position: fixed !important;
-  z-index: 1000;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(760px, calc(100vw - 32px));
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  margin: 0 !important;
-  padding: 30px !important;
-  background: #fff;
-  box-shadow:
-    0 0 0 100vmax rgba(8, 27, 39, 0.58),
-    0 24px 70px rgba(8, 27, 39, 0.3);
-}
-.feedback-modal .form-heading { position: sticky; top: -30px; z-index: 2; background: #fff; padding: 2px 0 16px; border-bottom: 1px solid #e5ebef; }
+
+/* Modal waarin de student nieuwe feedback kan invoeren. */
+.feedback-modal { width: min(760px, calc(100vw - 32px)); }
 .feedback-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .feedback-form-grid .input { margin-bottom: 12px; }
 .feedback-questions { border-top: 1px solid #e5eaf0; padding-top: 20px; }
@@ -363,17 +401,106 @@
   .feedback-points { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
+  .reflection-head-actions,
   .feedback-head-actions { justify-content: flex-start; margin-top: 16px; }
+  .reflection-head-actions .button,
   .feedback-head-actions .button { width: 100%; }
   .feedback-toolbar { display: block; }
   .feedback-type-filter { display: block; margin-bottom: 15px; }
   .feedback-intro { align-items: flex-start; }
   .feedback-form-grid { grid-template-columns: 1fr; }
+  .reflection-modal,
   .feedback-modal { width: calc(100vw - 20px); max-height: calc(100vh - 20px); padding: 22px !important; }
+  .reflection-modal .form-heading,
   .feedback-modal .form-heading { top: -22px; }
 }
 
-/* Verdeling van uren */
+/* ================================================================
+   11. Opdrachten en gekoppelde leeruitkomsten
+   Toont opdrachtinformatie en maakt de relatie met leeruitkomsten zichtbaar.
+   ================================================================ */
+.assignment-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 22px 0; }
+.assignment-summary-item { display: flex; flex-direction: column; padding: 18px; border: 1px solid #dfe7ed; border-top: 4px solid #78909d; border-radius: 12px; background: #fff; }
+.assignment-summary-item.active { border-top-color: #279b89; }
+.assignment-summary-item.review { border-top-color: #d3a14b; }
+.assignment-summary-item.completed { border-top-color: #8170c6; }
+.assignment-summary-item span { color: #687d8e; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.5px; }
+.assignment-summary-item strong { margin: 4px 0; color: #193d4a; font-size: 28px; }
+.assignment-summary-item small { color: #748797; }
+.assignment-toolbar { display: grid; grid-template-columns: minmax(260px, 1fr) 190px; gap: 14px; align-items: end; margin-bottom: 15px; padding: 14px 16px; border: 1px solid #e0e8ef; border-radius: 12px; background: #fff; }
+.assignment-toolbar .label { margin: 0; }
+.assignment-toolbar .input { margin: 5px 0 0; }
+.assignment-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 16px; }
+.assignment-list > .empty-state { grid-column: 1/-1; }
+.assignment-card { overflow: hidden; margin: 0; padding: 0; border-top: 4px solid #78909d; }
+.assignment-card.active { border-top-color: #279b89; }
+.assignment-card.review { border-top-color: #d3a14b; }
+.assignment-card.completed { border-top-color: #8170c6; }
+.assignment-card-open { display: block; width: 100%; padding: 24px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; }
+.assignment-card-open:hover { background: #fbfdfd; }
+.assignment-card-open:focus-visible { outline: 3px solid rgba(39, 155, 137, 0.25); outline-offset: -3px; }
+.assignment-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.assignment-card-head h2 { margin: 5px 0 0; color: #193d4a; }
+.assignment-type { color: #728596; font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.6px; }
+.assignment-status { flex: none; padding: 5px 9px; border-radius: 99px; background: #edf2f5; color: #5c7181; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.assignment-status.active { background: #e4f4ef; color: #197568; }
+.assignment-status.review { background: #fff3da; color: #8b651e; }
+.assignment-status.completed { background: #eeeafd; color: #6753a6; }
+.assignment-description { display: -webkit-box; min-height: 44px; overflow: hidden; color: #5b7081; font-size: 12px; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+.assignment-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px 0; border-top: 1px solid #e6edf1; border-bottom: 1px solid #e6edf1; }
+.assignment-meta.compact { grid-template-columns: repeat(2, 1fr); }
+.assignment-meta > div { display: flex; flex-direction: column; gap: 3px; }
+.assignment-meta span { color: #7a8c9a; font-size: 9px; text-transform: uppercase; }
+.assignment-meta b { color: #304b59; font-size: 11px; }
+.assignment-open-label { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; color: #1d7e72; font-size: 11px; font-weight: 750; }
+.assignment-outcomes { padding-top: 15px; border-top: 1px solid #e6edf1; }
+.assignment-outcomes-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+.assignment-outcomes-head h3 { margin: 0; color: #284956; font-size: 12px; }
+.assignment-outcomes-head > span { display: grid; place-items: center; min-width: 22px; height: 22px; border-radius: 99px; background: #e8f4f1; color: #23776c; font-size: 9px; font-weight: 800; }
+.assignment-outcome { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; margin-top: 7px; padding: 10px 11px; border: 1px solid #dfe8ed; border-radius: 9px; background: #f9fbfc; text-align: left; }
+.assignment-outcome:hover { border-color: #9dcfc4; background: #f0f8f5; }
+.assignment-outcome > span:first-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.assignment-outcome b { color: #2b4755; font-size: 11px; }
+.assignment-outcome .code { overflow: hidden; color: #687e8e; text-overflow: ellipsis; white-space: nowrap; }
+.assignment-outcome > span:last-child { flex: none; color: #238174; font-weight: 800; }
+.assignment-detail-head { margin-top: 20px; }
+.assignment-detail-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr); gap: 22px; align-items: start; }
+.assignment-detail-main,
+.assignment-detail-outcomes { margin: 0; }
+.assignment-detail-main > h2 { margin-bottom: 8px; }
+.assignment-detail-main > p { color: #526979; font-size: 14px; line-height: 1.8; }
+.assignment-detail-information { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 24px; }
+.assignment-detail-information > div { display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: 9px; background: #f3f7f8; }
+.assignment-detail-information span { color: #788b99; font-size: 9px; text-transform: uppercase; }
+.assignment-detail-information b { color: #2d4a57; font-size: 12px; }
+.assignment-submit-panel { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 22px; padding: 18px; border: 1px solid #cce4dd; border-radius: 10px; background: #eef8f5; }
+.assignment-submit-panel h3 { margin: 0 0 4px; color: #24544f; }
+.assignment-submit-panel p { margin: 0; color: #607a76; font-size: 11px; }
+.assignment-submit-panel .button { flex: none; }
+.assignment-detail-outcomes { position: sticky; top: 24px; }
+.assignment-detail-outcomes .assignment-outcomes-head { align-items: flex-start; }
+.assignment-detail-outcomes .assignment-outcomes-head h2 { margin: 3px 0 0; font-size: 18px; }
+.assignment-detail-outcomes > .dim { margin: 5px 0 14px; line-height: 1.6; }
+@media (max-width: 900px) {
+  .assignment-list { grid-template-columns: 1fr; }
+  .assignment-detail-grid { grid-template-columns: 1fr; }
+  .assignment-detail-outcomes { position: static; }
+}
+@media (max-width: 600px) {
+  .assignment-summary,
+  .assignment-toolbar,
+  .assignment-meta,
+  .assignment-detail-information { grid-template-columns: 1fr; }
+  .assignment-card-head { flex-direction: column; }
+  .assignment-card-open { padding: 20px; }
+  .assignment-submit-panel { align-items: stretch; flex-direction: column; }
+  .assignment-submit-panel .button { width: 100%; }
+}
+
+/* ================================================================
+   12. Urenverdeling en urenvensters
+   Visualiseert uren per fase en toont details van nieuwe uren.
+   ================================================================ */
 .hours-stacked-bar { display: flex; width: 100%; height: 34px; overflow: hidden; border-radius: 9px; background: #e9eef3; box-shadow: inset 0 0 0 1px rgba(30, 55, 70, 0.05); }
 .hours-segment { display: flex; align-items: center; justify-content: center; min-width: 0; transition: filter 0.18s; }
 .hours-segment:hover { filter: brightness(0.94); }
@@ -398,7 +525,7 @@
   .hours-legend { grid-template-columns: 1fr; }
 }
 
-/* Detailvenster voor nieuwe uren */
+/* Detailvenster met de uren die door een docent zijn verwerkt. */
 button.hours-notification {
   width: 100%;
   border: 0;
@@ -458,7 +585,10 @@ button.hours-notification:focus-visible { outline-color: #6bd4be; }
   .approval-modal-footer .button { width: 100%; }
 }
 
-/* Overzichtelijke totaalafwerking */
+/* ================================================================
+   13. Algemene visuele afwerking
+   Verfijnt breedtes, schaduwen, invoervelden en kaartdetails.
+   ================================================================ */
 body { background: #f3f6f9; }
 .main { max-width: 1420px; }
 .view { max-width: 1180px; margin: 0 auto; }
@@ -471,12 +601,9 @@ body { background: #f3f6f9; }
 .button:active { transform: translateY(1px); }
 .input:hover { border-color: #a9bcc9; }
 .input:focus { border-color: #1b8e80; box-shadow: 0 0 0 3px rgba(27, 142, 128, 0.1); outline: 0; }
-.catalog-filter { background: #fff; border: 1px solid #e0e8ef; border-radius: 12px; padding: 14px 16px; }
 .catalog-phase-label { display: inline-block; font-size: 9px; font-weight: 750; letter-spacing: 0.5px; text-transform: uppercase; color: #5b7182; background: #edf3f6; border-radius: 5px; padding: 5px 8px; margin-bottom: 17px; }
-.catalog-card { min-height: 390px; }
-.catalog-card > p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.catalog-card > p { display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .catalog-card .outcome-progress { margin-top: auto; }
-.printlabel { border-top: 1px solid #dfe7ed; padding-top: 15px; }
 .outcome-reflections { margin-top: 24px; padding: 26px; }
 .outcome-reflections-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 22px; padding-bottom: 18px; border-bottom: 1px solid #e4ebef; }
 .outcome-reflections-head h2 { margin: 2px 0 4px; }
@@ -489,7 +616,6 @@ body { background: #f3f6f9; }
 .outcome-reflection-item p { color: #617587; font-size: 12px; margin: 0; }
 .outcome-reflection-empty { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 0 4px; }
 .outcome-reflection-empty p { color: #6e8192; margin: 3px 0 0; }
-.reflection-date { font-variant-numeric: tabular-nums; }
 .side .nav { position: relative; }
 .side .nav.active:after { content: "›"; position: absolute; right: 14px; color: #8cf0db; }
 .simple { border-radius: 8px; }
@@ -504,11 +630,12 @@ body { background: #f3f6f9; }
   .outcome-reflection-item { grid-template-columns: 34px 1fr; }
   .outcome-reflection-item > .button { grid-column: 1/-1; width: 100%; }
   .catalog-card { min-height: 0; }
-  .catalog-filter { padding: 12px; }
 }
 
-/* Reflecties direct bij de leeruitkomst */
-.outcome-detail-stats { max-height: calc(100vh - 48px); overflow-y: auto; scrollbar-width: thin; }
+/* ================================================================
+   14. Historie bij een leeruitkomst
+   Toont compacte reflectie- en feedbackregels bij de gekozen leeruitkomst.
+   ================================================================ */
 .outcome-reflections-compact { border-top: 1px solid #e4ebef; margin-top: 20px; padding-top: 18px; }
 .compact-reflection-heading { display: flex; flex-direction: column; margin-bottom: 10px; }
 .compact-reflection-heading > span { font-size: 12px; font-weight: 750; color: #274554; }
@@ -532,13 +659,9 @@ body { background: #f3f6f9; }
 .outcome-reflection-empty.compact { display: block; padding: 12px; border: 1px dashed #cfdae1; border-radius: 9px; background: #fafcfd; }
 .outcome-reflection-empty.compact strong { font-size: 11px; }
 .outcome-reflection-empty.compact p { font-size: 10px; margin: 2px 0; }
-.hours-scale b { background: #e5f4ef; color: #176f65; border-radius: 99px; padding: 4px 10px; font-size: 10px; }
 .hours-scale span:last-child { font-weight: 700; color: #4f6575; }
-@media (max-width: 900px) {
-  .outcome-detail-stats { max-height: none; overflow: visible; }
-}
 
-/* Compacte reflectie- en feedbackhistorie per leeruitkomst */
+/* Feedback gebruikt hetzelfde compacte patroon als reflecties. */
 .outcome-reflection-list,
 .outcome-feedback-list { max-height: 220px; overflow-y: auto; padding-right: 3px; scrollbar-width: thin; scrollbar-color: #b9c9d1 transparent; }
 .outcome-feedback-compact { border-top: 1px solid #e4ebef; margin-top: 18px; padding-top: 18px; }
@@ -564,20 +687,22 @@ body { background: #f3f6f9; }
   .outcome-feedback-list { max-height: 280px; }
 }
 
-/* Reflectiedetails in een apart venster */
+/* ================================================================
+   15. Detailvensters voor reflectie en feedback
+   Opent volledige teksten in een leesbaar venster boven de pagina.
+   ================================================================ */
 .outcome-reflection-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 1px solid #dde7ec; border-radius: 9px; background: #f9fbfc; text-align: left; padding: 11px 12px; margin-top: 8px; }
 .outcome-reflection-row:hover { background: #eef6f3; border-color: #b7d9d1; }
 .outcome-reflection-row > div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .outcome-reflection-row strong { font-size: 12px; color: #263f50; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .outcome-reflection-row .reflection-date { font-size: 9px; }
 .row-arrow { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: #e2f2ed; color: #1c786d; }
-.outcome-reflection-modal {
+.outcome-reflection-modal,
+.registration-modal {
   position: fixed !important;
-  z-index: 1200;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(720px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   margin: 0 !important;
@@ -588,6 +713,7 @@ body { background: #f3f6f9; }
     0 0 0 100vmax rgba(8, 27, 39, 0.64),
     0 24px 70px rgba(8, 27, 39, 0.36);
 }
+.outcome-reflection-modal { z-index: 1200; width: min(720px, calc(100vw - 32px)); }
 .reflection-detail-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 26px 28px 21px; border-bottom: 1px solid #e4eaee; }
 .reflection-detail-modal-head h2 { font-size: 25px; margin: 3px 0 5px; }
 .reflection-detail-content { display: grid; padding: 8px 28px; }
@@ -605,7 +731,7 @@ body { background: #f3f6f9; }
   .reflection-detail-footer .button { width: 100%; }
 }
 
-/* Feedbackdetails in hetzelfde compacte patroon */
+/* Feedbackdetails krijgen een paarse variant van het reflectievenster. */
 .outcome-feedback-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; border: 1px solid #e1e1ed; border-radius: 9px; background: #fbfafe; text-align: left; padding: 11px 12px; margin-top: 8px; }
 .outcome-feedback-row:hover { background: #f3f0fa; border-color: #cfc7e6; }
 .outcome-feedback-row > div { display: flex; min-width: 0; align-items: flex-start; flex-direction: column; gap: 3px; }
@@ -620,47 +746,31 @@ body { background: #f3f6f9; }
 .feedback-detail-content h3 { color: #4e4278; }
 .outcome-feedback-modal { border-top: 4px solid #8170c6; }
 
-/* Dashboard: huidige activiteit, notificatie en aandachtspunten */
+/* ================================================================
+   16. Dashboardactiviteit en notificaties
+   Laat huidig werk, aandachtspunten en ongelezen uren zien.
+   ================================================================ */
 .processing-notification { position: relative; display: grid; place-items: center; width: 37px; height: 37px; border: 1px solid #d6e2e8; border-radius: 50%; background: #fff; color: #17786e; padding: 0; margin-right: 2px; }
 .processing-notification:hover { background: #eaf6f2; border-color: #a8d5ca; }
 .processing-icon { font-size: 15px; font-weight: 900; }
 .processing-badge { position: absolute; right: -6px; top: -6px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 4px; border: 2px solid #f4f7fb; border-radius: 99px; background: #d76a54; color: #fff; font-size: 8px; font-weight: 800; }
 .profile-name { white-space: nowrap; }
-.current-work { display: grid; grid-template-columns: auto minmax(0, 1fr) 270px; gap: 20px; align-items: center; margin-top: 24px; border-left: 4px solid #8170c6; background: linear-gradient(135deg, #fff, #faf9fe); }
-.current-work-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 13px; background: #ede9fb; color: #6a57a8; font-size: 27px; }
-.current-work-main .eyebrow { color: #6c59a6; margin: 0 0 4px; }
-.current-work-main h2 { font-size: 19px; margin: 0 0 4px; }
-.current-work-main p { color: #687b8d; font-size: 12px; margin: 0; }
-.current-work-tags { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 11px; }
-.current-work-tags span { background: #f0edf9; color: #65569a; border-radius: 99px; padding: 4px 9px; font-size: 9px; font-weight: 700; }
-.current-work-progress > div:first-child { display: flex; justify-content: space-between; font-size: 11px; color: #687c8d; margin-bottom: 7px; }
-.current-work-progress > div:first-child b { color: #65569a; }
-.current-work-progress .bar span { background: #8170c6; }
-.current-work-progress .button { width: 100%; margin-top: 13px; }
 .attention-filter-notice { display: flex; align-items: center; justify-content: space-between; gap: 18px; background: #fff8e9; border: 1px solid #efdcae; border-radius: 11px; padding: 12px 14px; margin: 14px 0; }
 .attention-filter-notice > div { display: flex; align-items: center; gap: 10px; }
 .attention-filter-notice > div > span { display: grid; place-items: center; flex: none; width: 25px; height: 25px; border-radius: 50%; background: #e6b85c; color: #fff; font-weight: 800; }
 .attention-filter-notice p { margin: 0; color: #765f34; font-size: 11px; }
 .attention-filter-notice button { border: 0; background: transparent; color: #8b6722; text-decoration: underline; font-size: 10px; font-weight: 700; white-space: nowrap; }
-@media (max-width: 850px) {
-  .current-work { grid-template-columns: auto 1fr; }
-  .current-work-progress { grid-column: 1/-1; }
-}
 @media (max-width: 600px) {
   .profile-name { display: none; }
   .processing-notification { margin-left: auto; }
-  .current-work { grid-template-columns: 1fr; }
-  .current-work-icon { display: none; }
   .attention-filter-notice { align-items: flex-start; flex-direction: column; }
   .attention-filter-notice button { padding-left: 35px; }
 }
 
-.dashboard-inline-progress { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; margin-top: 15px; }
-.dashboard-inline-progress .bar { margin: 0 !important; }
-.dashboard-inline-progress .bar span { background: #8170c6; }
-.dashboard-inline-progress b { font-size: 11px; color: #6655a0; }
-
-/* Jaaroverzicht uren */
+/* ================================================================
+   17. Jaaroverzicht en urenregistraties
+   Toont urentotalen per schooljaar en de details van één registratie.
+   ================================================================ */
 .hours-head-actions { display: flex; align-items: flex-end; gap: 10px; }
 .year-selector { font-size: 10px; font-weight: 750; color: #627688; text-transform: uppercase; letter-spacing: 0.5px; }
 .year-selector .input { min-width: 140px; margin: 4px 0 0; padding: 9px 32px 9px 11px; }
@@ -668,7 +778,7 @@ body { background: #f3f6f9; }
 .yearly-hours-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
 .yearly-hours-head h2 { margin-bottom: 3px; }
 .yearly-hours-head p { margin: 0; }
-.yearly-hours-overview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
+.yearly-hours-overview { display: grid; grid-template-columns: repeat(5, 1fr); gap: 13px; }
 .year-total { display: flex; flex-direction: column; align-items: stretch; text-align: left; border: 1px solid #e0e7ed; border-radius: 11px; background: #f9fbfc; padding: 15px; }
 .year-total:hover { border-color: #83bdaf; background: #f3f9f7; }
 .year-total.active { border-color: #278e80; background: #eef8f5; box-shadow: inset 0 0 0 1px #278e80; }
@@ -677,17 +787,12 @@ body { background: #f3f6f9; }
 .year-total .bar { height: 6px; margin-bottom: 7px; }
 .year-total small { color: #708394; }
 .year-total.active small { color: #23786d; font-weight: 700; }
-@media (max-width: 1000px) {
-  .yearly-hours-overview { grid-template-columns: repeat(2, 1fr); }
-}
 @media (max-width: 760px) {
   .hours-head-actions { width: 100%; align-items: stretch; flex-direction: column; }
   .year-selector .input { width: 100%; }
-  .yearly-hours-overview { grid-template-columns: 1fr; }
   .yearly-hours-head { align-items: flex-start; flex-direction: column; }
 }
 
-.yearly-hours-overview { grid-template-columns: repeat(5, 1fr); }
 .year-total.grand-total { background: #173f4b; border-color: #173f4b; }
 .year-total.grand-total > span,
 .year-total.grand-total small { color: #c1d5dc; }
@@ -704,7 +809,7 @@ body { background: #f3f6f9; }
   .yearly-hours-overview { grid-template-columns: 1fr; }
 }
 
-/* Gelezen-status urenverwerking */
+/* Maakt zichtbaar of een urenmelding al door de student is gelezen. */
 .processing-notification.read { color: #708794; background: #f5f7f8; border-color: #dce4e8; }
 .processing-notification.read .processing-icon { opacity: 0.7; }
 .approval-title-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -718,28 +823,12 @@ body { background: #f3f6f9; }
   .approval-footer-actions .button { width: 100%; }
 }
 
-/* Werkende registratiedetails */
+/* Detailvenster met datum, begeleider, uren en gekoppelde leeruitkomst. */
 .registration-row { width: 100%; border-left: 0; border-right: 0; border-bottom: 0; background: transparent; }
 .registration-row:first-child { border-top: 0; }
 .registration-row-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .registration-row-meta small { color: #718493; font-size: 9px; }
-.registration-modal {
-  position: fixed !important;
-  z-index: 1250;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(700px, calc(100vw - 32px));
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  margin: 0 !important;
-  padding: 0 !important;
-  background: #fff;
-  border: 0;
-  box-shadow:
-    0 0 0 100vmax rgba(8, 27, 39, 0.64),
-    0 24px 70px rgba(8, 27, 39, 0.36);
-}
+.registration-modal { z-index: 1250; width: min(700px, calc(100vw - 32px)); }
 .registration-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 26px 28px 20px; border-bottom: 1px solid #e4eaee; }
 .registration-modal-head h2 { font-size: 25px; margin: 8px 0 3px; }
 .registration-modal-head p { margin: 0; }
@@ -768,11 +857,10 @@ body { background: #f3f6f9; }
   .registration-modal-footer .button { width: 100%; }
 }
 
-/* Leerdoelen: alle leeruitkomsten per fase */
-.goal-outcome-filters { grid-template-columns: 1fr; }
-
-/* Leeruitkomsten archiveren en herstellen */
-.catalog-filter { grid-template-columns: minmax(220px, 1fr) 190px 220px; }
+/* ================================================================
+   18. Archiveren van leeruitkomsten
+   Markeert gearchiveerde leeruitkomsten en biedt een herstelfunctie.
+   ================================================================ */
 .archive-filter-notice { display: flex; align-items: center; background: #eef7f4; border: 1px solid #cce4dd; border-radius: 10px; padding: 11px 14px; margin: 14px 0; }
 .archive-filter-notice > div { display: flex; align-items: center; gap: 10px; }
 .archive-filter-notice > div > span { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: #248b7d; color: #fff; font-weight: 800; }
@@ -800,9 +888,10 @@ body { background: #f3f6f9; }
   .catalog-filter .search-label { grid-column: auto; }
   .catalog-archive-badge { right: 42px; top: 17px; }
 }
-.catalog-filter { display: grid; }
-
-/* Tijdelijke bevestigingsmelding */
+/* ================================================================
+   19. Tijdelijke bevestigingsmelding
+   Toont rechtsonder een korte melding na opslaan of wijzigen.
+   ================================================================ */
 #hint.warning { position: fixed; z-index: 1400; right: 24px; bottom: 24px; width: min(420px, calc(100vw - 32px)); margin: 0; border: 1px solid #b9ddd4; border-radius: 11px; background: #edf8f4; color: #285d55; box-shadow: 0 15px 38px rgba(16, 50, 60, 0.18); padding: 14px 18px; font-size: 12px; font-weight: 650; animation: hint-in 0.18s ease-out; }
 #hint.hint-leaving {
   opacity: 0;
@@ -818,3 +907,224 @@ body { background: #f3f6f9; }
 @media (max-width: 600px) {
   #hint.warning { right: 16px; bottom: 16px; }
 }
+
+/* ================================================================
+   20. Persoonlijk studentdashboard
+   De kaarten, lijsten en instellingen van het vernieuwde dashboard.
+   ================================================================ */
+
+/* Navigatie-iconen worden vanuit één JavaScript-verzameling geplaatst. */
+.side .nav { display: flex; align-items: center; gap: 12px; }
+.nav-icon { display: grid; width: 19px; height: 19px; flex: none; place-items: center; }
+.nav-icon svg,
+.ui-icon svg,
+.dashboard-card-icon svg,
+.panel-icon svg,
+.settings-card-icon svg { width: 100%; height: 100%; }
+.settings-nav { margin-top: 6px; border-top: 1px solid rgba(175, 198, 213, 0.14); border-radius: 0 0 9px 9px; }
+
+/* Welkomstregel en fasekeuze. */
+.dashboard-welcome { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
+.dashboard-welcome h1 { margin-bottom: 5px; }
+.dashboard-welcome p { margin: 0; color: #697e90; font-size: 14px; }
+.dashboard-settings-shortcut { display: inline-flex; align-items: center; gap: 8px; flex: none; border: 1px solid #d9e5e9; border-radius: 9px; background: #fff; color: #436170; padding: 9px 12px; font-size: 10px; font-weight: 700; }
+.dashboard-settings-shortcut:hover { border-color: #9bcfc4; background: #eef8f5; color: #16786e; }
+.dashboard-settings-shortcut .ui-icon { width: 16px; height: 16px; }
+.dashboard-phase-tabs { margin: 18px 0 20px; }
+
+/* De drie belangrijkste dashboardkaarten. */
+.dashboard-primary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.dashboard-metric-card { height: 200px; min-width: 0; border: 1px solid #dce7ea; border-radius: 14px; padding: 22px; overflow: hidden; }
+.dashboard-progress-card { border-color: #c9e8df; background: #eaf7f3; }
+.dashboard-assignment-card { border-color: #e0e2f5; background: #f1f1fc; }
+.dashboard-attention-card { border-color: #f0e2c8; background: #fff8ec; }
+.dashboard-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.dashboard-card-icon { display: grid; width: 40px; height: 40px; flex: none; place-items: center; border-radius: 10px; padding: 9px; }
+.dashboard-progress-card .dashboard-card-icon { background: #d4f0e8; color: #179b89; }
+.dashboard-assignment-card .dashboard-card-icon { background: #e2dffc; color: #6858d4; }
+.dashboard-attention-card .dashboard-card-icon { background: #ffedcd; color: #db8a19; }
+.dashboard-metric-card .big { margin: 9px 0 0; }
+.dashboard-metric-card .dim { min-height: 20px; font-size: 13px; }
+.dashboard-metric-card > .bar { margin-top: 17px; }
+.dashboard-assignment-card .card-link,
+.dashboard-attention-card .card-link { margin-top: 16px; }
+
+/* Twee ruime kolommen houden het dashboard leesbaar zonder veel scrollen. */
+.dashboard-widget-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.dashboard-panel { display: flex; height: 220px; min-width: 0; flex-direction: column; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; padding: 19px; overflow: hidden; }
+.dashboard-panel-head { display: flex; min-height: 34px; align-items: center; flex-direction: row; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+.dashboard-panel-title { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.dashboard-panel-title h2 { margin: 0; color: #1d3446; font-size: 14px; }
+.dashboard-panel-head .card-link { flex: none; padding: 0; font-size: 10px; }
+.panel-icon { display: grid; width: 32px; height: 32px; flex: none; place-items: center; border-radius: 8px; background: #e9f0ff; color: #3974cc; padding: 7px; }
+.panel-icon-green { background: #e1f4ee; color: #188c7d; }
+.panel-icon-orange { background: #fff0dc; color: #dc8117; }
+
+/* Voortgang per leeruitkomst. */
+.dashboard-outcome-list { display: grid; gap: 3px; }
+.dashboard-outcome-row { display: grid; grid-template-columns: minmax(130px, 1fr) minmax(100px, 1fr) 38px; align-items: center; gap: 10px; width: 100%; border: 0; border-radius: 8px; background: transparent; color: #587084; padding: 6px 4px; text-align: left; }
+.dashboard-outcome-row:hover { background: #f3f8f7; }
+.dashboard-outcome-row > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.dashboard-outcome-row .bar { height: 6px; }
+.dashboard-outcome-row b { color: #38566a; font-size: 10px; text-align: right; }
+
+/* Acties en deadlines. */
+.dashboard-action-list,
+.dashboard-deadline-list { display: grid; gap: 7px; }
+.dashboard-action-row { display: grid; grid-template-columns: 27px minmax(0, 1fr) auto 12px; align-items: center; gap: 10px; width: 100%; border: 1px solid #e1e9ed; border-radius: 9px; background: #fbfcfd; color: #51697b; padding: 10px; text-align: left; }
+.dashboard-action-row:hover,
+.dashboard-deadline-list button:hover { border-color: #b8d9d1; background: #f1f8f6; }
+.dashboard-action-row strong,
+.dashboard-action-row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dashboard-action-row strong { color: #213a4c; font-size: 11px; }
+.dashboard-action-row small { margin-top: 2px; color: #7a8c99; font-size: 9px; }
+.dashboard-action-row em { color: #617788; font-size: 9px; font-style: normal; font-weight: 700; }
+.action-status { display: grid; width: 25px; height: 25px; place-items: center; border: 2px solid #91a6b5; border-radius: 50%; color: #fff; font-size: 11px; }
+.action-status.review { border-color: #8a75d2; background: #8a75d2; }
+.action-status.completed { border-color: #1ba18e; background: #1ba18e; }
+.dashboard-empty { margin: 0; color: #788b99; font-size: 11px; }
+.dashboard-deadline-list button { display: grid; grid-template-columns: 105px minmax(0, 1fr) 12px; align-items: center; gap: 10px; width: 100%; border: 0; border-bottom: 1px solid #e8eef1; background: transparent; color: #667d8e; padding: 9px 3px; text-align: left; }
+.dashboard-deadline-list button:last-child { border-bottom: 0; }
+.dashboard-deadline-list button > span:first-child { font-size: 9px; }
+.dashboard-deadline-list strong { overflow: hidden; color: #304c5d; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Compacte feedbackkaart. */
+.dashboard-feedback-quote { margin: 0; border-radius: 8px; background: #f5f8fa; color: #597082; padding: 12px 13px; font-size: 11px; line-height: 1.55; }
+.dashboard-feedback-author { display: flex; flex-direction: column; gap: 2px; margin: 11px 0 0; color: #7b8c98; font-size: 9px; }
+.dashboard-feedback-author strong { color: #385362; font-size: 10px; }
+
+/* Door de student gekozen compacte weergave. */
+.dashboard-compact .dashboard-metric-card { height: 155px; padding: 14px; }
+.dashboard-compact .dashboard-panel { height: 185px; padding: 12px; }
+.dashboard-compact .dashboard-widget-grid { margin-top: 9px; gap: 9px; }
+.dashboard-compact .dashboard-outcome-row { padding-top: 5px; padding-bottom: 5px; }
+.dashboard-compact .dashboard-action-row { padding-top: 7px; padding-bottom: 7px; }
+
+/* Instellingenpagina voor de persoonlijke dashboardweergave. */
+.settings-page-head { max-width: 690px; margin-bottom: 24px; }
+.settings-page-head .back-link { margin-bottom: 25px; }
+.settings-layout { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 18px; align-items: start; }
+.settings-card { margin: 0; }
+.settings-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.settings-card-head h2 { margin-bottom: 4px; }
+.settings-card-head p { margin: 0; color: #748797; font-size: 10px; line-height: 1.5; }
+.settings-card-icon { display: grid; width: 34px; height: 34px; flex: none; place-items: center; border-radius: 9px; background: #e5f3ef; color: #1b8175; padding: 8px; }
+.settings-options { display: grid; }
+.settings-option { display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid #e8eef1; padding: 15px 0; cursor: pointer; }
+.settings-option span { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.settings-option strong { color: #284657; font-size: 11px; }
+.settings-option small { color: #7a8d9b; font-size: 9px; line-height: 1.45; }
+.settings-option input { width: 19px; height: 19px; flex: none; accent-color: #198f81; cursor: pointer; }
+.settings-footer { display: flex; align-items: center; justify-content: flex-end; gap: 15px; margin-top: 18px; }
+.settings-saved { color: #1b7d70; font-size: 10px; font-weight: 700; opacity: 0; transition: opacity 0.2s; }
+.settings-saved.visible { opacity: 1; }
+
+@media (max-width: 980px) {
+  .dashboard-primary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-attention-card { grid-column: 1/-1; }
+  .dashboard-widget-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .settings-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+  .dashboard-welcome { flex-direction: column; }
+  .dashboard-settings-shortcut { width: 100%; justify-content: center; }
+  .dashboard-primary-grid { grid-template-columns: 1fr; }
+  .dashboard-attention-card { grid-column: auto; }
+  .dashboard-metric-card { height: 165px; }
+  .dashboard-widget-grid { grid-template-columns: 1fr; }
+  .dashboard-panel { height: auto; min-height: 225px; }
+  .dashboard-panel-head { align-items: flex-start; flex-direction: column; }
+  .dashboard-deadline-list button { grid-template-columns: 92px minmax(0, 1fr) 12px; }
+  .settings-footer { align-items: stretch; flex-direction: column; }
+  .settings-footer .button { width: 100%; }
+}
+
+/* ================================================================
+   21. Donkere modus
+   Eén thema op het hoofdelement voorkomt dubbele componentstijlen.
+   ================================================================ */
+html.theme-dark { color-scheme: dark; background: #0b1821; }
+.theme-dark body,
+.theme-dark .app,
+.theme-dark .main { background: #0f202b; color: #dce7ec; }
+.theme-dark h1,
+.theme-dark h2,
+.theme-dark h3,
+.theme-dark .topbar-title strong,
+.theme-dark .profile-name,
+.theme-dark .dashboard-panel-title h2,
+.theme-dark .dashboard-action-row strong,
+.theme-dark .dashboard-deadline-list strong,
+.theme-dark .settings-option strong { color: #edf5f7; }
+.theme-dark .dim,
+.theme-dark p.dim,
+.theme-dark .dashboard-welcome p,
+.theme-dark .dashboard-metric-card .dim,
+.theme-dark .settings-card-head p,
+.theme-dark .settings-option small { color: #9eb1bc; }
+
+/* Header, footer en algemene invoervelden. */
+.theme-dark .topbar,
+.theme-dark .app-footer { border-color: #29404d; }
+.theme-dark .topbar-project,
+.theme-dark .topbar-date,
+.theme-dark .footer-meta,
+.theme-dark .footer-brand span { color: #8fa5b1; }
+.theme-dark .profile,
+.theme-dark .button,
+.theme-dark .input,
+.theme-dark select,
+.theme-dark textarea { border-color: #36505d; background: #162b37; color: #e2ecef; }
+.theme-dark .topbar-mark,
+.theme-dark .avatar,
+.theme-dark .footer-mark { border-color: #28584f; background: #173a38; color: #72d9c8; }
+.theme-dark .footer-brand strong { color: #dce9ed; }
+.theme-dark .footer-notice { border-color: #29424c; background: #152b35; }
+.theme-dark .footer-notice .printlabel { color: #91a8b3; }
+.theme-dark .button:hover { background: #1d3a46; }
+.theme-dark .button.dark { border-color: #38aa98; background: #238d7d; color: #fff; }
+
+/* Dashboardkaarten en voortgang. */
+.theme-dark .dashboard-settings-shortcut { border-color: #35505d; background: #152b37; color: #b8cbd3; }
+.theme-dark .dashboard-settings-shortcut:hover { border-color: #3d8f82; background: #173a3a; color: #7cdfcf; }
+.theme-dark .dashboard-progress-card { border-color: #285b51; background: #15362f; }
+.theme-dark .dashboard-assignment-card { border-color: #414568; background: #252942; }
+.theme-dark .dashboard-attention-card { border-color: #5e4c2e; background: #382f21; }
+.theme-dark .dashboard-panel,
+.theme-dark .card { border-color: #2b4451; background: #142733; box-shadow: none; }
+.theme-dark .bar { background: #263d49; }
+.theme-dark .dashboard-outcome-row,
+.theme-dark .dashboard-action-row,
+.theme-dark .dashboard-deadline-list button { color: #a9bbc4; }
+.theme-dark .dashboard-outcome-row:hover,
+.theme-dark .dashboard-action-row:hover,
+.theme-dark .dashboard-deadline-list button:hover { border-color: #376f66; background: #19352f; }
+.theme-dark .dashboard-action-row { border-color: #2b4552; background: #182d39; }
+.theme-dark .dashboard-outcome-row b { color: #c2d1d7; }
+.theme-dark .dashboard-feedback-quote { background: #192f3b; color: #b2c2ca; }
+.theme-dark .dashboard-feedback-author,
+.theme-dark .dashboard-action-row small { color: #8fa4ae; }
+
+/* Tabs, formulieren en overige studentpagina's. */
+.theme-dark .tabs { border-color: #29414e; }
+.theme-dark .tab { color: #91a6b2; }
+.theme-dark .tab.active { color: #68d1bf; }
+.theme-dark .notice,
+.theme-dark .catalog-intro,
+.theme-dark .feedback-intro,
+.theme-dark .reflection-intro,
+.theme-dark .linked-outcome,
+.theme-dark .goal-preview,
+.theme-dark .filter,
+.theme-dark .catalog-filter,
+.theme-dark .feedback-toolbar { border-color: #2b4552; background: #152a35; color: #a9bbc4; }
+.theme-dark .row,
+.theme-dark .simple,
+.theme-dark .settings-option,
+.theme-dark .dashboard-deadline-list button { border-color: #29414d; }
+.theme-dark .row.click:hover,
+.theme-dark .simple.click:hover { background: #19333d; }
+.theme-dark .pill { border-color: #2e5d55; background: #173a36; color: #73d4c4; }
+.theme-dark .code { color: #9bb0bb; }
+.theme-dark .settings-saved { color: #70d5c3; }

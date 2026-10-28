@@ -19,8 +19,10 @@ class StateController extends Controller
         $allowedKeys = [
             'ontwikkeling-reflecties',
             'ontwikkeling-feedback',
+            'ontwikkeling-opdracht-statussen',
             'archived-learning-outcomes',
             'hours-processing-read',
+            'ontwikkeling-dashboard-instellingen',
         ];
         $data = array_intersect_key($payload['data'], array_flip($allowedKeys));
 
@@ -35,6 +37,35 @@ class StateController extends Controller
                 throw ValidationException::withMessages([
                     'data' => 'Ongeldige of te grote gegevensverzameling.',
                 ]);
+            }
+        }
+
+        if (isset($data['ontwikkeling-opdracht-statussen'])) {
+            $statussen = $data['ontwikkeling-opdracht-statussen'];
+
+            if (! is_array($statussen) || count($statussen) > 100) {
+                throw ValidationException::withMessages(['data' => 'Ongeldige opdrachtstatussen.']);
+            }
+
+            foreach ($statussen as $opdrachtId => $status) {
+                if (! ctype_digit((string) $opdrachtId) || ! in_array($status, ['active', 'review', 'completed'], true)) {
+                    throw ValidationException::withMessages(['data' => 'Ongeldige opdrachtstatus.']);
+                }
+            }
+        }
+
+        if (isset($data['ontwikkeling-dashboard-instellingen'])) {
+            $instellingen = $data['ontwikkeling-dashboard-instellingen'];
+            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'actions', 'feedback', 'deadlines'];
+
+            if (! is_array($instellingen) || array_diff(array_keys($instellingen), $toegestaneInstellingen)) {
+                throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstellingen.']);
+            }
+
+            foreach ($instellingen as $waarde) {
+                if (! is_bool($waarde)) {
+                    throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstelling.']);
+                }
             }
         }
 

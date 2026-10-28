@@ -83,7 +83,7 @@
                 <option>Per leerjaar</option>
                 <option>Per opleiding</option>
               </select>
-              <button class="button" onclick="hint('Rapportage-export is in dit mock-up nog niet gekoppeld.')">Exporteren (concept)</button>
+              <button class="button" onclick="hint('Rapportage-export is nog niet gekoppeld.')">Exporteren (concept)</button>
             </div>
           </div>
         </section>

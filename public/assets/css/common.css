@@ -170,7 +170,7 @@ textarea.input { min-height: 95px; resize: vertical; }
 
   .head { display: block; }
 }
-/* Professionele mock-up: marineblauw, turquoise en zacht lila */
+/* Huisstijl: marineblauw, turquoise en zacht lila. */
 :root {
   font:
     14px/1.6 "Segoe UI",
@@ -194,21 +194,35 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible { outline: 3px solid #159d99; outline-offset: 4px; }
-.side { width: 246px; background: #122b3d; color: #eff8ff; border: 0; padding: 32px 20px; position: sticky; top: 0; height: 100vh; }
+.side { width: 246px; background: #122b3d; color: #eff8ff; border: 0; padding: 24px 20px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #466276 transparent; }
 .brand { letter-spacing: -1px; font-size: 25px; }
 .side .brand:before { content: "◈"; color: #64dbca; margin-right: 10px; }
 .side .dim { color: #afc6d5; }
-.side hr { opacity: 0.15; margin: 20px 0; }
-.side #nav { display: grid; gap: 8px; }
-.nav { border: 0; background: transparent; color: #bbcedb; border-radius: 9px; padding: 13px 17px; }
+.side hr { opacity: 0.15; margin: 15px 0; }
+.side #nav { display: grid; gap: 5px; }
+.nav { border: 0; background: transparent; color: #bbcedb; border-radius: 9px; padding: 11px 17px; }
 .nav:hover { background: #244358; color: white; }
 .nav.active { background: #24515e; color: #8cf0db; box-shadow: inset 3px 0 #67dbc2; }
-.side .foot { border-color: #355063; padding: 23px 10px; }
-.main { padding: 0 42px 36px; margin: 0 auto; min-width: 0; }
-.topbar { height: 85px; border-bottom: 1px solid #dde5ed; display: flex; justify-content: space-between; align-items: center; color: #6a7c8e; font-size: 12px; margin-bottom: 35px; }
-.separator { margin: 0 14px; color: #b3bfca; }
-.profile { display: flex; align-items: center; gap: 10px; color: #283e51; font-weight: 600; }
-.avatar { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 50%; background: #e0e8ef; }
+.side .foot { flex: none; border-color: #355063; padding: 13px 7px 0; }
+.side .foot > .small { margin-bottom: 5px; }
+.side .foot form .nav { padding-top: 9px; padding-bottom: 9px; }
+.product-credit { display: flex; flex-direction: column; gap: 2px; margin: 8px 0 0; padding: 9px 5px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 8px; line-height: 1.4; letter-spacing: 0.3px; }
+.product-credit strong { color: #d2e1e9; font-size: 9px; font-weight: 650; }
+.main { display: flex; min-width: 0; min-height: 100vh; flex-direction: column; padding: 0 42px 36px; margin: 0 auto; }
+
+/* Gedeelde header met projectcontext en het ingelogde account. */
+.topbar { display: flex; width: 100%; max-width: 1180px; min-height: 84px; flex: none; justify-content: space-between; align-items: center; gap: 24px; margin: 0 auto 34px; border-bottom: 1px solid #d8e4e9; color: #6a7c8e; }
+.topbar-context { display: flex; min-width: 0; align-items: center; gap: 11px; }
+.topbar-mark { display: grid; width: 34px; height: 34px; flex: none; place-items: center; border-radius: 9px; background: #e2f4f0; color: #168b7d; font-size: 19px; }
+.topbar-title { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.topbar-project { color: #718695; font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: 1px; }
+.topbar-title strong { overflow: hidden; color: #1f4050; font-size: 15px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.profile { display: flex; flex: none; align-items: center; gap: 10px; padding: 7px 10px 7px 8px; border: 1px solid #dce7eb; border-radius: 12px; background: rgba(255, 255, 255, 0.72); color: #283e51; font-weight: 600; }
+.topbar-date { margin-left: auto; color: #718396; font-size: 10px; white-space: nowrap; }
+.avatar { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #c8e3dc; border-radius: 10px; background: #e6f4f0; color: #176f65; font-size: 11px; font-weight: 800; }
+.profile-copy { display: flex; flex-direction: column; line-height: 1.25; }
+.profile-name { color: #294756; font-size: 11px; }
+.profile-copy small { margin-top: 2px; color: #81919e; font-size: 8px; font-weight: 550; text-transform: uppercase; letter-spacing: 0.45px; }
 .eyebrow { font-size: 10px; letter-spacing: 1.8px; font-weight: 750; color: #168479; margin-bottom: 10px; }
 h1 { font-size: 32px; letter-spacing: -1px; color: #162f43; }
 h2 { font-size: 17px; letter-spacing: -0.3px; }
@@ -254,6 +268,20 @@ p.dim,
 .row b { font-size: 12px; }
 .row .hours { font-size: 10px; color: #6a7d8c; }
 .row .bar { height: 5px; }
+
+/* Gedeelde footer met productinformatie en een korte demomelding. */
+.app-footer { width: 100%; max-width: 1180px; margin: 52px auto 0; padding-top: 20px; border-top: 1px solid #d8e3e8; color: #667b8b; }
+.footer-main { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.footer-identity { display: flex; align-items: center; gap: 10px; }
+.footer-mark { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border: 1px solid #cde5df; border-radius: 8px; background: #edf7f4; color: #198e81; font-size: 16px; }
+.footer-brand { display: flex; flex-direction: column; gap: 1px; }
+.footer-brand strong { color: #244653; font-size: 12px; }
+.footer-brand span { color: #7b8c99; font-size: 9px; }
+.footer-meta { display: flex; align-items: flex-end; flex-direction: column; gap: 2px; color: #81919c; font-size: 9px; }
+.footer-meta span:first-child { color: #405e6d; font-weight: 650; }
+.footer-notice { display: flex; align-items: center; gap: 9px; margin-top: 14px; padding: 9px 11px; border: 1px solid #e0eaed; border-radius: 8px; background: #f4f8f8; }
+.footer-notice-icon { display: grid; width: 19px; height: 19px; flex: none; place-items: center; border-radius: 50%; background: #deeee9; color: #24776d; font-size: 9px; font-weight: 800; }
+.footer-notice .printlabel { margin: 0; padding: 0; border: 0; color: #738793; font-size: 9px; }
 
 /* Inlogpagina in dezelfde huisstijl als het dashboard. */
 .login { background: #f3f7fb; overflow: hidden; }
@@ -314,4 +342,10 @@ p.dim,
   .login .intro .brand { margin-bottom: 28px; }
   .login .intro h1 { font-size: 34px; }
   .login .form { padding: 28px 18px 46px; }
+  .topbar { height: auto; min-height: 70px; margin-bottom: 26px; }
+  .topbar-mark { width: 30px; height: 30px; }
+  .topbar-project { display: none; }
+  .topbar-date { display: none; }
+  .footer-main { align-items: flex-start; flex-direction: column; }
+  .footer-meta { align-items: flex-start; }
 }

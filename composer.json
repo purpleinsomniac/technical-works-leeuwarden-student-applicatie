@@ -1,7 +1,7 @@
 {
   "name": "ontwikkeling/leeromgeving",
   "type": "project",
-  "description": "Laravel-versie van de Ontwikkeling mock-up",
+  "description": "Laravel-studentapplicatie voor de persoonlijke leeromgeving Ontwikkeling",
   "require": {
     "php": "^8.2",
     "laravel/framework": "^12.0"

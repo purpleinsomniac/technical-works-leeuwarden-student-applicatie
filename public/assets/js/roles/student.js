@@ -1,5 +1,12 @@
 // Laravel synchronisatie: opgeslagen gebruikersgegevens worden bij het openen ingeladen.
-const persistentKeys = ["ontwikkeling-reflecties", "ontwikkeling-feedback", "archived-learning-outcomes", "hours-processing-2026-09-12-read"];
+const persistentKeys = [
+  "ontwikkeling-reflecties",
+  "ontwikkeling-feedback",
+  "ontwikkeling-opdracht-statussen",
+  "archived-learning-outcomes",
+  "hours-processing-2026-09-12-read",
+  "ontwikkeling-dashboard-instellingen",
+];
 if (window.LARAVEL_USER) {
   for (const [key, value] of Object.entries(window.LARAVEL_STATE || {})) {
     if (typeof key === "string" && (persistentKeys.includes(key) || key.includes("processing"))) {
@@ -698,6 +705,73 @@ const currentWorkByPhase = {
   },
 };
 
+// Demo-opdrachten. De outcomeCodes vormen later de koppeling met
+// de tabel opdracht_leeruitkomst in de database.
+const assignments = [
+  {
+    id: 1,
+    title: "Werkplek installeren",
+    type: "Installatieopdracht",
+    description: "Installeer en configureer een veilige werkplek en leg de gekozen werkwijze vast.",
+    status: "active",
+    phase: "OF",
+    dueDate: "30 september 2026",
+    hours: 42,
+    outcomeCodes: ["IT_OF_LU_Hardskills_001", "IT_OF_LU_Hardskills_007", "IT_OF_LU_Hardskills_005"],
+  },
+  {
+    id: 2,
+    title: "Servicedesk als team",
+    type: "Samenwerkingsopdracht",
+    description: "Los als team meldingen op, communiceer met gebruikers en reflecteer op de samenwerking.",
+    status: "review",
+    phase: "OF",
+    dueDate: "18 september 2026",
+    hours: 36,
+    outcomeCodes: ["IT_OF_LU_Hardskills_002", "IT_OF_LU_Hardskills_004", "IT_OF_LU_Softskills_003", "IT_OF_LU_Softskills_004"],
+  },
+  {
+    id: 3,
+    title: "Netwerkdocumentatie",
+    type: "Documentatieopdracht",
+    description: "Breng een bestaand netwerk in kaart en schrijf documentatie die een collega direct kan gebruiken.",
+    status: "completed",
+    phase: "VF",
+    dueDate: "28 juni 2026",
+    hours: 48,
+    outcomeCodes: ["IT_VF_LU_Hardskills_005", "IT_VF_LU_Hardskills_007", "IT_VF_LU_Softskills_004"],
+  },
+  {
+    id: 4,
+    title: "Softwaremodule bouwen en testen",
+    type: "Bouw- en testopdracht",
+    description: "Bouw zelfstandig een softwaremodule en toon met een testplan aan dat deze aan de eisen voldoet.",
+    status: "active",
+    phase: "AF",
+    dueDate: "15 januari 2027",
+    hours: 0,
+    outcomeCodes: ["IT_AF_LU_Hardskills_004", "IT_AF_LU_Hardskills_005", "IT_AF_LU_Hardskills_006"],
+  },
+];
+
+const assignmentStatuses = {
+  active: "Actief",
+  review: "Beoordeling",
+  completed: "Afgerond",
+};
+
+const assignmentStatusKey = "ontwikkeling-opdracht-statussen";
+try {
+  const savedAssignmentStatuses = JSON.parse(loadLocalState(assignmentStatusKey) || "{}");
+  assignments.forEach((assignment) => {
+    if (["active", "review", "completed"].includes(savedAssignmentStatuses[assignment.id])) {
+      assignment.status = savedAssignmentStatuses[assignment.id];
+    }
+  });
+} catch {
+  // Ongeldige lokale demogegevens worden genegeerd; de standaardstatus blijft staan.
+}
+
 const records = [
   ["Werkplek installeren", "Installatieopdracht", "IT_OF_LU_Hardskills_001", 42, 1],
   ["Software configureren", "Configuratieopdracht", "IT_OF_LU_Hardskills_001", 35, 1],
@@ -744,12 +818,14 @@ const registrationMeta = [
 // -----------------------------------------------------------------------------
 const routes = {
   student: [
-    ["Dashboard", "studentDashboard"],
-    ["Leeruitkomsten", "learningOutcomes"],
-    ["Uren", "hours"],
-    ["Leerdoelen", "goals"],
-    ["Reflecties", "reflections"],
-    ["Feedback", "feedback"],
+    ["Dashboard", "studentDashboard", "dashboard"],
+    ["Leeruitkomsten", "learningOutcomes", "outcomes"],
+    ["Opdrachten", "assignments", "assignment"],
+    ["Uren", "hours", "clock"],
+    ["Leerdoelen", "goals", "target"],
+    ["Reflecties", "reflections", "reflection"],
+    ["Feedback", "feedback", "feedback"],
+    ["Instellingen", "dashboardSettings", "settings"],
   ],
   coach: [
     ["Studenten", "coachStudents"],
@@ -781,7 +857,9 @@ let role = window.LARAVEL_USER?.role || "student",
   reflectionReturnToOutcome = false,
   feedbackReturnToOutcome = false,
   catalogAttentionOnly = false,
-  selectedRegistrationCode = null;
+  selectedRegistrationCode = null,
+  selectedAssignmentId = null,
+  outcomeReturnPage = "learningOutcomes";
 const archivedOutcomesKey = "archived-learning-outcomes";
 const attentionOutcomesByPhase = {
   OF: ["IT_OF_LU_Softskills_003"],
@@ -791,6 +869,35 @@ const attentionOutcomesByPhase = {
 const attentionOutcomeCodes = Object.values(attentionOutcomesByPhase).flat();
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+// Eén herbruikbare iconenverzameling voor de navigatie en dashboardkaarten.
+const iconPaths = Object.freeze({
+  dashboard: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/>',
+  outcomes: '<path d="M5 3h11a3 3 0 0 1 3 3v15H7a2 2 0 0 1-2-2V3Z"/><path d="M8 7h7M8 11h7M8 15h4"/>',
+  assignment: '<path d="M9 5h6M9 3h6v4H9z"/><path d="M7 5H5v16h14V5h-2"/><path d="m9 14 2 2 4-5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="m14 10 6-6M16 4h4v4"/>',
+  reflection: '<path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/>',
+  feedback: '<path d="M5 20v-6M10 20V9M15 20V4M20 20V12"/>',
+  settings: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  progress: '<path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/>',
+  idea: '<path d="M9 18h6M10 22h4"/><path d="M8.5 15.5A7 7 0 1 1 15.5 15.5c-.9.7-1.4 1.5-1.5 2.5h-4c-.1-1-.6-1.8-1.5-2.5Z"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  layout: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M10 9v12"/>',
+  eye: '<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/>',
+});
+
+function uiIcon(name) {
+  const paths = iconPaths[name] || iconPaths.dashboard;
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + "</svg>";
+}
+
+function applyUiIcons(scope = document) {
+  scope.querySelectorAll("[data-icon]").forEach((element) => {
+    if (!element.firstElementChild) element.innerHTML = uiIcon(element.dataset.icon);
+  });
+}
 
 function login() {
   role = window.LARAVEL_USER?.role || "student";
@@ -802,8 +909,22 @@ function login() {
   document.getElementById("processingNotification").classList.toggle("hidden", role !== "student");
 
   document.getElementById("nav").innerHTML = routes[role]
-    .map(([s, p]) => '<button class="nav" data-route="' + p + '" onclick="show(\'' + p + "')\">" + s + "</button>")
+    .map(
+      ([label, page, icon]) =>
+        '<button class="nav ' +
+        (page === "dashboardSettings" ? "settings-nav" : "") +
+        '" data-route="' +
+        page +
+        '" onclick="show(\'' +
+        page +
+        "')\"><span class=\"nav-icon\">" +
+        uiIcon(icon) +
+        '</span><span class="nav-label">' +
+        label +
+        "</span></button>",
+    )
     .join("");
+  applyUiIcons();
   show(routes[role][0][1]);
 }
 
@@ -814,9 +935,11 @@ function show(page) {
 
   document.querySelectorAll(".view").forEach((x) => x.classList.toggle("hidden", x.id !== page));
 
-  document
-    .querySelectorAll("[data-route]")
-    .forEach((x) => x.classList.toggle("active", x.dataset.route === (page === "outcomeDetail" ? "learningOutcomes" : page)));
+  const navigationPage = page === "outcomeDetail" ? "learningOutcomes" : page === "assignmentDetail" ? "assignments" : page;
+  document.querySelectorAll("[data-route]").forEach((x) => x.classList.toggle("active", x.dataset.route === navigationPage));
+  if (page === "assignments") renderAssignments();
+  if (page === "dashboardSettings") renderDashboardSettings();
+  if (page === "studentDashboard") applyDashboardPreferences();
   window.scrollTo(0, 0);
 }
 
@@ -853,17 +976,263 @@ function renderDashboard() {
     .join("");
 
   document.getElementById("phasePercent").textContent = current[2] + "%";
+  document.getElementById("phaseProgressLabel").textContent = "van de " + current[1].toLowerCase() + " behaald";
 
   document.getElementById("phaseBar").innerHTML = '<span style="width:' + current[2] + '%"></span>';
   const work = currentWorkByPhase[phase];
   document.getElementById("currentWorkTitle").textContent = work.title;
   document.getElementById("currentWorkMeta").textContent = work.type + " · " + current[1];
-  document.getElementById("currentWorkBar").style.width = work.pct + "%";
-  document.getElementById("currentWorkPercent").textContent = work.pct + "%";
   const attentionCount = attentionOutcomesByPhase[phase].length;
   document.getElementById("attentionCount").textContent = attentionCount;
   document.getElementById("attentionText").textContent =
     attentionCount === 1 ? "leeruitkomst om verder aan te werken" : "leeruitkomsten om verder aan te werken";
+
+  const phaseOutcomes = outcomes
+    .filter((outcome) => outcome.phase === phase && Number.isFinite(outcome.pct))
+    .sort((a, b) => b.pct - a.pct)
+    .slice(0, 4);
+  document.getElementById("dashboardOutcomeProgress").innerHTML = phaseOutcomes
+    .map(
+      (outcome) =>
+        '<button class="dashboard-outcome-row" type="button" onclick="openOutcome(\'' +
+        outcome.code +
+        "')\"><span>" +
+        esc(outcome.short) +
+        '</span><span class="bar"><span style="width:' +
+        outcome.pct +
+        '%"></span></span><b>' +
+        outcome.pct +
+        "%</b></button>",
+    )
+    .join("");
+
+  const phaseAssignments = assignments.filter((assignment) => assignment.phase === phase).slice(0, 3);
+  document.getElementById("dashboardActionList").innerHTML = phaseAssignments.length
+    ? phaseAssignments
+        .map(
+          (assignment) =>
+            '<button class="dashboard-action-row" type="button" onclick="openAssignment(' +
+            assignment.id +
+            ')"><span class="action-status ' +
+            assignment.status +
+            '">' +
+            (assignment.status === "completed" ? "✓" : "") +
+            '</span><span><strong>' +
+            esc(assignment.title) +
+            "</strong><small>" +
+            esc(assignment.type) +
+            "</small></span><em>" +
+            assignmentStatuses[assignment.status] +
+            '</em><span aria-hidden="true">›</span></button>',
+        )
+        .join("")
+    : '<p class="dashboard-empty">Voor deze fase zijn geen openstaande acties.</p>';
+
+  document.getElementById("dashboardDeadlineList").innerHTML = assignments
+    .filter((assignment) => assignment.status !== "completed")
+    .slice(0, 3)
+    .map(
+      (assignment) =>
+        '<button type="button" onclick="openAssignment(' +
+        assignment.id +
+        ')"><span>' +
+        esc(assignment.dueDate) +
+        "</span><strong>" +
+        esc(assignment.title) +
+        '</strong><span aria-hidden="true">›</span></button>',
+    )
+    .join("");
+
+  applyDashboardPreferences();
+}
+
+// -----------------------------------------------------------------------------
+// Persoonlijke dashboardinstellingen
+// -----------------------------------------------------------------------------
+const dashboardSettingsKey = "ontwikkeling-dashboard-instellingen";
+const defaultDashboardPreferences = Object.freeze({
+  compact: false,
+  darkMode: false,
+  outcomes: true,
+  actions: true,
+  feedback: true,
+  deadlines: true,
+});
+let dashboardSettingsMessageTimer;
+
+function getDashboardPreferences() {
+  try {
+    const saved = JSON.parse(loadLocalState(dashboardSettingsKey) || "{}");
+    return { ...defaultDashboardPreferences, ...(saved && typeof saved === "object" ? saved : {}) };
+  } catch {
+    return { ...defaultDashboardPreferences };
+  }
+}
+
+function applyDashboardPreferences() {
+  const dashboard = document.getElementById("studentDashboard");
+  if (!dashboard) return;
+  const preferences = getDashboardPreferences();
+  document.documentElement.classList.toggle("theme-dark", preferences.darkMode);
+  dashboard.classList.toggle("dashboard-compact", preferences.compact);
+  for (const key of ["outcomes", "actions", "feedback", "deadlines"]) {
+    dashboard.querySelector('[data-dashboard-widget="' + key + '"]')?.classList.toggle("hidden", !preferences[key]);
+  }
+}
+
+function renderDashboardSettings() {
+  const preferences = getDashboardPreferences();
+  const fields = {
+    compact: "settingCompact",
+    darkMode: "settingDarkMode",
+    outcomes: "settingOutcomes",
+    actions: "settingActions",
+    feedback: "settingFeedback",
+    deadlines: "settingDeadlines",
+  };
+  for (const [key, id] of Object.entries(fields)) document.getElementById(id).checked = preferences[key];
+  applyUiIcons(document.getElementById("dashboardSettings"));
+}
+
+function updateDashboardPreference(key, enabled) {
+  if (!(key in defaultDashboardPreferences)) return;
+  const preferences = { ...getDashboardPreferences(), [key]: Boolean(enabled) };
+  saveLocalState(dashboardSettingsKey, JSON.stringify(preferences));
+  applyDashboardPreferences();
+
+  const message = document.getElementById("dashboardSettingsSaved");
+  message.classList.add("visible");
+  clearTimeout(dashboardSettingsMessageTimer);
+  dashboardSettingsMessageTimer = setTimeout(() => message.classList.remove("visible"), 2200);
+}
+
+function resetDashboardPreferences() {
+  saveLocalState(dashboardSettingsKey, JSON.stringify(defaultDashboardPreferences));
+  renderDashboardSettings();
+  applyDashboardPreferences();
+  hint("De standaardweergave is hersteld.");
+}
+
+// Bouwt het opdrachtenoverzicht en zoekt de gekoppelde leeruitkomsten op.
+function renderAssignments() {
+  const search = document.getElementById("assignmentSearch").value.trim().toLowerCase();
+  const selectedStatus = document.getElementById("assignmentStatus").value;
+
+  const list = assignments.filter((assignment) => {
+    const linkedOutcomes = assignment.outcomeCodes
+      .map((code) => outcomes.find((outcome) => outcome.code === code))
+      .filter(Boolean);
+    const searchableText = [
+      assignment.title,
+      assignment.type,
+      assignment.description,
+      ...linkedOutcomes.flatMap((outcome) => [outcome.code, outcome.short]),
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return assignment.status === selectedStatus && (!search || searchableText.includes(search));
+  });
+
+  document.getElementById("assignmentTotal").textContent = assignments.length + " OPDRACHTEN";
+  document.getElementById("assignmentActiveCount").textContent = assignments.filter((item) => item.status === "active").length;
+  document.getElementById("assignmentReviewCount").textContent = assignments.filter((item) => item.status === "review").length;
+  document.getElementById("assignmentCompletedCount").textContent = assignments.filter((item) => item.status === "completed").length;
+  document.getElementById("assignmentCount").textContent = list.length + " " + (list.length === 1 ? "opdracht" : "opdrachten") + " gevonden";
+
+  document.getElementById("assignmentList").innerHTML = list.length
+    ? list
+        .map((assignment) => {
+          const phaseName = phases.find((item) => item[0] === assignment.phase)?.[1] || assignment.phase;
+
+          return (
+            '<article class="assignment-card card ' +
+            assignment.status +
+            '"><button class="assignment-card-open" type="button" onclick="openAssignment(' +
+            assignment.id +
+            ')"><div class="assignment-card-head"><div><span class="assignment-type">' +
+            esc(assignment.type) +
+            "</span><h2>" +
+            esc(assignment.title) +
+            '</h2></div><span class="assignment-status ' +
+            assignment.status +
+            '">' +
+            assignmentStatuses[assignment.status] +
+            '</span></div><p class="assignment-description">' +
+            esc(assignment.description) +
+            '</p><div class="assignment-meta compact"><div><span>Fase</span><b>' +
+            esc(phaseName) +
+            '</b></div><div><span>Inleverdatum</span><b>' +
+            esc(assignment.dueDate) +
+            '</b></div></div><span class="assignment-open-label">Bekijk opdrachtinformatie <b aria-hidden="true">→</b></span></button></article>'
+          );
+        })
+        .join("")
+    : '<div class="empty-state"><span class="empty-icon">⌕</span><h2>Geen opdrachten gevonden</h2><p>Pas de zoekterm of filters aan.</p></div>';
+}
+
+// Vult de detailpagina van de gekozen opdracht en toont daar de koppelingen.
+function openAssignment(id) {
+  const assignment = assignments.find((item) => item.id === id);
+  if (!assignment) return;
+  selectedAssignmentId = id;
+
+  const phaseName = phases.find((item) => item[0] === assignment.phase)?.[1] || assignment.phase;
+  const linkedOutcomes = assignment.outcomeCodes
+    .map((code) => outcomes.find((outcome) => outcome.code === code))
+    .filter(Boolean);
+
+  document.getElementById("assignmentDetailType").textContent = assignment.type;
+  document.getElementById("assignmentDetailTitle").textContent = assignment.title;
+  document.getElementById("assignmentDetailIntro").textContent = assignmentStatuses[assignment.status] + " · " + phaseName;
+  document.getElementById("assignmentDetailDescription").textContent = assignment.description;
+  document.getElementById("assignmentDetailPhase").textContent = phaseName;
+  document.getElementById("assignmentDetailDueDate").textContent = assignment.dueDate;
+  document.getElementById("assignmentDetailHours").textContent = assignment.hours + " uur";
+  document.getElementById("assignmentDetailOutcomeCount").textContent = linkedOutcomes.length;
+
+  const status = document.getElementById("assignmentDetailStatus");
+  status.className = "assignment-status " + assignment.status;
+  status.textContent = assignmentStatuses[assignment.status];
+
+  const submitButton = document.getElementById("assignmentSubmitButton");
+  const submissionNote = document.getElementById("assignmentSubmissionNote");
+  submitButton.classList.toggle("hidden", assignment.status !== "active");
+  submissionNote.textContent =
+    assignment.status === "active"
+      ? "Lever je opdracht in wanneer alle onderdelen klaar zijn."
+      : assignment.status === "review"
+        ? "Deze opdracht is ingeleverd en wacht op beoordeling door de docent."
+        : "Deze opdracht is beoordeeld en afgerond.";
+
+  document.getElementById("assignmentDetailOutcomeList").innerHTML = linkedOutcomes
+    .map(
+      (outcome) =>
+        '<button class="assignment-outcome" type="button" onclick="openOutcome(\'' +
+        esc(outcome.code) +
+        "', 'assignmentDetail')\"><span><b>" +
+        esc(outcome.short) +
+        '</b><small class="code">' +
+        esc(outcome.code) +
+        '</small></span><span aria-hidden="true">→</span></button>',
+    )
+    .join("");
+
+  show("assignmentDetail");
+}
+
+function submitAssignment() {
+  const assignment = assignments.find((item) => item.id === selectedAssignmentId);
+  if (!assignment || assignment.status !== "active") return;
+
+  assignment.status = "review";
+  const statuses = Object.fromEntries(assignments.map((item) => [item.id, item.status]));
+  saveLocalState(assignmentStatusKey, JSON.stringify(statuses));
+
+  document.getElementById("assignmentStatus").value = "review";
+  renderAssignments();
+  openAssignment(assignment.id);
+  hint("Je opdracht is ingeleverd en staat nu bij Beoordeling.");
 }
 
 function practicalExplanation(outcome) {
@@ -875,9 +1244,12 @@ function practicalExplanation(outcome) {
     : "Je laat deze vaardigheid zien tijdens samenwerking, communicatie en je eigen leerproces. Beschrijf een concrete situatie, jouw handelen, ontvangen feedback en wat je een volgende keer anders doet.";
 }
 
-function openOutcome(code) {
+function openOutcome(code, returnPage = "learningOutcomes") {
   const x = outcomes.find((o) => o.code === code),
     hasProgress = x.pct !== null;
+  outcomeReturnPage = returnPage;
+  const backButton = document.getElementById("outcomeBackButton");
+  backButton.textContent = returnPage === "assignmentDetail" ? "← Terug naar opdracht" : "← Terug naar leeruitkomsten";
   currentOutcomeCode = code;
   document.getElementById("outcomeTitle").textContent = x.short;
   document.getElementById("outcomeMeta").textContent = phases.find((p) => p[0] === x.phase)[1];
@@ -898,6 +1270,10 @@ function openOutcome(code) {
   renderOutcomeReflections();
   renderOutcomeFeedback();
   show("outcomeDetail");
+}
+
+function backFromOutcome() {
+  show(outcomeReturnPage);
 }
 
 function renderGoalOptions() {

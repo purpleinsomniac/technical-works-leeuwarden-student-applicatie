@@ -51,7 +51,7 @@
               <h2>Coachnotitie</h2>
               <label class="label">Opmerking voor begeleiding</label>
               <textarea class="input" placeholder="Noteer een observatie of afspraak"></textarea>
-              <button class="button" onclick="hint('Coachnotities worden in het mock-up niet opgeslagen.')">Notitie bewaren</button>
+              <button class="button" onclick="hint('Coachnotities worden nog niet opgeslagen.')">Notitie bewaren</button>
             </div>
           </div>
           <div class="card">

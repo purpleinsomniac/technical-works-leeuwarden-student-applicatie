@@ -11,6 +11,13 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $user?->loadMissing('appState');
+        $initialen = $user
+            ? collect(preg_split('/\s+/', trim($user->naam)))
+                ->filter()
+                ->take(2)
+                ->map(fn (string $naamdeel): string => mb_strtoupper(mb_substr($naamdeel, 0, 1)))
+                ->implode('')
+            : '';
 
         $roleView = match ($user?->rol) {
             'student' => 'roles.student',
@@ -51,6 +58,7 @@ class DashboardController extends Controller
                 'id' => $user->id,
                 'name' => $user->naam,
                 'role' => $user->rol,
+                'initials' => $initialen,
             ] : null,
             'frontendState' => $user?->appState?->gegevens ?? [],
         ]);

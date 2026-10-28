@@ -51,12 +51,24 @@
             @csrf
             <button class="nav" type="submit">Uitloggen</button>
           </form>
+          <p class="product-credit">
+            <span>Product of</span>
+            <strong>Technical Works Leeuwarden</strong>
+          </p>
         </div>
       </aside>
       <main class="main">
+        {{-- Gedeelde header voor alle rollen. --}}
         <header class="topbar">
-          <span>IT Innovation Gateway <span class="separator">/</span> Mijn leeromgeving</span>
-          <span class="profile">
+          <div class="topbar-context">
+            <span class="topbar-mark" aria-hidden="true">◈</span>
+            <div class="topbar-title">
+              <span class="topbar-project">IT Innovation Gateway</span>
+              <strong>Mijn leeromgeving</strong>
+            </div>
+          </div>
+          <time class="topbar-date" datetime="{{ now()->toDateString() }}">{{ ucfirst(now()->locale('nl')->translatedFormat('l j F Y')) }}</time>
+          <div class="profile">
             <button
               id="processingNotification"
               class="processing-notification"
@@ -67,17 +79,40 @@
             >
               <span class="processing-icon">✓</span><span class="processing-badge">42</span>
             </button>
-            <span class="avatar">SV</span><span class="profile-name">Sam de Vries</span></span
-          >
+            <span class="avatar" aria-hidden="true">{{ $frontendUser['initials'] }}</span>
+            <span class="profile-copy">
+              <strong class="profile-name">{{ $frontendUser['name'] }}</strong>
+              <small>Ingelogd</small>
+            </span>
+          </div>
         </header>
-        {{-- Studentweergaven: dashboard, leeruitkomsten, uren, reflecties en feedback. --}}
+        {{-- Rolweergaven met onder andere dashboard, opdrachten en leeruitkomsten. --}}
         @if ($roleView)
           @include($roleView)
         @endif
 
 
         <div id="hint" class="warning hidden" role="status"></div>
-        <p class="printlabel">Mock-up · ontwerp met demogegevens · definitieve rekenregels en rechten nog vast te stellen</p>
+        {{-- Gedeelde footer voor alle rollen. --}}
+        <footer class="app-footer">
+          <div class="footer-main">
+            <div class="footer-identity">
+              <span class="footer-mark" aria-hidden="true">◈</span>
+              <div class="footer-brand">
+                <strong>Ontwikkeling</strong>
+                <span>IT Innovation Gateway</span>
+              </div>
+            </div>
+            <div class="footer-meta">
+              <span>Persoonlijke leeromgeving</span>
+              <span>© {{ date('Y') }} Technical Works Leeuwarden</span>
+            </div>
+          </div>
+          <div class="footer-notice">
+            <span class="footer-notice-icon" aria-hidden="true">i</span>
+            <p class="printlabel">Deze applicatie gebruikt momenteel demogegevens. Definitieve rekenregels en gebruikersrechten worden nog vastgesteld.</p>
+          </div>
+        </footer>
       </main>
     </div>
 

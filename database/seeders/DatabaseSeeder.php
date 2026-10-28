@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         );
 
         foreach ($leeruitkomsten as $leeruitkomst) {
-            LearningOutcome::updateOrCreate(
+            LearningOutcome::updateOrCreate( 
                 ['code' => $leeruitkomst['code']],
                 [
                     'studiefase_id' => $studiefases[$leeruitkomst['phase']]->id,

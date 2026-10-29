@@ -1,29 +1,103 @@
-.coach-progress-panel { padding: 24px; }
-.coach-progress-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 7px; }
-.coach-progress-heading h2 { margin-bottom: 4px; color: #1d3d4d; }
-.coach-progress-heading p { margin: 0; font-size: 11px; }
-.coach-progress-heading .pill { flex: none; }
-.coach-outcome-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 17px 0; border-top: 1px solid #e8eef2; }
-.coach-outcome-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.coach-outcome-heading > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.coach-outcome-heading b { color: #2b4657; font-size: 12px; }
-.coach-outcome-heading .code { overflow-wrap: anywhere; }
-.coach-outcome-status { flex: none; padding: 5px 10px; border: 1px solid #dfe9e8; border-radius: 999px; background: #f3f8f7; color: #53746f; font-size: 9px; font-weight: 650; text-transform: capitalize; }
-.coach-outcome-controls { display: grid; grid-template-columns: minmax(130px, 0.75fr) minmax(180px, 1fr) auto; align-items: end; gap: 13px; }
+.coach-page { width: 100%; max-width: 1180px; margin: 0 auto; }
+.coach-page-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin: 7px 0 25px; }
+.coach-eyebrow { display: block; margin-bottom: 6px; color: #168479; font-size: 9px; font-weight: 750; letter-spacing: 1.5px; text-transform: uppercase; }
+.coach-page-hero h1,
+.coach-student-hero h1 { margin: 0 0 8px; color: #19384b; font-size: clamp(26px, 3vw, 34px); letter-spacing: -0.8px; }
+.coach-page-hero p,
+.coach-student-hero p { margin: 0; color: #708293; font-size: 12px; }
+.coach-student-count { display: flex; align-items: baseline; gap: 6px; flex: none; padding: 9px 13px; border: 1px solid #d5e9e3; border-radius: 10px; background: #edf7f4; color: #176f65; font-size: 15px; font-weight: 750; }
+.coach-student-count span { color: #5d817a; font-size: 10px; font-weight: 600; }
+.coach-success { margin: 0 0 18px; border-color: #cde8dd; background: #eef8f3; color: #286d54; }
+.coach-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 31px; }
+.coach-summary-card { display: flex; min-width: 0; align-items: center; gap: 13px; padding: 17px 19px; border: 1px solid #e1e9ef; border-radius: 13px; background: #fff; box-shadow: 0 4px 14px rgba(22, 47, 67, 0.025); }
+.coach-summary-icon { display: grid; width: 39px; height: 39px; flex: none; place-items: center; border-radius: 11px; background: #e6f5f0; color: #168479; font-size: 18px; }
+.coach-summary-icon-hours { background: #fff5e7; color: #b57d29; }
+.coach-summary-icon-outcomes { background: #edf0fc; color: #6875b1; }
+.coach-summary-card div { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.coach-summary-card strong { color: #203d4e; font-size: 21px; line-height: 1.2; }
+.coach-summary-card div span { color: #778897; font-size: 10px; }
+.coach-roster,
+.coach-progress-section { min-width: 0; }
+.coach-section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin-bottom: 14px; }
+.coach-section-heading h2 { margin: 0 0 4px; color: #203d4e; font-size: 18px; }
+.coach-section-heading p { margin: 0; color: #758695; font-size: 11px; }
+.coach-section-count { flex: none; padding: 6px 10px; border: 1px solid #e1e8ed; border-radius: 999px; background: #fff; color: #667b8a; font-size: 9px; font-weight: 650; }
+.coach-student-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.coach-student-card { display: grid; grid-template-columns: 43px minmax(0, 1fr) auto; align-items: center; gap: 11px 13px; min-width: 0; padding: 17px; border: 1px solid #e1e8ee; border-radius: 13px; background: #fff; color: inherit; text-align: left; box-shadow: 0 3px 12px rgba(22, 47, 67, 0.025); transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s; }
+.coach-student-card:hover { transform: translateY(-2px); border-color: #b9d9d2; box-shadow: 0 8px 20px rgba(22, 88, 78, 0.08); }
+.coach-student-card:focus-visible { outline: 3px solid #159d99; outline-offset: 3px; }
+.coach-student-avatar { display: grid; width: 43px; height: 43px; flex: none; place-items: center; border: 1px solid #cce5de; border-radius: 13px; background: #e9f5f1; color: #22796e; font-size: 15px; font-weight: 750; }
+.coach-student-info { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.coach-student-info strong { overflow: hidden; color: #274455; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.coach-student-info > span { overflow: hidden; color: #82909c; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.coach-student-arrow { color: #3a9688; font-size: 17px; }
+.coach-student-meta { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 6px 15px; padding-top: 10px; border-top: 1px solid #edf1f4; color: #788895; font-size: 9px; }
+.coach-student-meta strong { color: #3e5d6a; font-weight: 750; }
+.coach-empty-state { display: flex; min-height: 220px; flex-direction: column; align-items: center; justify-content: center; padding: 30px; border: 1px dashed #d5e1e7; border-radius: 14px; background: rgba(255, 255, 255, 0.72); text-align: center; }
+.coach-empty-icon { display: grid; width: 46px; height: 46px; place-items: center; margin-bottom: 13px; border-radius: 14px; background: #eaf5f2; color: #34877b; font-size: 21px; }
+.coach-empty-state h3 { margin: 0 0 5px; color: #294858; font-size: 14px; }
+.coach-empty-state p { max-width: 390px; margin: 0; color: #798a97; font-size: 10px; line-height: 1.6; }
+.coach-detail-top { display: flex; align-items: center; gap: 16px; margin: 0 0 18px; }
+.coach-back-button { display: inline-flex; flex: none; align-items: center; gap: 8px; }
+.coach-detail-top .coach-eyebrow { margin: 0; }
+.coach-student-hero { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.coach-student-avatar-large { width: 55px; height: 55px; border-radius: 16px; font-size: 19px; }
+.coach-student-hero h1 { margin-bottom: 3px; }
+.coach-student-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 25px; }
+.coach-detail-stat { display: flex; min-width: 0; flex-direction: column; gap: 8px; padding: 17px 19px; border: 1px solid #e1e9ef; border-radius: 13px; background: #fff; }
+.coach-detail-stat-label { color: #778896; font-size: 10px; }
+.coach-detail-stat strong { overflow-wrap: anywhere; color: #203d4e; font-size: 24px; line-height: 1.2; }
+.coach-detail-stat strong small { color: #748695; font-size: 11px; font-weight: 600; }
+.coach-detail-stat .coach-detail-phase { font-size: 16px; }
+.coach-progress-section > .coach-section-heading { margin-bottom: 15px; }
+.coach-progress-section .coach-eyebrow { margin-bottom: 5px; }
+.coach-outcome-card { margin-bottom: 11px; padding: 18px 20px; border: 1px solid #e1e8ee; border-radius: 13px; background: #fff; box-shadow: 0 3px 12px rgba(22, 47, 67, 0.025); }
+.coach-outcome-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; padding-bottom: 14px; border-bottom: 1px solid #edf1f4; }
+.coach-outcome-title { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.coach-outcome-title h3 { margin: 0; color: #2b4657; font-size: 12px; line-height: 1.5; }
+.coach-outcome-code { color: #788b9b; font: 600 9px/1.4 ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
+.coach-status-badge { flex: none; padding: 5px 9px; border: 1px solid #e1e8ed; border-radius: 999px; background: #f5f7f9; color: #657887; font-size: 9px; font-weight: 650; text-transform: capitalize; }
+.coach-status-gestart { border-color: #d7e8f4; background: #eef6fb; color: #447496; }
+.coach-status-in_ontwikkeling { border-color: #f0e2c8; background: #fff8eb; color: #99702d; }
+.coach-status-behaald { border-color: #cde8dd; background: #eef8f3; color: #337557; }
+.coach-outcome-form { display: grid; grid-template-columns: minmax(150px, 0.75fr) minmax(190px, 1fr) auto; align-items: end; gap: 13px; padding-top: 14px; }
 .coach-field { display: block; min-width: 0; color: #40596a; font-size: 10px; }
 .coach-field .input { min-height: 42px; margin: 6px 0 0; border-color: #d7e1e8; border-radius: 8px; background: #fbfcfd; padding: 9px 12px; font-size: 11px; }
 .coach-field .input:focus { border-color: #4aa99b; background: #fff; box-shadow: 0 0 0 3px rgba(47, 174, 159, 0.1); outline: 0; }
-.coach-save-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 10px; padding: 10px 19px; white-space: nowrap; }
+.coach-field small { display: block; margin-top: 5px; color: #84929d; font-size: 9px; font-weight: 500; }
+.coach-input-wrap { position: relative; display: block; }
+.coach-input-wrap .input { padding-right: 40px; }
+.coach-input-wrap > span { position: absolute; top: 50%; right: 12px; color: #81909b; font-size: 10px; font-weight: 500; transform: translateY(-50%); }
+.coach-save-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 9px; padding: 10px 16px; white-space: nowrap; }
 .coach-save-button:hover { background: #116b62; border-color: #116b62; box-shadow: 0 5px 14px rgba(22, 126, 114, 0.15); transform: translateY(-1px); }
+.coach-outcomes-empty { min-height: 190px; }
+
+@media (max-width: 980px) {
+  .coach-student-grid { grid-template-columns: 1fr; }
+  .coach-outcome-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .coach-save-button { grid-column: 1 / -1; justify-self: start; }
+}
 
 @media (max-width: 680px) {
-  .coach-progress-panel { padding: 18px; }
-  .coach-progress-heading { align-items: flex-start; flex-direction: column; }
-  .coach-outcome-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
-  .coach-save-button { grid-column: 1 / -1; width: 100%; }
+  .coach-page-hero { align-items: flex-start; flex-direction: column; }
+  .coach-summary { gap: 9px; margin-bottom: 25px; }
+  .coach-summary-card { align-items: flex-start; flex-direction: column; gap: 9px; padding: 13px; }
+  .coach-summary-icon { width: 33px; height: 33px; }
+  .coach-summary-card strong { font-size: 18px; }
+  .coach-summary-card div span { font-size: 9px; }
+  .coach-section-heading { align-items: flex-start; }
+  .coach-student-stats { gap: 8px; }
+  .coach-detail-stat { padding: 13px; }
+  .coach-detail-stat strong { font-size: 20px; }
+  .coach-outcome-card { padding: 15px; }
 }
 
 @media (max-width: 420px) {
-  .coach-outcome-controls { grid-template-columns: 1fr; }
-  .coach-save-button { grid-column: auto; }
+  .coach-summary { grid-template-columns: 1fr; }
+  .coach-summary-card { align-items: center; flex-direction: row; }
+  .coach-student-stats { grid-template-columns: 1fr; }
+  .coach-outcome-form { grid-template-columns: 1fr; gap: 10px; }
+  .coach-save-button { grid-column: auto; width: 100%; }
+  .coach-section-heading { flex-direction: column; }
+  .coach-detail-top { flex-wrap: wrap; }
 }

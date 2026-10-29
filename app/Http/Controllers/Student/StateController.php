@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Student;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\UserState;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ class StateController extends Controller
 
         $allowedKeys = [
             'archived-learning-outcomes',
-            'hours-processing-read',
+            'hours-processing-latest-read',
             'ontwikkeling-dashboard-instellingen',
         ];
         $data = array_intersect_key($payload['data'], array_flip($allowedKeys));
@@ -57,10 +59,11 @@ class StateController extends Controller
             }
         }
 
-        UserState::updateOrCreate(
-            ['gebruiker_id' => $request->user()->id],
-            ['gegevens' => $data],
-        );
+        $state = UserState::firstOrNew(['gebruiker_id' => $request->user()->id]);
+
+        // Alleen de gewijzigde onderdelen vervangen. Andere voorkeuren blijven bewaard.
+        $state->gegevens = array_replace($state->gegevens ?? [], $data);
+        $state->save();
 
         return response()->json(['saved' => true]);
     }

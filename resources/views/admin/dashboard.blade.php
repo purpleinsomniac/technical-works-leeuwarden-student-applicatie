@@ -1,3 +1,4 @@
+<<<<<<< HEAD:resources/views/roles/beheerder.blade.php
 <section id="adminProcessing" class="view hidden admin-dashboard">
   <header class="admin-hero">
     <div class="admin-hero-copy">
@@ -38,6 +39,13 @@
   </section>
 
   <div class="admin-section-heading">
+=======
+@extends('layouts.application')
+
+@section('role-content')
+<section id="adminProcessing" class="view hidden">
+  <div class="head">
+>>>>>>> fb49386d067a7b33bf790dd1a99e2e1ddd560682:resources/views/admin/dashboard.blade.php
     <div>
       <span class="admin-eyebrow">Inzicht</span>
       <h2>Applicatiegegevens</h2>
@@ -121,3 +129,4 @@
     <p>Er bestaat nog geen auditlogtabel. Daarom worden hier geen logregels getoond. Een auditlog kan later worden toegevoegd zodra de gewenste handelingen en bewaartermijnen zijn vastgesteld.</p>
   </section>
 </section>
+@endsection

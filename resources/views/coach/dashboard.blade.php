@@ -1,3 +1,6 @@
+@extends('layouts.application')
+
+@section('role-content')
 <section id="coachStudents" class="view hidden">
   <div class="head">
     <div>
@@ -95,4 +98,4 @@
   </section>
 @endforeach
 
-{{-- Managementweergaven. --}}
+@endsection

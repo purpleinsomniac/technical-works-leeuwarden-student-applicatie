@@ -1,3 +1,6 @@
+@extends('layouts.application')
+
+@section('role-content')
 <section id="managerGroups" class="view hidden">
   <div class="head">
     <div>
@@ -38,4 +41,4 @@
   </div>
 </section>
 
-{{-- Beheerweergaven voor verwerking en logging. --}}
+@endsection

@@ -1,7 +1,7 @@
 window.RoleApp.initializeRole({
   label: "Beheerder",
   routes: [
-    ["Verwerking", "adminProcessing"],
+    ["Overzicht", "adminProcessing"],
     ["Logboek", "adminLog"],
   ],
 });

@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    /**
-     * Open het inlogscherm of stuur een gebruiker naar het eigen dashboard.
-     */
     public function index(Request $request): View|RedirectResponse
     {
-        if (! $request->user()) {
+        $user = $request->user();
+
+        if (! $user) {
             return view('auth.login');
         }
 
-        $route = match ($request->user()->rol) {
+        $route = match ($user->rol) {
             'student' => 'student.dashboard',
             'coach' => 'coach.dashboard',
             'teamleider' => 'teamleader.dashboard',

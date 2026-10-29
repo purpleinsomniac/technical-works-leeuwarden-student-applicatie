@@ -19,6 +19,7 @@ class DashboardController extends RoleDashboardController
             activeRole: 'coach',
             view: 'coach.dashboard',
             roleData: $this->students(),
+            style: 'css/roles/coach.css',
             scripts: ['js/common.js', 'js/roles/coach.js'],
         );
     }

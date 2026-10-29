@@ -1,0 +1,29 @@
+.coach-progress-panel { padding: 24px; }
+.coach-progress-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 7px; }
+.coach-progress-heading h2 { margin-bottom: 4px; color: #1d3d4d; }
+.coach-progress-heading p { margin: 0; font-size: 11px; }
+.coach-progress-heading .pill { flex: none; }
+.coach-outcome-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 17px 0; border-top: 1px solid #e8eef2; }
+.coach-outcome-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.coach-outcome-heading > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.coach-outcome-heading b { color: #2b4657; font-size: 12px; }
+.coach-outcome-heading .code { overflow-wrap: anywhere; }
+.coach-outcome-status { flex: none; padding: 5px 10px; border: 1px solid #dfe9e8; border-radius: 999px; background: #f3f8f7; color: #53746f; font-size: 9px; font-weight: 650; text-transform: capitalize; }
+.coach-outcome-controls { display: grid; grid-template-columns: minmax(130px, 0.75fr) minmax(180px, 1fr) auto; align-items: end; gap: 13px; }
+.coach-field { display: block; min-width: 0; color: #40596a; font-size: 10px; }
+.coach-field .input { min-height: 42px; margin: 6px 0 0; border-color: #d7e1e8; border-radius: 8px; background: #fbfcfd; padding: 9px 12px; font-size: 11px; }
+.coach-field .input:focus { border-color: #4aa99b; background: #fff; box-shadow: 0 0 0 3px rgba(47, 174, 159, 0.1); outline: 0; }
+.coach-save-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 10px; padding: 10px 19px; white-space: nowrap; }
+.coach-save-button:hover { background: #116b62; border-color: #116b62; box-shadow: 0 5px 14px rgba(22, 126, 114, 0.15); transform: translateY(-1px); }
+
+@media (max-width: 680px) {
+  .coach-progress-panel { padding: 18px; }
+  .coach-progress-heading { align-items: flex-start; flex-direction: column; }
+  .coach-outcome-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .coach-save-button { grid-column: 1 / -1; width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .coach-outcome-controls { grid-template-columns: 1fr; }
+  .coach-save-button { grid-column: auto; }
+}

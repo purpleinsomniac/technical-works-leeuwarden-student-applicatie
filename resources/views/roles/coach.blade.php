@@ -50,35 +50,45 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2>Voortgang aanpassen</h2>
-      <p class="dim">Wijzig alleen de gegevens die je met de student hebt besproken.</p>
+    <div class="card coach-progress-panel">
+      <div class="coach-progress-heading">
+        <div>
+          <h2>Voortgang aanpassen</h2>
+          <p class="dim">Wijzig alleen de gegevens die je met de student hebt besproken.</p>
+        </div>
+        <span class="pill">{{ count($student['outcomes']) }} leeruitkomsten</span>
+      </div>
       @foreach ($student['outcomes'] as $outcome)
-        <form class="kv" method="POST" action="{{ route('progress.update', [$student['id'], $outcome['id']]) }}">
+        <form class="coach-outcome-form" method="POST" action="{{ route('progress.update', [$student['id'], $outcome['id']]) }}">
           @csrf
           @method('PATCH')
-          <div>
-            <b>{{ $outcome['title'] }}</b>
-            <span class="code">{{ $outcome['code'] }}</span>
+          <div class="coach-outcome-heading">
+            <div>
+              <b>{{ $outcome['title'] }}</b>
+              <span class="code">{{ $outcome['code'] }}</span>
+            </div>
+            <span class="coach-outcome-status">{{ str_replace('_', ' ', ucfirst($outcome['status'])) }}</span>
           </div>
-          <label class="label">
-            Uren
-            <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
-          </label>
-          <label class="label">
-            Status
-            <select class="input" name="status" required>
-              @foreach ([
-                'niet_gestart' => 'Niet gestart',
-                'gestart' => 'Gestart',
-                'in_ontwikkeling' => 'In ontwikkeling',
-                'behaald' => 'Behaald',
-              ] as $waarde => $label)
-                <option value="{{ $waarde }}" @selected($outcome['status'] === $waarde)>{{ $label }}</option>
-              @endforeach
-            </select>
-          </label>
-          <button class="button dark" type="submit">Opslaan</button>
+          <div class="coach-outcome-controls">
+            <label class="label coach-field">
+              Uren
+              <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
+            </label>
+            <label class="label coach-field">
+              Status
+              <select class="input" name="status" required>
+                @foreach ([
+                  'niet_gestart' => 'Niet gestart',
+                  'gestart' => 'Gestart',
+                  'in_ontwikkeling' => 'In ontwikkeling',
+                  'behaald' => 'Behaald',
+                ] as $waarde => $label)
+                  <option value="{{ $waarde }}" @selected($outcome['status'] === $waarde)>{{ $label }}</option>
+                @endforeach
+              </select>
+            </label>
+            <button class="button dark coach-save-button" type="submit">Opslaan <span aria-hidden="true">→</span></button>
+          </div>
         </form>
       @endforeach
     </div>

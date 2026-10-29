@@ -43,7 +43,7 @@ class DashboardController extends Controller
                 'scripts' => ['js/roles/student.js'],
             ],
             'coach' => [
-                'style' => null,
+                'style' => 'css/roles/coach.css',
                 'scripts' => ['js/common.js', 'js/roles/coach.js'],
             ],
             'teamleider' => [
@@ -51,7 +51,7 @@ class DashboardController extends Controller
                 'scripts' => ['js/common.js', 'js/roles/teamleider.js'],
             ],
             'beheerder' => [
-                'style' => null,
+                'style' => 'css/roles/beheerder.css',
                 'scripts' => ['js/common.js', 'js/roles/beheerder.js'],
             ],
             default => [

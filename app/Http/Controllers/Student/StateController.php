@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Student;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\UserState;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ class StateController extends Controller
 
         $allowedKeys = [
             'archived-learning-outcomes',
-            'hours-processing-2026-09-12-read',
+            'hours-processing-latest-read',
             'ontwikkeling-dashboard-instellingen',
         ];
         $data = array_intersect_key($payload['data'], array_flip($allowedKeys));

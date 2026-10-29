@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
             'student' => ['Sam de Vries', 'student@example.test'],
             'coach' => ['Mevrouw Jansen', 'coach@example.test'],
             'teamleider' => ['Onderwijsmanager', 'manager@example.test'],
-            'beheerder' => ['Applicatiebeheerder', 'admin@example.test'],
+            'beheerder' => ['Applicatiebeheerder', 'admin@ITIG.edu'],
         ];
 
         foreach ($demoUsers as $rol => [$naam, $email]) {

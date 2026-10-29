@@ -1,3 +1,6 @@
+@extends('layouts.application')
+
+@section('role-content')
 <section id="adminProcessing" class="view hidden">
   <div class="head">
     <div>
@@ -32,3 +35,4 @@
     <p class="dim">Voeg later een aparte auditlogmigratie toe wanneer is vastgesteld welke handelingen en bewaartermijnen nodig zijn.</p>
   </div>
 </section>
+@endsection

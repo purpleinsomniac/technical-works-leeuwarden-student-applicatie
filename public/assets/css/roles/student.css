@@ -86,9 +86,14 @@
   .side { position: static; width: 100%; height: auto; padding: 20px; }
   .side #nav { display: flex; flex-wrap: wrap; gap: 5px; }
   .side .nav { width: auto; font-size: 12px; }
-  .side .foot,
   .side hr,
   .side #roleLabel { display: none; }
+  /* Houd de accountnaam en uitlogknop ook op telefoon en smalle vensters bereikbaar. */
+  .side .foot { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; margin-top: 13px; padding-top: 13px; }
+  .side .foot > .small,
+  .side .foot .product-credit { display: none; }
+  .side .foot form { margin-left: auto; }
+  .side .foot form .nav { width: auto; min-height: 40px; padding: 9px 14px; }
   .main { padding: 0 18px 25px; }
   .topbar { height: 65px; margin-bottom: 25px; }
   .topbar .profile { display: none; }
@@ -930,11 +935,12 @@ body { background: #f3f6f9; }
 .dashboard-settings-shortcut { display: inline-flex; align-items: center; gap: 8px; flex: none; border: 1px solid #d9e5e9; border-radius: 9px; background: #fff; color: #436170; padding: 9px 12px; font-size: 10px; font-weight: 700; }
 .dashboard-settings-shortcut:hover { border-color: #9bcfc4; background: #eef8f5; color: #16786e; }
 .dashboard-settings-shortcut .ui-icon { width: 16px; height: 16px; }
-.dashboard-phase-tabs { margin: 18px 0 20px; }
+.dashboard-phase-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(100%, 620px); margin: 18px 0 20px; }
+.dashboard-phase-tabs .tab { display: flex; width: 100%; min-height: 44px; align-items: center; justify-content: center; padding-right: 12px; padding-left: 12px; text-align: center; }
 
 /* De drie belangrijkste dashboardkaarten. */
-.dashboard-primary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
-.dashboard-metric-card { height: 200px; min-width: 0; border: 1px solid #dce7ea; border-radius: 14px; padding: 22px; overflow: hidden; }
+.dashboard-primary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 15px; }
+.dashboard-metric-card { display: flex; box-sizing: border-box; height: 210px; min-width: 0; flex-direction: column; border: 1px solid #dce7ea; border-radius: 14px; padding: 22px; overflow: hidden; }
 .dashboard-progress-card { border-color: #c9e8df; background: #eaf7f3; }
 .dashboard-assignment-card { border-color: #e0e2f5; background: #f1f1fc; }
 .dashboard-attention-card { border-color: #f0e2c8; background: #fff8ec; }
@@ -946,12 +952,13 @@ body { background: #f3f6f9; }
 .dashboard-metric-card .big { margin: 9px 0 0; }
 .dashboard-metric-card .dim { min-height: 20px; font-size: 13px; }
 .dashboard-metric-card > .bar { margin-top: 17px; }
+.dashboard-progress-card > .bar,
 .dashboard-assignment-card .card-link,
-.dashboard-attention-card .card-link { margin-top: 16px; }
+.dashboard-attention-card .card-link { margin-top: auto; }
 
 /* Twee ruime kolommen houden het dashboard leesbaar zonder veel scrollen. */
 .dashboard-widget-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
-.dashboard-panel { display: flex; height: 220px; min-width: 0; flex-direction: column; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; padding: 19px; overflow: hidden; }
+.dashboard-panel { display: flex; box-sizing: border-box; height: 250px; min-width: 0; flex-direction: column; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; padding: 19px; overflow: hidden; }
 .dashboard-panel-head { display: flex; min-height: 34px; align-items: center; flex-direction: row; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
 .dashboard-panel-title { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .dashboard-panel-title h2 { margin: 0; color: #1d3446; font-size: 14px; }
@@ -970,7 +977,9 @@ body { background: #f3f6f9; }
 
 /* Acties en deadlines. */
 .dashboard-action-list,
-.dashboard-deadline-list { display: grid; gap: 7px; }
+.dashboard-deadline-list { display: grid; min-height: 0; flex: 1; align-content: start; gap: 7px; overflow-y: auto; }
+.dashboard-outcome-list,
+#dashboardRecentFeedback { min-height: 0; flex: 1; overflow-y: auto; }
 .dashboard-action-row { display: grid; grid-template-columns: 27px minmax(0, 1fr) auto 12px; align-items: center; gap: 10px; width: 100%; border: 1px solid #e1e9ed; border-radius: 9px; background: #fbfcfd; color: #51697b; padding: 10px; text-align: left; }
 .dashboard-action-row:hover,
 .dashboard-deadline-list button:hover { border-color: #b8d9d1; background: #f1f8f6; }
@@ -1031,9 +1040,9 @@ body { background: #f3f6f9; }
   .dashboard-settings-shortcut { width: 100%; justify-content: center; }
   .dashboard-primary-grid { grid-template-columns: 1fr; }
   .dashboard-attention-card { grid-column: auto; }
-  .dashboard-metric-card { height: 165px; }
+  .dashboard-metric-card { height: 190px; }
   .dashboard-widget-grid { grid-template-columns: 1fr; }
-  .dashboard-panel { height: auto; min-height: 225px; }
+  .dashboard-panel { height: 250px; min-height: 250px; }
   .dashboard-panel-head { align-items: flex-start; flex-direction: column; }
   .dashboard-deadline-list button { grid-template-columns: 92px minmax(0, 1fr) 12px; }
   .settings-footer { align-items: stretch; flex-direction: column; }

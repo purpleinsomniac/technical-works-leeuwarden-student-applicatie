@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // Redirect the user to the main dashboard entry point.
-    public function showLogin(): RedirectResponse
+    // Toon het formulier direct, zodat fout- en succesmeldingen bewaard blijven.
+    public function showLogin(Request $request): View|RedirectResponse
     {
-        return redirect()->route('home');
+        if ($request->user()) {
+            return redirect()->route('home');
+        }
+
+        return view('auth.login');
     }
 
     // Validate the submitted credentials and log the user in when they are correct.

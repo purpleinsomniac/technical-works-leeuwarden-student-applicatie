@@ -8,7 +8,6 @@
       <h1>Studenten begeleiden</h1>
       <p>Bekijk de voortgang van je studenten en werk uren en status per leeruitkomst bij.</p>
     </div>
-    <span class="coach-student-count">{{ count($roleData) }} <span>studenten</span></span>
   </header>
 
   @if (session('status'))

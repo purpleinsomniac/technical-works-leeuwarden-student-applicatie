@@ -10,6 +10,23 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * Ingelogde gebruiker uit de tabel `gebruikers`.
+ *
+ * @property int $id
+ * @property string $naam
+ * @property string $email
+ * @property string $password
+ * @property string $rol
+ * @property int|null $hoofdrol_id
+ * @property int|null $studiefase_id
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read UserState|null $appState
+ * @property-read StudyPhase|null $studyPhase
+ * @property-read Role|null $primaryRole
+ */
 class User extends Authenticatable
 {
     use Notifiable;

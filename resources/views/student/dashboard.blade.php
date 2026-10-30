@@ -1,3 +1,6 @@
+@extends('layouts.application')
+
+@section('role-content')
 <section id="studentDashboard" class="view student-dashboard">
           {{-- Welkomstregel en snelle toegang tot persoonlijke dashboardinstellingen. --}}
           <div class="dashboard-welcome">
@@ -30,8 +33,8 @@
                 <span class="metric-label">Huidige opdracht</span>
                 <span class="dashboard-card-icon" data-icon="assignment" aria-hidden="true"></span>
               </div>
-              <h2 class="dashboard-card-title" id="currentWorkTitle">Werkplek installeren</h2>
-              <div class="dim" id="currentWorkMeta">Installatieopdracht · Oriëntatiefase</div>
+              <h2 class="dashboard-card-title" id="currentWorkTitle">Opdracht laden…</h2>
+              <div class="dim" id="currentWorkMeta">De gegevens worden uit de database geladen.</div>
               <button class="card-link" type="button" onclick="show('assignments')">Bekijk opdracht <span aria-hidden="true">→</span></button>
             </article>
 
@@ -78,8 +81,7 @@
                 </div>
                 <button class="card-link" type="button" onclick="show('feedback')">Alle feedback →</button>
               </div>
-              <blockquote class="dashboard-feedback-quote">“Je hebt een mooie start gemaakt. Onderbouw je keuzes bij de volgende stap nog iets duidelijker.”</blockquote>
-              <p class="dashboard-feedback-author"><strong>Mevrouw Jansen</strong><span>Docent · 10 september 2026</span></p>
+              <div id="dashboardRecentFeedback"></div>
             </section>
 
             <section class="dashboard-panel dashboard-widget" data-dashboard-widget="deadlines">
@@ -98,47 +100,22 @@
             <div class="approval-modal-head">
               <div>
                 <div class="approval-title-meta">
-                  <p class="eyebrow">VERWERKING · 12 SEPTEMBER 2026</p>
+                  <p id="hoursApprovalEyebrow" class="eyebrow">URENVERWERKING</p>
                   <span id="processingReadStatus" class="processing-read-status unread">Ongelezen</span>
                 </div>
-                <h2 id="hoursApprovalTitle">42 nieuwe uren</h2>
-                <p>Deze uren zijn gecontroleerd en gekoppeld aan drie onderdelen.</p>
+                <h2 id="hoursApprovalTitle">Nieuwe uren</h2>
+                <p id="hoursApprovalDescription">De gevalideerde uren worden uit de database geladen.</p>
               </div>
               <button class="modal-close" type="button" aria-label="Detailvenster sluiten" onclick="closeHoursApprovalModal()">×</button>
             </div>
             <div class="approval-summary">
-              <div><span>Totaal goedgekeurd</span><strong>42 uur</strong></div>
-              <div><span>Onderdelen</span><strong>3</strong></div>
-              <div><span>Verwerkt op</span><strong>12 sep 2026</strong></div>
+              <div><span>Totaal goedgekeurd</span><strong id="hoursApprovalTotal">0 uur</strong></div>
+              <div><span>Onderdelen</span><strong id="hoursApprovalCount">0</strong></div>
+              <div><span>Verwerkt op</span><strong id="hoursApprovalDate">—</strong></div>
             </div>
-            <div class="approval-list">
-              <article class="approval-item">
-                <div class="approval-hours">18<span>uur</span></div>
-                <div>
-                  <h3>Werkplek installeren</h3>
-                  <strong>Eenvoudige vakgerichte taken uitvoeren</strong><span class="code">IT_OF_LU_Hardskills_001</span>
-                </div>
-                <div class="approval-person"><span>Goedgekeurd door</span><b>Mevrouw Jansen</b><small>Docent · 12 sep 2026</small></div>
-              </article>
-              <article class="approval-item">
-                <div class="approval-hours">14<span>uur</span></div>
-                <div>
-                  <h3>Werkproces plannen</h3>
-                  <strong>Voortgang bijhouden en rapporteren</strong><span class="code">IT_OF_LU_Hardskills_005</span>
-                </div>
-                <div class="approval-person"><span>Goedgekeurd door</span><b>Peter de Boer</b><small>Praktijkbegeleider · 11 sep 2026</small></div>
-              </article>
-              <article class="approval-item">
-                <div class="approval-hours">10<span>uur</span></div>
-                <div>
-                  <h3>Teamreflectie</h3>
-                  <strong>Samenwerken en reflecteren</strong><span class="code">IT_OF_LU_Softskills_003</span>
-                </div>
-                <div class="approval-person"><span>Goedgekeurd door</span><b>Fatima El Amrani</b><small>Coach · 10 sep 2026</small></div>
-              </article>
-            </div>
+            <div id="hoursApprovalList" class="approval-list"></div>
             <div class="approval-modal-footer">
-              <span class="small dim">Deze gegevens zijn demogegevens.</span>
+              <span class="small dim">Alleen gevalideerde uren worden getoond.</span>
               <div class="approval-footer-actions">
                 <button id="markProcessingReadButton" class="button" type="button" onclick="markHoursProcessingRead()">✓ Markeer als gelezen</button
                 ><button class="button dark" type="button" onclick="closeHoursApprovalModal();show('hours')">Volledig urenoverzicht →</button>
@@ -198,41 +175,63 @@
         </section>
 
         <section id="learningOutcomes" class="view hidden">
-          <div class="head">
+          <div class="head learning-catalog-head">
             <div>
               <p class="eyebrow">ONTDEK JE LEERROUTE</p>
               <h1>Leeruitkomsten</h1>
               <p class="dim">Wat ga je leren? Ontdek de kennis en vaardigheden van jouw opleiding.</p>
             </div>
-            <span class="pill">48 LEERUITKOMSTEN</span>
+            <span id="catalogTotalPill" class="pill">48 LEERUITKOMSTEN</span>
           </div>
-          <div class="catalog-intro">
-            <span class="catalog-symbol">✧</span>
-            <div>
-              <h2>Een helder beeld van wat je leert</h2>
-              <p>Bekijk per leeruitkomst de beschrijving, je voortgang en je uren.</p>
+
+          {{-- Eén samenvatting toont de totale voortgang en de drie statussen. --}}
+          <section class="learning-summary" aria-label="Samenvatting leeruitkomsten">
+            <div id="catalogProgressRing" class="learning-progress-ring" aria-label="Totale voortgang">
+              <strong id="catalogProgressPercent">0%</strong>
             </div>
+            <div class="learning-summary-copy">
+              <h2 id="catalogProgressTitle">Jouw voortgang</h2>
+              <p id="catalogProgressText">0 leeruitkomsten afgerond</p>
+              <div class="bar"><span id="catalogProgressBar" style="width:0%"></span></div>
+            </div>
+            <div class="learning-summary-stats">
+              <div class="learning-summary-stat completed"><span aria-hidden="true">✓</span><strong id="catalogCompletedCount">0</strong><small>Afgerond</small></div>
+              <div class="learning-summary-stat active"><span aria-hidden="true">◷</span><strong id="catalogActiveCount">0</strong><small>Bezig</small></div>
+              <div class="learning-summary-stat todo"><span aria-hidden="true">!</span><strong id="catalogTodoCount">0</strong><small>Nog te doen</small></div>
+            </div>
+          </section>
+
+          {{-- De fasekeuze bepaalt welke voortgang en leeruitkomsten worden getoond. --}}
+          <div class="learning-phase-row">
+            <div id="catalogPhaseTabs" class="learning-phase-tabs" aria-label="Fase kiezen"></div>
           </div>
-          <div class="filter catalog-filter">
-            <label class="label search-label"
-              >Zoeken<input id="outcomeSearch" class="input" type="search" placeholder="Zoek op onderwerp of code…" oninput="renderCatalog()" />
+          <input id="catalogPhase" type="hidden" value="OF">
+
+          <div class="catalog-filter learning-catalog-filter">
+            <label class="learning-search">
+              <span class="learning-search-icon" aria-hidden="true">⌕</span>
+              <span class="sr-only">Zoeken</span>
+              <input id="outcomeSearch" class="input" type="search" placeholder="Zoek op leeruitkomst, code of onderwerp…" oninput="resetCatalogAndRender()">
             </label>
-            <label class="label"
-              >Fase<select id="catalogPhase" class="input" onchange="renderCatalog()">
-                <option value="OF">Oriëntatiefase</option>
-                <option value="VF">Verdiepingsfase</option>
-                <option value="AF">Afrondingsfase</option>
-                <option value="all">Alle fasen</option>
-              </select>
-            </label>
-            <label class="label"
-              >Weergave<select id="catalogArchiveFilter" class="input" onchange="renderCatalog()">
-                <option value="active">Actieve leeruitkomsten</option>
+            <label class="label">Status
+              <select id="catalogArchiveFilter" class="input" onchange="resetCatalogAndRender()">
+                <option value="all">Alle statussen</option>
+                <option value="completed">Afgerond</option>
+                <option value="active">Bezig</option>
+                <option value="todo">Nog te doen</option>
                 <option value="archived">Gearchiveerde leeruitkomsten</option>
-                <option value="all">Alles tonen</option>
+              </select>
+            </label>
+            <label class="label">Sorteer op
+              <select id="catalogSort" class="input" onchange="resetCatalogAndRender()">
+                <option value="standard">Standaard</option>
+                <option value="progress-desc">Meeste voortgang</option>
+                <option value="progress-asc">Minste voortgang</option>
+                <option value="alphabetical">Alfabetisch</option>
               </select>
             </label>
           </div>
+
           <div id="archiveFilterNotice" class="archive-filter-notice hidden">
             <div>
               <span>✓</span>
@@ -246,8 +245,11 @@
             </div>
             <button type="button" onclick="clearAttentionOutcomes()">Toon alle leeruitkomsten</button>
           </div>
-          <p id="catalogCount" class="small dim" role="status"></p>
-          <div id="catalogList" class="catalog-grid"></div>
+          <div id="catalogList" class="catalog-grid learning-outcome-list"></div>
+          <div class="learning-catalog-footer">
+            <p id="catalogCount" class="small dim" role="status"></p>
+            <nav id="catalogPagination" class="catalog-pagination" aria-label="Pagina's leeruitkomsten"></nav>
+          </div>
         </section>
         <section id="outcomeDetail" class="view hidden">
           <button id="outcomeBackButton" class="mutedlink" type="button" onclick="backFromOutcome()">← Terug naar leeruitkomsten</button>
@@ -464,7 +466,7 @@
               ><button class="button" onclick="emptyHours=!emptyHours;renderHours()">Toon lege toestand</button>
             </div>
           </div>
-          <div class="notice">De norm van <b>800 uren per leerjaar</b> is een realistische demowaarde. De definitieve norm moet nog worden vastgesteld.</div>
+          <div class="notice">De voorlopige norm is <b>800 uren per leerjaar</b>. De definitieve norm moet nog worden vastgesteld.</div>
           <div class="hours-overview card">
             <div class="hours-total">
               <span class="metric-label">Uren in <span id="hoursSelectedYear">Leerjaar 1</span></span>
@@ -512,7 +514,7 @@
             <h2>Registraties in <span id="registrationsYear">Leerjaar 1</span></h2>
             <div id="hoursList"></div>
           </div>
-          <p class="small dim">Laatste verwerking: 12-09-2026 09:30 (demo). Registraties zijn alleen na validatie zichtbaar.</p>
+          <p class="small dim">Registraties zijn alleen na validatie zichtbaar.</p>
           <div id="registrationDetailModal" class="card registration-modal hidden" role="dialog" aria-modal="true" aria-labelledby="registrationDetailTitle">
             <div class="registration-modal-head">
               <div>
@@ -676,7 +678,7 @@
               </div>
               <div id="reflectionMessage" class="form-message hidden" role="status"></div>
               <button class="button dark" type="submit">Reflectie bewaren</button>
-              <p class="privacy-note">Je reflectie wordt voorlopig alleen in deze browser bewaard.</p>
+              <p class="privacy-note">Je reflectie wordt veilig bij jouw account in de database bewaard.</p>
             </form>
           </div>
         </section>
@@ -759,46 +761,9 @@
             </div>
             <div id="feedbackMessage" class="form-message hidden" role="status"></div>
             <button class="button dark" type="submit">Feedback bewaren</button>
-            <p class="privacy-note">Feedback wordt voorlopig alleen in deze browser bewaard.</p>
+            <p class="privacy-note">Feedback wordt bij jouw account in de database bewaard.</p>
           </form>
         </section>
 
-        <section id="history" class="view hidden">
-          <h1>Ontwikkeling over tijd</h1>
-          <p class="dim">Vergelijk perioden en bekijk hoe uren en leeruitkomsten zijn opgebouwd.</p>
-          <div class="notice">De getallen en datums zijn voorbeelden. Welke perioden en peildata beschikbaar zijn, moet worden vastgesteld.</div>
-          <div class="grid2">
-            <div class="card">
-              <h2>Periode 1 · demo</h2>
-              <div class="big">42%</div>
-              <div class="bar">
-                <span style="width: 42%"> </span>
-              </div>
-              <p>254 uren</p>
-            </div>
-            <div class="card">
-              <h2>Periode 2 · demo</h2>
-              <div class="big">60%</div>
-              <div class="bar">
-                <span style="width: 60%"> </span>
-              </div>
-              <p>342 uren</p>
-            </div>
-          </div>
-          <div class="card">
-            <h2>Gebeurtenissen</h2>
-            <div class="timeline">
-              <div class="event">
-                <b>12 september 2026 · verwerking</b>
-                <p>Nieuwe uren opgenomen; voorbeeldvoortgang bijgewerkt.</p>
-              </div>
-              <div class="event">
-                <b>4 september 2026 · opdracht</b>
-                <p>Installatieopdracht gevalideerd en gekoppeld aan IT_OF_LU_Hardskills_001.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {{-- Coachweergaven. --}}
+@endsection
 

@@ -7,6 +7,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Opdracht die aan een student en één of meer leeruitkomsten is gekoppeld.
+ *
+ * @property int $id
+ * @property int $gebruiker_id
+ * @property string $onderwerp
+ * @property string $type
+ * @property string|null $omschrijving
+ * @property int $gevalideerde_uren
+ * @property \Illuminate\Support\Carbon|null $inleverdatum
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, LearningOutcome> $learningOutcomes
+ */
 class Assignment extends Model
 {
     protected $table = 'opdrachten';

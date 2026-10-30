@@ -337,6 +337,18 @@ p.dim,
 .login .button.dark:hover { background: #116b62; border-color: #116b62; box-shadow: 0 8px 20px rgba(22, 126, 114, 0.2); transform: translateY(-1px); }
 .login .warning { margin-bottom: 20px; border-color: #f0d7a7; background: #fff8e9; color: #76581d; }
 
+/* Wachtwoordherstel gebruikt dezelfde rustige huisstijl als de inlogpagina. */
+.login-form-options { display: flex; justify-content: flex-end; margin: -7px 0 9px; }
+.forgot-password-link,
+.auth-back-link { color: #167e72; font-size: 12px; font-weight: 700; text-decoration: none; }
+.forgot-password-link:hover,
+.auth-back-link:hover { color: #105f57; text-decoration: underline; }
+.auth-back-link { display: inline-flex; margin-bottom: 22px; }
+.auth-message { margin-bottom: 20px; border: 1px solid; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.55; }
+.auth-message.success { border-color: #bfe2d7; background: #e9f7f2; color: #17685d; }
+.auth-message.error { border-color: #efd1c9; background: #fff1ee; color: #8a4037; }
+.auth-help { margin: 18px 0 0; color: #748695; font-size: 11px; line-height: 1.6; }
+
 @media (max-width: 680px) {
   .login .intro { min-height: 38vh; padding: 42px 28px; }
   .login .intro .brand { margin-bottom: 28px; }

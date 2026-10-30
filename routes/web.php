@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Coach\DashboardController as CoachDashboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Coach\ProgressController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\DataController as StudentDataController;
@@ -15,6 +16,17 @@ Route::get('/', [DashboardController::class, 'index'])->name('home');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/inloggen', [AuthController::class, 'login'])->middleware('guest')->name('login.submit');
 Route::post('/uitloggen', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::middleware('guest')->group(function (): void {
+    Route::get('/wachtwoord-vergeten', [PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/wachtwoord-vergeten', [PasswordResetController::class, 'email'])
+        ->middleware('throttle:5,1')
+        ->name('password.email');
+    Route::get('/wachtwoord-herstellen/{token}', [PasswordResetController::class, 'reset'])->name('password.reset');
+    Route::post('/wachtwoord-herstellen', [PasswordResetController::class, 'update'])
+        ->middleware('throttle:5,1')
+        ->name('password.update');
+});
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/student', StudentDashboardController::class)->middleware('role:student')->name('student.dashboard');

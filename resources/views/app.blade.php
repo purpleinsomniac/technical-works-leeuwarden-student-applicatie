@@ -39,7 +39,7 @@
     </section>
     @if ($user)
     <div class="app" id="app">
-      <aside class="side">
+      <aside class="side role-side-{{ $user->rol }}">
         <div class="brand">Ontwikkeling</div>
         <div class="dim small" id="roleLabel"></div>
         <hr style="width: 100%; border: 0; border-top: 1px solid #ddd" />
@@ -57,7 +57,7 @@
           </p>
         </div>
       </aside>
-      <main class="main">
+      <main class="main role-{{ $user->rol }}">
         {{-- Gedeelde header voor alle rollen. --}}
         <header class="topbar">
           <div class="topbar-context">
@@ -141,4 +141,3 @@
     @endforeach
     @endif
 @endpush
-

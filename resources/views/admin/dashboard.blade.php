@@ -10,7 +10,6 @@
     </div>
     <button class="button admin-hero-action" type="button" onclick="show('adminLog')">Bekijk het logboek <span aria-hidden="true">→</span></button>
   </header>
-
   {{-- Shows the database totals supplied by the administrator dashboard controller. --}}
   <section class="admin-stats" aria-label="Databaseoverzicht">
     <article class="admin-stat admin-stat-users"><span class="admin-stat-icon" aria-hidden="true">◉</span><span class="admin-stat-label">Gebruikers</span><strong>{{ $roleData['userCount'] }}</strong><span class="admin-stat-note">Accounts in de leeromgeving</span></article>
@@ -18,12 +17,10 @@
     <article class="admin-stat admin-stat-outcomes"><span class="admin-stat-icon" aria-hidden="true">◎</span><span class="admin-stat-label">Leeruitkomsten</span><strong>{{ $roleData['outcomeCount'] }}</strong><span class="admin-stat-note">Beschikbaar in de applicatie</span></article>
     <article class="admin-stat admin-stat-progress"><span class="admin-stat-icon" aria-hidden="true">↗</span><span class="admin-stat-label">Voortgangsregels</span><strong>{{ $roleData['progressCount'] }}</strong><span class="admin-stat-note">Geregistreerde voortgang</span></article>
   </section>
-
   <div class="admin-section-heading">
     <div><span class="admin-eyebrow">Inzicht</span><h2>Applicatiegegevens</h2></div>
     <span class="admin-updated">Actuele databasegegevens</span>
   </div>
-
   <div class="admin-content-grid">
     <section class="admin-panel">
       <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">▤</span><div><h3>Onderwijsgegevens</h3><p>Gegevens die de leeromgeving ondersteunen.</p></div></div>
@@ -32,6 +29,7 @@
       <div class="admin-detail"><span>Laatste voortgangswijziging</span><strong>{{ $roleData['lastProgressUpdate'] ?? 'Nog niet bijgewerkt' }}</strong></div>
     </section>
 
+    {{-- This list describes the available roles; its entries are not live database counts. --}}
     <section class="admin-panel admin-roles-panel">
       <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">♧</span><div><h3>Rolverdeling</h3><p>De omgeving is ingericht voor begeleiding en studie.</p></div></div>
       <div class="admin-role-list">
@@ -42,7 +40,6 @@
       </div>
     </section>
   </div>
-
   <section class="admin-processing-note">
     <span class="admin-processing-icon" aria-hidden="true">i</span>
     <div><strong>Externe verwerking nog niet gekoppeld</strong><p>Er is nog geen urenimport of auditlog gekoppeld. De getoonde gegevens komen uit Laravel en MySQL.</p></div>
@@ -59,7 +56,6 @@
     </div>
     <button class="button admin-hero-action" id="toggleLearningOutcomeForm" type="button" aria-controls="createLearningOutcome" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleLearningOutcomeForm()">Leeruitkomst toevoegen <span aria-hidden="true">+</span></button>
   </header>
-
   {{-- Surface successful saves and validation failures on this management page. --}}
   @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
   @if ($errors->any())
@@ -69,6 +65,7 @@
     </div>
   @endif
 
+  {{-- The query flag keeps the form open after redirects that return validation errors. --}}
   <section class="admin-panel admin-outcome-create" id="createLearningOutcome" aria-labelledby="create-learning-outcome" @if (!request()->boolean('new')) hidden @endif>
     <div class="admin-panel-heading"><div><h2 id="create-learning-outcome">Nieuwe leeruitkomst</h2><p>Vul de gegevens in om een leeruitkomst toe te voegen.</p></div></div>
     {{-- Outcomes require an existing study phase to satisfy their database relationship. --}}
@@ -77,6 +74,7 @@
     @else
       <form action="{{ route('admin.learning-outcomes.store', ['page' => 'leeruitkomsten', 'new' => 1]) }}" method="post">
         @csrf
+        {{-- old() restores submitted values when validation sends the user back. --}}
         <label for="new-outcome-phase">Studiefase</label>
         <select class="input" id="new-outcome-phase" name="studiefase_id" required>
           <option value="">Selecteer een studiefase</option>
@@ -91,7 +89,6 @@
       </form>
     @endif
   </section>
-
   {{-- The controller orders tiles by study phase and then code for predictable scanning. --}}
   <div class="admin-outcome-tiles">
     @forelse ($roleData['learningOutcomes'] as $outcome)
@@ -103,6 +100,7 @@
         <div class="admin-detail"><span>Type</span><strong>{{ $outcome->type ?: 'Niet ingesteld' }}</strong></div>
         <div class="admin-detail"><span>Normuren</span><strong>{{ $outcome->normuren ?? 'Niet ingesteld' }}</strong></div>
 
+        {{-- Each tile owns its edit form so submitted values stay tied to that outcome. --}}
         <details class="admin-outcome-edit">
           <summary class="button">Wijzigen</summary>
           <form action="{{ route('admin.learning-outcomes.update', ['learningOutcome' => $outcome, 'page' => 'leeruitkomsten']) }}" method="post">
@@ -128,6 +126,7 @@
           <button class="button" type="submit">Verwijderen</button>
         </form>
       </article>
+    {{-- Keep the page useful when the database has no outcomes yet. --}}
     @empty
       <p class="dim">Er zijn nog geen leeruitkomsten om te beheren.</p>
     @endforelse

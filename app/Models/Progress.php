@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $gebruiker_id
  * @property int $leeruitkomst_id
  * @property int $gevalideerde_uren
- * @property int|null $normuren
+ * @property string|null $normwaarden
  * @property string $status
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -23,7 +23,7 @@ class Progress extends Model
 {
     protected $table = 'voortgang';
 
-    protected $fillable = ['gebruiker_id', 'leeruitkomst_id', 'gevalideerde_uren', 'normuren', 'status'];
+    protected $fillable = ['gebruiker_id', 'leeruitkomst_id', 'gevalideerde_uren', 'normwaarden', 'status'];
 
     public function user(): BelongsTo
     {

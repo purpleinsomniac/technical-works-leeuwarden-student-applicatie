@@ -136,7 +136,7 @@
                 <span>uur</span>
               </span>
               @if ($outcome['target'])
-                <small>Norm: {{ $outcome['target'] }} uur</small>
+                <small>Normwaarden: {!! nl2br(e($outcome['target'])) !!}</small>
               @endif
             </label>
             <label class="label coach-field">

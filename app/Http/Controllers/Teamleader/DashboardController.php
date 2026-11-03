@@ -31,9 +31,9 @@ class DashboardController extends RoleDashboardController
     {
         $progress = Progress::with('learningOutcome.studyPhase')->get();
         $percentages = $progress
-            ->filter(fn (Progress $item): bool => (int) ($item->normuren ?? $item->learningOutcome->normuren) > 0)
+            ->filter(fn (Progress $item): bool => $this->numericTarget($item) !== null)
             ->map(function (Progress $item): int {
-                $target = (int) ($item->normuren ?? $item->learningOutcome->normuren);
+                $target = $this->numericTarget($item);
 
                 return min(100, (int) round(($item->gevalideerde_uren / $target) * 100));
             });
@@ -42,9 +42,9 @@ class DashboardController extends RoleDashboardController
             ->groupBy(fn (Progress $item): string => $item->learningOutcome->studyPhase?->naam ?? 'Onbekend')
             ->map(function ($items): int {
                 $values = $items
-                    ->filter(fn (Progress $item): bool => (int) ($item->normuren ?? $item->learningOutcome->normuren) > 0)
+                    ->filter(fn (Progress $item): bool => $this->numericTarget($item) !== null)
                     ->map(function (Progress $item): int {
-                        $target = (int) ($item->normuren ?? $item->learningOutcome->normuren);
+                        $target = $this->numericTarget($item);
 
                         return min(100, (int) round(($item->gevalideerde_uren / $target) * 100));
                     });
@@ -58,5 +58,12 @@ class DashboardController extends RoleDashboardController
             'attentionCount' => $progress->whereIn('status', ['niet_gestart', 'gestart'])->count(),
             'phases' => $phasePercentages,
         ];
+    }
+
+    private function numericTarget(Progress $progress): ?float
+    {
+        $target = $progress->normwaarden ?? $progress->learningOutcome->normwaarden;
+
+        return is_numeric($target) && (float) $target > 0 ? (float) $target : null;
     }
 }

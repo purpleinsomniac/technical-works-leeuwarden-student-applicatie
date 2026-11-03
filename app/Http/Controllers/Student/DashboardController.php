@@ -59,9 +59,10 @@ class DashboardController extends RoleDashboardController
             ->map(function ($outcome): array {
                 $progress = $outcome->progress->first();
                 $hours = $progress?->gevalideerde_uren;
-                $target = $progress?->normuren ?? $outcome->normuren;
-                $percentage = $hours !== null && $target
-                    ? min(100, (int) round(($hours / $target) * 100))
+                $target = $progress?->normwaarden ?? $outcome->normwaarden;
+                $numericTarget = is_numeric($target) ? (float) $target : null;
+                $percentage = $hours !== null && $numericTarget !== null && $numericTarget > 0
+                    ? min(100, (int) round(($hours / $numericTarget) * 100))
                     : null;
 
                 return [

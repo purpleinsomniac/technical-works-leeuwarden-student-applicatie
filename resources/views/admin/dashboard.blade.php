@@ -84,7 +84,7 @@
         <label for="new-outcome-title">Titel</label><input class="input" id="new-outcome-title" name="titel" value="{{ old('titel') }}" maxlength="255" required>
         <label for="new-outcome-type">Type (optioneel)</label><input class="input" id="new-outcome-type" name="type" value="{{ old('type') }}" maxlength="45">
         <label for="new-outcome-description">Omschrijving</label><textarea class="input" id="new-outcome-description" name="omschrijving" required>{{ old('omschrijving') }}</textarea>
-        <label for="new-outcome-hours">Normuren (optioneel)</label><input class="input" id="new-outcome-hours" name="normuren" type="number" min="0" value="{{ old('normuren') }}">
+        <label for="new-outcome-values">Normwaarden (optioneel)</label><textarea class="input" id="new-outcome-values" name="normwaarden" rows="3">{{ old('normwaarden') }}</textarea>
         <button class="button dark" type="submit">Opslaan</button>
       </form>
     @endif
@@ -98,7 +98,7 @@
         <h3>{{ $outcome->titel }}</h3>
         <p>{{ $outcome->omschrijving }}</p>
         <div class="admin-detail"><span>Type</span><strong>{{ $outcome->type ?: 'Niet ingesteld' }}</strong></div>
-        <div class="admin-detail"><span>Normuren</span><strong>{{ $outcome->normuren ?? 'Niet ingesteld' }}</strong></div>
+        <div class="admin-detail"><span>Normwaarden</span><strong>{!! nl2br(e($outcome->normwaarden ?? 'Niet ingesteld')) !!}</strong></div>
 
         {{-- Each tile owns its edit form so submitted values stay tied to that outcome. --}}
         <details class="admin-outcome-edit">
@@ -114,7 +114,7 @@
             <label for="outcome-{{ $outcome->id }}-title">Titel</label><input class="input" id="outcome-{{ $outcome->id }}-title" name="titel" value="{{ $outcome->titel }}" maxlength="255" required>
             <label for="outcome-{{ $outcome->id }}-type">Type (optioneel)</label><input class="input" id="outcome-{{ $outcome->id }}-type" name="type" value="{{ $outcome->type }}" maxlength="45">
             <label for="outcome-{{ $outcome->id }}-description">Omschrijving</label><textarea class="input" id="outcome-{{ $outcome->id }}-description" name="omschrijving" required>{{ $outcome->omschrijving }}</textarea>
-            <label for="outcome-{{ $outcome->id }}-hours">Normuren (optioneel)</label><input class="input" id="outcome-{{ $outcome->id }}-hours" name="normuren" type="number" min="0" value="{{ $outcome->normuren }}">
+            <label for="outcome-{{ $outcome->id }}-values">Normwaarden (optioneel)</label><textarea class="input" id="outcome-{{ $outcome->id }}-values" name="normwaarden" rows="3">{{ $outcome->normwaarden }}</textarea>
             <button class="button dark" type="submit">Wijzigingen opslaan</button>
           </form>
         </details>

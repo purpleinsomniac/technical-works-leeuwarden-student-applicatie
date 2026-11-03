@@ -54,7 +54,7 @@ class LeeruitkomstController extends Controller
             'titel' => ['required', 'string', 'max:255'],
             'type' => ['nullable', 'string', 'max:45'],
             'omschrijving' => ['required', 'string'],
-            'normuren' => ['nullable', 'integer', 'min:0', 'max:4294967295'],
+            'normwaarden' => ['nullable', 'string', 'max:10000'],
         ]);
     }
 }

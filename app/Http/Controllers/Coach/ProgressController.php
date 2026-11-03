@@ -26,7 +26,7 @@ class ProgressController extends Controller
             ['gebruiker_id' => $student->id, 'leeruitkomst_id' => $learningOutcome->id],
             [
                 'gevalideerde_uren' => $data['gevalideerde_uren'],
-                'normuren' => $learningOutcome->normuren,
+                'normwaarden' => $learningOutcome->normwaarden,
                 'status' => $data['status'],
             ],
         );

@@ -367,42 +367,67 @@
         </section>
 
         {{-- Opdrachtenoverzicht met de leeruitkomsten die per opdracht worden ontwikkeld. --}}
-        <section id="assignments" class="view hidden">
-          <div class="head">
+        <section id="assignments" class="view hidden assignments-page">
+          <header class="assignments-header">
+            <p class="eyebrow">JOUW WERK EN BEWIJSSTUKKEN</p>
+            <h1>Opdrachten</h1>
+            <p class="dim">Bekijk je opdrachten en werk aan de leeruitkomsten.</p>
+            <span class="sr-only" id="assignmentTotal">0 OPDRACHTEN</span>
+          </header>
+
+          <div class="assignment-status-tabs" role="tablist" aria-label="Opdrachten per status">
+            <button class="assignment-status-tab active" type="button" role="tab" aria-selected="true" data-assignment-status="active" onclick="selectAssignmentStatus('active')">
+              <span class="assignment-tab-icon" data-assignment-tab-icon="active" aria-hidden="true"></span>
+              <span><strong>Opdrachten</strong><small><b id="assignmentActiveCount">0</b> actieve opdrachten</small></span>
+            </button>
+            <button class="assignment-status-tab" type="button" role="tab" aria-selected="false" data-assignment-status="review" onclick="selectAssignmentStatus('review')">
+              <span class="assignment-tab-icon" data-assignment-tab-icon="review" aria-hidden="true"></span>
+              <span><strong>Beoordelingen</strong><small><b id="assignmentReviewCount">0</b> wachten op beoordeling</small></span>
+            </button>
+            <button class="assignment-status-tab" type="button" role="tab" aria-selected="false" data-assignment-status="completed" onclick="selectAssignmentStatus('completed')">
+              <span class="assignment-tab-icon" data-assignment-tab-icon="completed" aria-hidden="true"></span>
+              <span><strong>Afgerond</strong><small><b id="assignmentCompletedCount">0</b> voltooide opdrachten</small></span>
+            </button>
+            <button class="assignment-status-tab late" type="button" role="tab" aria-selected="false" data-assignment-status="late" onclick="selectAssignmentStatus('late')">
+              <span class="assignment-tab-icon" data-assignment-tab-icon="late" aria-hidden="true"></span>
+              <span><strong>Te laat</strong><small><b id="assignmentLateCount">0</b> niet op tijd ingeleverd</small></span>
+            </button>
+          </div>
+
+          <input id="assignmentSearch" type="hidden" value="">
+          <input id="assignmentStatus" type="hidden" value="active">
+
+          <article id="currentAssignmentCard" class="current-assignment-card" aria-labelledby="currentAssignmentTitle">
+            <div class="current-assignment-main">
+              <span id="currentAssignmentIcon" class="current-assignment-icon" aria-hidden="true"></span>
+              <div class="current-assignment-copy">
+                <span class="current-assignment-label">HUIDIGE OPDRACHT</span>
+                <h2 id="currentAssignmentTitle">Opdracht laden…</h2>
+                <p id="currentAssignmentDescription"></p>
+              </div>
+              <button id="currentAssignmentButton" class="current-assignment-button" type="button">Ga verder <span aria-hidden="true">→</span></button>
+            </div>
+            <div class="current-assignment-meta">
+              <div><span class="current-meta-icon" data-current-icon="phase" aria-hidden="true"></span><span><small>Fase</small><strong id="currentAssignmentPhases">—</strong></span></div>
+              <div><span class="current-meta-icon" data-current-icon="calendar" aria-hidden="true"></span><span><small>Inleverdatum</small><strong id="currentAssignmentDueDate">—</strong></span></div>
+              <div><span class="current-meta-icon" data-current-icon="outcomes" aria-hidden="true"></span><span><small>Leeruitkomsten</small><strong id="currentAssignmentOutcomes">—</strong></span></div>
+            </div>
+          </article>
+
+          <div class="assignment-section-head">
             <div>
-              <p class="eyebrow">JOUW WERK EN BEWIJSSTUKKEN</p>
-              <h1>Opdrachten</h1>
-              <p class="dim">Bekijk waar je aan werkt en welke leeruitkomsten bij iedere opdracht horen.</p>
+              <h2 id="assignmentSectionTitle">Actieve opdrachten</h2>
+              <p id="assignmentSectionDescription">Dit zijn je opdrachten die nog openstaan. Lever ze op tijd in.</p>
             </div>
-            <span class="pill" id="assignmentTotal">0 OPDRACHTEN</span>
-          </div>
-
-          <div class="assignment-summary">
-            <div class="assignment-summary-item active">
-              <span>Actief</span><strong id="assignmentActiveCount">0</strong><small>opdrachten in uitvoering</small>
-            </div>
-            <div class="assignment-summary-item review">
-              <span>Beoordeling</span><strong id="assignmentReviewCount">0</strong><small>wacht op beoordeling</small>
-            </div>
-            <div class="assignment-summary-item completed">
-              <span>Afgerond</span><strong id="assignmentCompletedCount">0</strong><small>opdrachten voltooid</small>
-            </div>
-          </div>
-
-          <div class="assignment-toolbar">
-            <label class="label assignment-search"
-              >Zoeken<input id="assignmentSearch" class="input" type="search" placeholder="Zoek op opdracht of leeruitkomst…" oninput="renderAssignments()" />
-            </label>
-            <label class="label"
-              >Status<select id="assignmentStatus" class="input" onchange="renderAssignments()">
-                <option value="active">Actief</option>
-                <option value="review">Beoordeling</option>
-                <option value="completed">Afgerond</option>
+            <label class="assignment-sort">Sorteer op
+              <select id="assignmentSort" class="input" onchange="renderAssignments()">
+                <option value="deadline">Deadline (dichtstbij)</option>
+                <option value="title">Naam (A-Z)</option>
               </select>
             </label>
           </div>
 
-          <p id="assignmentCount" class="small dim" role="status"></p>
+          <p id="assignmentCount" class="sr-only" role="status"></p>
           <div id="assignmentList" class="assignment-list"></div>
         </section>
 
@@ -421,6 +446,20 @@
             <article class="card assignment-detail-main">
               <h2>Over deze opdracht</h2>
               <p id="assignmentDetailDescription"></p>
+              <section class="assignment-files" aria-labelledby="assignmentFilesTitle">
+                <div class="assignment-files-head">
+                  <div>
+                    <h3 id="assignmentFilesTitle">Bestanden</h3>
+                    <p>Voeg bewijsstukken, documenten of afbeeldingen toe aan je opdracht.</p>
+                  </div>
+                  <label id="assignmentFileUploadLabel" class="assignment-file-upload">
+                    <input id="assignmentFileInput" type="file" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp,.xls,.xlsx,.csv,.ppt,.pptx,.zip" onchange="uploadAssignmentFile(this)">
+                    <span>+ Bestand toevoegen</span>
+                  </label>
+                </div>
+                <p id="assignmentFileHelp" class="assignment-file-help">Maximaal 10 MB per bestand.</p>
+                <div id="assignmentFileList" class="assignment-file-list"></div>
+              </section>
               <div class="assignment-detail-information">
                 <div><span>Fase</span><b id="assignmentDetailPhase"></b></div>
                 <div><span>Inleverdatum</span><b id="assignmentDetailDueDate"></b></div>
@@ -431,7 +470,10 @@
                   <h3>Opdracht gereed?</h3>
                   <p id="assignmentSubmissionNote">Lever je opdracht in wanneer alle onderdelen klaar zijn.</p>
                 </div>
-                <button id="assignmentSubmitButton" class="button dark" type="button" onclick="submitAssignment()">Opdracht inleveren</button>
+                <div class="assignment-submit-actions">
+                  <button id="assignmentReopenButton" class="button assignment-reopen-button hidden" type="button" onclick="reopenAssignment()">Terugzetten naar opdrachten</button>
+                  <button id="assignmentSubmitButton" class="button dark" type="button" onclick="submitAssignment()">Opdracht inleveren</button>
+                </div>
               </div>
             </article>
             <aside class="card assignment-detail-outcomes">
@@ -448,79 +490,84 @@
           </div>
         </section>
 
-        <section id="hours" class="view hidden">
-          <div class="head">
+        <section id="hours" class="view hidden hours-page">
+          <header class="hours-page-head">
             <div>
               <h1>Uren</h1>
-              <p class="dim">Bekijk per leerjaar je goedgekeurde registraties en totalen.</p>
+              <p>Bekijk per leerjaar je geregistreerde uren. De uren worden geregistreerd door je docent.</p>
             </div>
-            <div class="hours-head-actions">
-              <label class="year-selector"
-                >Periode<select id="hoursYear" class="input" onchange="renderHours()">
-                  <option value="1">Leerjaar 1</option>
-                  <option value="2">Leerjaar 2</option>
-                  <option value="3">Leerjaar 3</option>
-                  <option value="4">Leerjaar 4</option>
-                  <option value="total">Totaal opleiding</option>
-                </select></label
-              ><button class="button" onclick="emptyHours=!emptyHours;renderHours()">Toon lege toestand</button>
-            </div>
-          </div>
-          <div class="notice">De voorlopige norm is <b>800 uren per leerjaar</b>. De definitieve norm moet nog worden vastgesteld.</div>
-          <div class="hours-overview card">
+            <label class="year-selector">Periode
+              <select id="hoursYear" class="input" onchange="resetHoursAndRender()">
+                <option value="1">Leerjaar 1</option>
+                <option value="2">Leerjaar 2</option>
+                <option value="3">Leerjaar 3</option>
+                <option value="4">Leerjaar 4</option>
+                <option value="total">Totaal opleiding</option>
+              </select>
+            </label>
+          </header>
+
+          <section class="hours-summary-card" aria-label="Samenvatting uren">
+            <div id="hoursProgressRing" class="hours-progress-ring"><strong id="hoursProgressPercent">0%</strong></div>
             <div class="hours-total">
-              <span class="metric-label">Uren in <span id="hoursSelectedYear">Leerjaar 1</span></span>
-              <div>
-                <strong id="hoursYearTotal">678</strong>
-                <span> / 800 uur</span>
-              </div>
-              <p class="dim" id="hoursYearPercentage">42% van de urennorm behaald</p>
+              <div><strong id="hoursYearTotal">0</strong><span> / <b id="hoursTarget">800</b> uur</span></div>
+              <p id="hoursYearPercentage">van de urennorm behaald</p>
             </div>
             <div class="hours-progress">
               <div id="hoursStackedBar" class="hours-stacked-bar"></div>
-              <div class="hours-scale">
-                <span>0 uur</span>
-                <b id="hoursScalePercentage">42% van je doel behaald</b>
-                <span>Doel: 800 uur</span>
-              </div>
               <div id="hoursLegend" class="hours-legend"></div>
             </div>
+          </section>
+
+          <div class="hours-filter-bar">
+            <div class="hours-phase-tabs" role="tablist" aria-label="Registraties per fase">
+              <button class="active" type="button" data-hours-phase="all" onclick="selectHoursPhase('all')">Alle registraties</button>
+              <button type="button" data-hours-phase="OF" onclick="selectHoursPhase('OF')">Oriëntatiefase</button>
+              <button type="button" data-hours-phase="VF" onclick="selectHoursPhase('VF')">Verdiepingsfase</button>
+              <button type="button" data-hours-phase="AF" onclick="selectHoursPhase('AF')">Afrondingsfase</button>
+            </div>
+            <label class="hours-search"><span aria-hidden="true">⌕</span><span class="sr-only">Zoeken</span>
+              <input id="hoursSearch" type="search" placeholder="Zoeken in registraties…" oninput="resetHoursAndRender()">
+            </label>
           </div>
-          <div class="grid3 hours-phases hidden" aria-hidden="true">
-            <div class="card">
-              <div class="big" id="hoursOrientation">342 uur</div>
-              <span class="dim">oriëntatiefase</span>
-            </div>
-            <div class="card">
-              <div class="big" id="hoursDeepening">221 uur</div>
-              <span class="dim">verdiepingsfase</span>
-            </div>
-            <div class="card">
-              <div class="big" id="hoursCompletion">115 uur</div>
-              <span class="dim">afrondingsfase</span>
-            </div>
-          </div>
-          <div class="card yearly-hours-card">
-            <div class="yearly-hours-head">
+
+          <section class="hours-registration-card">
+            <div class="hours-registration-head">
               <div>
-                <h2>Uren per leerjaar</h2>
-                <p class="dim">Vergelijk de vier leerjaren of bekijk het totaal van de hele opleiding.</p>
+                <h2>Registraties in <span id="registrationsYear">Leerjaar 1</span></h2>
+                <p>Bekijk je geregistreerde uren. Klik op een registratie om de opdracht en leeruitkomsten te bekijken.</p>
               </div>
-              <span class="pill">4 LEERJAREN + TOTAAL</span>
+              <label>Sorteer op
+                <select id="hoursSort" class="input" onchange="resetHoursAndRender()">
+                  <option value="date-desc">Datum (nieuwste eerst)</option>
+                  <option value="date-asc">Datum (oudste eerst)</option>
+                  <option value="hours-desc">Meeste uren</option>
+                  <option value="title">Opdracht (A-Z)</option>
+                </select>
+              </label>
             </div>
-            <div id="yearlyHoursOverview" class="yearly-hours-overview"></div>
-          </div>
-          <div class="card">
-            <h2>Registraties in <span id="registrationsYear">Leerjaar 1</span></h2>
-            <div id="hoursList"></div>
-          </div>
-          <p class="small dim">Registraties zijn alleen na validatie zichtbaar.</p>
+            <div class="hours-table-head" aria-hidden="true">
+              <span>Opdracht</span><span>Fase(s)</span><span>Leeruitkomsten</span><span>Uren</span><span>Datum</span><span>Details</span>
+            </div>
+            <div id="hoursList" class="hours-registration-list"></div>
+            <footer class="hours-table-footer">
+              <span id="hoursResultCount">0 registraties</span>
+              <nav id="hoursPagination" class="hours-pagination" aria-label="Pagina's urenregistraties"></nav>
+              <label><select id="hoursPerPage" class="input" onchange="resetHoursAndRender()">
+                <option value="4">4 per pagina</option>
+                <option value="8">8 per pagina</option>
+                <option value="12">12 per pagina</option>
+              </select></label>
+            </footer>
+          </section>
+
           <div id="registrationDetailModal" class="card registration-modal hidden" role="dialog" aria-modal="true" aria-labelledby="registrationDetailTitle">
             <div class="registration-modal-head">
               <div>
                 <span id="registrationDetailStatus" class="registration-status">GEVALIDEERD</span>
                 <h2 id="registrationDetailTitle"></h2>
                 <p id="registrationDetailType" class="dim"></p>
+                <p id="registrationDetailDescription" class="registration-detail-description"></p>
               </div>
               <button class="modal-close" type="button" aria-label="Registratiedetails sluiten" onclick="closeRegistrationDetail()">×</button>
             </div>
@@ -532,11 +579,12 @@
               <div><span>Goedgekeurd door</span><b id="registrationDetailApprover"></b></div>
             </div>
             <div class="registration-outcome">
-              <span>Gekoppelde leeruitkomst</span><strong id="registrationDetailOutcomeName"></strong><span class="code" id="registrationDetailCode"></span>
+              <span>Gekoppelde leeruitkomsten</span>
+              <div id="registrationDetailOutcomeList" class="registration-detail-outcome-list"></div>
             </div>
             <div class="registration-modal-footer">
-              <button class="button" type="button" onclick="closeRegistrationDetail()">Sluiten</button
-              ><button class="button dark" type="button" onclick="openRegistrationOutcome()">Bekijk leeruitkomst →</button>
+              <button class="button" type="button" onclick="closeRegistrationDetail()">Sluiten</button>
+              <button class="button dark" type="button" onclick="openRegistrationAssignment()">Bekijk opdracht →</button>
             </div>
           </div>
         </section>

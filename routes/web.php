@@ -49,6 +49,10 @@ Route::middleware('auth')->group(function (): void {
         Route::delete('/mijn-feedback/{feedback}', [StudentDataController::class, 'destroyFeedback'])->name('feedback.destroy');
         Route::post('/mijn-leerdoelen', [StudentDataController::class, 'storeGoal'])->name('goals.store');
         Route::post('/mijn-opdrachten/{assignment}/inleveren', [StudentDataController::class, 'submitAssignment'])->name('assignments.submit');
+        Route::post('/mijn-opdrachten/{assignment}/terugzetten', [StudentDataController::class, 'reopenAssignment'])->name('assignments.reopen');
+        Route::post('/mijn-opdrachten/{assignment}/bestanden', [StudentDataController::class, 'storeAssignmentFile'])->name('assignments.files.store');
+        Route::get('/mijn-opdrachtbestanden/{assignmentFile}', [StudentDataController::class, 'downloadAssignmentFile'])->name('assignments.files.download');
+        Route::delete('/mijn-opdrachtbestanden/{assignmentFile}', [StudentDataController::class, 'destroyAssignmentFile'])->name('assignments.files.destroy');
     });
 
     Route::patch('/coach/studenten/{student}/voortgang/{learningOutcome}', [ProgressController::class, 'update'])

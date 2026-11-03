@@ -14,7 +14,11 @@ function openOutcome(code, returnPage = "learningOutcomes") {
     hasProgress = x.pct !== null;
   outcomeReturnPage = returnPage;
   const backButton = document.getElementById("outcomeBackButton");
-  backButton.textContent = returnPage === "assignmentDetail" ? "← Terug naar opdracht" : "← Terug naar leeruitkomsten";
+  backButton.textContent = returnPage === "assignmentDetail"
+    ? "← Terug naar opdracht"
+    : returnPage === "hours"
+      ? "← Terug naar urenregistratie"
+      : "← Terug naar leeruitkomsten";
   currentOutcomeCode = code;
   document.getElementById("outcomeTitle").textContent = x.short;
   document.getElementById("outcomeMeta").textContent = phases.find((p) => p[0] === x.phase)[1];

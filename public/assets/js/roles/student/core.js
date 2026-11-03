@@ -16,12 +16,13 @@ if (window.LARAVEL_USER) {
 
 // Verstuur onderwijsgegevens via beveiligde Laravel-routes naar MySQL.
 async function apiRequest(url, options = {}) {
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(url, {
     credentials: "same-origin",
     ...options,
     headers: {
       Accept: "application/json",
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       "X-CSRF-TOKEN": window.LARAVEL_CSRF,
       ...(options.headers || {}),
     },

@@ -36,6 +36,9 @@
         'feedbackDelete' => route('feedback.destroy', ['feedback' => '__ID__']),
         'goalStore' => route('goals.store'),
         'assignmentSubmit' => route('assignments.submit', ['assignment' => '__ID__']),
+        'assignmentReopen' => route('assignments.reopen', ['assignment' => '__ID__']),
+        'assignmentFileStore' => route('assignments.files.store', ['assignment' => '__ID__']),
+        'assignmentFileDelete' => route('assignments.files.destroy', ['assignmentFile' => '__ID__']),
     ]) }};
     window.LARAVEL_CSRF = {{ Illuminate\Support\Js::from(csrf_token()) }};
   </script>

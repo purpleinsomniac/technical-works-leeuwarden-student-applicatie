@@ -83,7 +83,7 @@ class DashboardController extends RoleDashboardController
 
         $assignments = Assignment::query()
             ->where('gebruiker_id', $user->id)
-            ->with(['learningOutcomes.studyPhase'])
+            ->with(['learningOutcomes.studyPhase', 'files'])
             ->orderByRaw('inleverdatum is null, inleverdatum')
             ->get()
             ->map(fn ($assignment): array => [
@@ -93,9 +93,26 @@ class DashboardController extends RoleDashboardController
                 'description' => $assignment->omschrijving,
                 'status' => $assignment->status,
                 'phase' => $this->phaseCode($assignment->learningOutcomes->first()?->studyPhase?->naam),
+                'phases' => $assignment->learningOutcomes
+                    ->map(fn ($outcome): string => $this->phaseCode($outcome->studyPhase?->naam))
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all(),
                 'dueDate' => $assignment->inleverdatum?->locale('nl')->translatedFormat('j F Y'),
+                'dueDateIso' => $assignment->inleverdatum?->format('Y-m-d'),
+                'registeredAt' => $assignment->updated_at?->locale('nl')->translatedFormat('j F Y'),
+                'registeredAtIso' => $assignment->updated_at?->format('Y-m-d'),
                 'hours' => $assignment->gevalideerde_uren,
                 'outcomeCodes' => $assignment->learningOutcomes->pluck('code')->values()->all(),
+                'files' => $assignment->files->map(fn ($file): array => [
+                    'id' => $file->id,
+                    'name' => $file->originele_naam,
+                    'size' => $file->bestandsgrootte,
+                    'mime' => $file->mime_type,
+                    'downloadUrl' => route('assignments.files.download', $file),
+                    'uploadedAt' => $file->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
+                ])->values()->all(),
             ])
             ->values();
 
@@ -193,13 +210,17 @@ class DashboardController extends RoleDashboardController
                 ['AF', 'Afrondingsfase', $phaseTotals['AF']['percentage'], $phaseTotals['AF']['hours']],
             ],
             'records' => $assignments->map(fn (array $assignment): array => [
-                $assignment['title'],
-                $assignment['type'],
-                $assignment['outcomeCodes'][0] ?? '',
-                $assignment['hours'],
-                1,
-                $assignment['dueDate'] ?? 'Datum onbekend',
-                $coachName.' · coach',
+                'assignmentId' => $assignment['id'],
+                'title' => $assignment['title'],
+                'type' => $assignment['type'],
+                'description' => $assignment['description'],
+                'outcomeCodes' => $assignment['outcomeCodes'],
+                'phases' => $assignment['phases'],
+                'hours' => $assignment['hours'],
+                'year' => 1,
+                'date' => $assignment['registeredAt'] ?? 'Datum onbekend',
+                'dateIso' => $assignment['registeredAtIso'],
+                'approver' => $coachName.' · coach',
             ])->values(),
             'hoursByYear' => [
                 1 => [

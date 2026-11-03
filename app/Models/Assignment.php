@@ -53,4 +53,9 @@ class Assignment extends Model
     {
         return $this->hasMany(Reflection::class, 'opdracht_id');
     }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(AssignmentFile::class, 'opdracht_id')->latest();
+    }
 }

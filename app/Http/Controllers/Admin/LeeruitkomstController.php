@@ -29,7 +29,9 @@ class LeeruitkomstController extends Controller
 
         $learningOutcome->update($data);
 
-        return back()->with('status', 'De leeruitkomst is bijgewerkt.');
+        return redirect()
+            ->route('admin.dashboard', ['page' => 'leeruitkomsten'])
+            ->with('status', 'De leeruitkomst is bijgewerkt.');
     }
 
     public function destroy(LearningOutcome $learningOutcome): RedirectResponse
@@ -37,7 +39,9 @@ class LeeruitkomstController extends Controller
         // The database cascades deletion to linked progress and other dependent records.
         $learningOutcome->delete();
 
-        return back()->with('status', 'De leeruitkomst is verwijderd.');
+        return redirect()
+            ->route('admin.dashboard', ['page' => 'leeruitkomsten'])
+            ->with('status', 'De leeruitkomst is verwijderd.');
     }
 
     private function validatedOutcome(Request $request, ?LearningOutcome $learningOutcome = null): array

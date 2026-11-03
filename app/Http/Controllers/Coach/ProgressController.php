@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Coach;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\LearningOutcome;
 use App\Models\Progress;

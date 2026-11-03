@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,23 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * Ingelogde gebruiker uit de tabel `gebruikers`.
+ *
+ * @property int $id
+ * @property string $naam
+ * @property string $email
+ * @property string $password
+ * @property string $rol
+ * @property int|null $hoofdrol_id
+ * @property int|null $studiefase_id
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read UserState|null $appState
+ * @property-read StudyPhase|null $studyPhase
+ * @property-read Role|null $primaryRole
+ */
 class User extends Authenticatable
 {
     use Notifiable;
@@ -25,6 +43,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /** Verstuur de wachtwoordherstelmail in de Nederlandse applicatiestijl. */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function appState(): HasOne

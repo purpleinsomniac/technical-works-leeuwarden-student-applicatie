@@ -194,20 +194,25 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible { outline: 3px solid #159d99; outline-offset: 4px; }
-.side { width: 246px; background: #122b3d; color: #eff8ff; border: 0; padding: 24px 20px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #466276 transparent; }
-.brand { letter-spacing: -1px; font-size: 25px; }
-.side .brand:before { content: "◈"; color: #64dbca; margin-right: 10px; }
+.side { isolation: isolate; width: 252px; gap: 0; background: linear-gradient(160deg, #042d40 0%, #00364a 62%, #00485b 100%); color: #eff8ff; border: 0; padding: 17px 9px 12px; position: sticky; top: 0; height: 100vh; overflow: hidden; box-shadow: 8px 0 30px rgba(7, 31, 45, 0.08); }
+.side::before,
+.side::after { content: ""; position: absolute; z-index: -1; right: -120px; bottom: -152px; width: 310px; height: 230px; border: 20px solid rgba(0, 177, 190, 0.18); border-radius: 50%; transform: rotate(-25deg); pointer-events: none; }
+.side::after { right: -142px; bottom: -174px; border-width: 13px; border-color: rgba(0, 214, 210, 0.2); }
+.side > * { position: relative; z-index: 1; }
+.brand { display: flex; align-items: center; padding: 0 10px; letter-spacing: -0.45px; font-size: 19px; color: #fff; }
+.side .brand:before { content: ""; display: block; width: 14px; height: 14px; flex: none; margin-right: 12px; border: 2px solid #2fe0df; transform: rotate(45deg); }
 .side .dim { color: #afc6d5; }
-.side hr { opacity: 0.15; margin: 15px 0; }
-.side #nav { display: grid; gap: 5px; }
-.nav { border: 0; background: transparent; color: #bbcedb; border-radius: 9px; padding: 11px 17px; }
-.nav:hover { background: #244358; color: white; }
-.nav.active { background: #24515e; color: #8cf0db; box-shadow: inset 3px 0 #67dbc2; }
-.side .foot { flex: none; border-color: #355063; padding: 13px 7px 0; }
+.side #roleLabel { padding: 0 10px; color: #64c7d1; font-size: 11px; }
+.side hr { width: calc(100% - 20px); border: 0; border-top: 1px solid rgba(183, 222, 232, 0.22); margin: 10px 10px 11px; }
+.side #nav { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 2px; }
+.nav { min-height: 38px; border: 0; background: transparent; color: #e8f0f4; border-radius: 9px; padding: 8px 15px; font-size: 16px; font-weight: 650; }
+.nav:hover { background: rgba(16, 95, 119, 0.5); color: #fff; }
+.nav.active { background: linear-gradient(90deg, #08768f, #08a8b2); color: #fff; box-shadow: none; }
+.side .foot { flex: none; margin-top: 9px; border-top: 1px solid rgba(177, 220, 229, 0.22); padding: 13px 0 0; }
 .side .foot > .small { margin-bottom: 5px; }
-.side .foot form .nav { padding-top: 9px; padding-bottom: 9px; }
-.product-credit { display: flex; flex-direction: column; gap: 2px; margin: 8px 0 0; padding: 9px 5px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 8px; line-height: 1.4; letter-spacing: 0.3px; }
-.product-credit strong { color: #d2e1e9; font-size: 9px; font-weight: 650; }
+.side .foot form .nav { padding-top: 8px; padding-bottom: 8px; }
+.product-credit { display: flex; flex-direction: column; gap: 1px; margin: 8px 6px 0; padding: 10px 3px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 7px; line-height: 1.35; letter-spacing: 0.1px; }
+.product-credit strong { color: #d2e1e9; font-size: 8px; font-weight: 650; }
 .main { display: flex; min-width: 0; min-height: 100vh; flex-direction: column; padding: 0 42px 36px; margin: 0 auto; }
 
 /* Gedeelde header met projectcontext en het ingelogde account. */
@@ -217,8 +222,10 @@ textarea:focus-visible,
 .topbar-title { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .topbar-project { color: #718695; font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: 1px; }
 .topbar-title strong { overflow: hidden; color: #1f4050; font-size: 15px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
-.profile { display: flex; flex: none; align-items: center; gap: 10px; padding: 7px 10px 7px 8px; border: 1px solid #dce7eb; border-radius: 12px; background: rgba(255, 255, 255, 0.72); color: #283e51; font-weight: 600; }
-.topbar-date { margin-left: auto; color: #718396; font-size: 10px; white-space: nowrap; }
+.topbar-actions { display: flex; flex: none; align-items: center; gap: 10px; margin-left: auto; }
+.topbar-date { display: inline-flex; align-items: center; gap: 8px; margin: 0; border: 1px solid #dce7eb; border-radius: 11px; background: rgba(255, 255, 255, 0.62); color: #61798b; padding: 8px 11px; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.topbar-date-icon { display: grid; width: 17px; height: 17px; place-items: center; color: #278477; }
+.topbar-date-icon svg { width: 16px; height: 16px; }
 .avatar { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #c8e3dc; border-radius: 10px; background: #e6f4f0; color: #176f65; font-size: 11px; font-weight: 800; }
 .profile-copy { display: flex; flex-direction: column; line-height: 1.25; }
 .profile-name { color: #294756; font-size: 11px; }
@@ -336,6 +343,18 @@ p.dim,
 .login .button.dark { margin-top: 8px; background: #167e72; border-color: #167e72; padding: 13px 18px; }
 .login .button.dark:hover { background: #116b62; border-color: #116b62; box-shadow: 0 8px 20px rgba(22, 126, 114, 0.2); transform: translateY(-1px); }
 .login .warning { margin-bottom: 20px; border-color: #f0d7a7; background: #fff8e9; color: #76581d; }
+
+/* Wachtwoordherstel gebruikt dezelfde rustige huisstijl als de inlogpagina. */
+.login-form-options { display: flex; justify-content: flex-end; margin: -7px 0 9px; }
+.forgot-password-link,
+.auth-back-link { color: #167e72; font-size: 12px; font-weight: 700; text-decoration: none; }
+.forgot-password-link:hover,
+.auth-back-link:hover { color: #105f57; text-decoration: underline; }
+.auth-back-link { display: inline-flex; margin-bottom: 22px; }
+.auth-message { margin-bottom: 20px; border: 1px solid; border-radius: 10px; padding: 12px 14px; font-size: 12px; line-height: 1.55; }
+.auth-message.success { border-color: #bfe2d7; background: #e9f7f2; color: #17685d; }
+.auth-message.error { border-color: #efd1c9; background: #fff1ee; color: #8a4037; }
+.auth-help { margin: 18px 0 0; color: #748695; font-size: 11px; line-height: 1.6; }
 
 @media (max-width: 680px) {
   .login .intro { min-height: 38vh; padding: 42px 28px; }

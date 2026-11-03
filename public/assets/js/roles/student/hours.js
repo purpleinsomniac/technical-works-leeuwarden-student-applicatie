@@ -1,139 +1,157 @@
 // Urenoverzicht, registratiedetails en urenmeldingen.
+let hoursPhaseFilter = "all";
+let hoursPage = 1;
+let selectedRegistrationRecord = null;
 
 function renderHours() {
-  const selected = document.getElementById("hoursYear").value,
-    totalData = Object.values(hoursByYear).reduce(
-      (sum, item) => ({
-        total: sum.total + item.total,
-        orientation: sum.orientation + item.orientation,
-        deepening: sum.deepening + item.deepening,
-        completion: sum.completion + item.completion,
-      }),
-      { total: 0, orientation: 0, deepening: 0, completion: 0 },
-    ),
-    isTotal = selected === "total",
-    data = isTotal ? totalData : hoursByYear[Number(selected)],
-    target = isTotal ? 3200 : 800,
-    remaining = Math.max(0, target - data.total),
-    percentage = Math.round((data.total / target) * 100),
-    periodLabel = isTotal ? "Totaal opleiding" : "Leerjaar " + selected,
-    periodRecords = isTotal ? records : records.filter((record) => record[4] === Number(selected));
-  document.getElementById("hoursSelectedYear").textContent = periodLabel;
+  const selected = document.getElementById("hoursYear").value;
+  const totalData = Object.values(hoursByYear).reduce(
+    (sum, item) => ({
+      total: sum.total + item.total,
+      orientation: sum.orientation + item.orientation,
+      deepening: sum.deepening + item.deepening,
+      completion: sum.completion + item.completion,
+    }),
+    { total: 0, orientation: 0, deepening: 0, completion: 0 },
+  );
+  const isTotal = selected === "total";
+  const data = isTotal ? totalData : hoursByYear[Number(selected)];
+  const target = isTotal ? 3200 : 800;
+  const remaining = Math.max(0, target - data.total);
+  const percentage = target ? Math.round((data.total / target) * 100) : 0;
+  const periodLabel = isTotal ? "Totaal opleiding" : "Leerjaar " + selected;
+
   document.getElementById("registrationsYear").textContent = periodLabel;
-  document.querySelector(".hours-total>div>span").textContent = " / " + target.toLocaleString("nl-NL") + " uur";
-  document.querySelector(".hours-scale span:last-child").textContent = "Doel: " + target.toLocaleString("nl-NL") + " uur";
   document.getElementById("hoursYearTotal").textContent = data.total.toLocaleString("nl-NL");
-  document.getElementById("hoursYearPercentage").textContent = percentage + "% van de urennorm behaald";
-  document.getElementById("hoursScalePercentage").textContent = percentage + "% van je doel behaald";
-  document.getElementById("hoursOrientation").textContent = data.orientation + " uur";
-  document.getElementById("hoursDeepening").textContent = data.deepening + " uur";
-  document.getElementById("hoursCompletion").textContent = data.completion + " uur";
+  document.getElementById("hoursTarget").textContent = target.toLocaleString("nl-NL");
+  document.getElementById("hoursProgressPercent").textContent = percentage + "%";
+  document.getElementById("hoursProgressRing").style.setProperty("--hours-progress", Math.min(360, percentage * 3.6) + "deg");
+  document.getElementById("hoursYearPercentage").textContent = "van de urennorm behaald";
+
   const segments = [
     ["orientation", data.orientation, "Oriëntatiefase"],
     ["deepening", data.deepening, "Verdiepingsfase"],
     ["completion", data.completion, "Afrondingsfase"],
     ["remaining", remaining, "Nog te behalen"],
   ];
-  document.getElementById("hoursStackedBar").innerHTML = segments
-    .map(
-      ([kind, hours, label]) =>
-        '<span class="hours-segment ' +
-        kind +
-        '" style="width:' +
-        (hours / target) * 100 +
-        '%" title="' +
-        label +
-        ": " +
-        hours +
-        ' uur">' +
-        (kind === "remaining" ? "" : "<span>" + hours + " uur</span>") +
-        "</span>",
-    )
-    .join("");
-  document.getElementById("hoursLegend").innerHTML = segments
-    .map(
-      ([kind, hours, label]) =>
-        '<div><span class="legend-color ' + kind + '"></span><span><b>' + hours.toLocaleString("nl-NL") + " uur</b> " + label + "</span></div>",
-    )
-    .join("");
-  const periodItems = [...Object.entries(hoursByYear).sort((a, b) => a[0] - b[0]), ["total", totalData]];
-  document.getElementById("yearlyHoursOverview").innerHTML = periodItems
-    .map(([key, item]) => {
-      const itemIsTotal = key === "total",
-        itemTarget = itemIsTotal ? 3200 : 800,
-        label = itemIsTotal ? "Totaal" : "Leerjaar " + key;
-      return (
-        '<button type="button" class="year-total ' +
-        (key === selected ? "active" : "") +
-        " " +
-        (itemIsTotal ? "grand-total" : "") +
-        '" onclick="selectHoursYear(\'' +
-        key +
-        "')\"><span>" +
-        label +
-        "</span><strong>" +
-        item.total.toLocaleString("nl-NL") +
-        ' uur</strong><div class="bar"><span style="width:' +
-        (item.total / itemTarget) * 100 +
-        '%"></span></div><small>' +
-        Math.round((item.total / itemTarget) * 100) +
-        "% van " +
-        (itemIsTotal ? "de opleidingsnorm" : "de leerjaarnorm") +
-        "</small></button>"
-      );
-    })
-    .join("");
-  document.getElementById("hoursList").innerHTML = emptyHours
-    ? '<div class="empty-state"><h3>Nog geen gevalideerde uren</h3><p>Er zijn voor deze periode nog geen goedgekeurde registraties zichtbaar.</p><button class="button" onclick="emptyHours=false;renderHours()">Toon voorbeeldgegevens</button></div>'
-    : periodRecords
-        .map((r) => {
-          const index = records.indexOf(r),
-            meta = registrationMeta[index];
-          return (
-            '<button type="button" class="simple click registration-row" onclick="openHourRegistration(' +
-            index +
-            ')"><span><b>' +
-            esc(r[0]) +
-            '</b><br><span class="small dim">' +
-            esc(r[1]) +
-            " · Leerjaar " +
-            r[4] +
-            '</span></span><span class="code">' +
-            esc(r[2]) +
-            '</span><span class="registration-row-meta"><b>' +
-            r[3] +
-            " uur</b><small>" +
-            esc(meta[0]) +
-            "</small></span></button>"
-          );
-        })
-        .join("");
+  document.getElementById("hoursStackedBar").innerHTML = segments.map(([kind, hours, label]) =>
+    '<span class="hours-segment ' + kind + '" style="width:' + Math.max(0, (hours / target) * 100) + '%" title="' + esc(label) + ': ' + hours + ' uur"></span>',
+  ).join("");
+  document.getElementById("hoursLegend").innerHTML = segments.map(([kind, hours, label]) =>
+    '<div><span class="legend-color ' + kind + '"></span><span><b>' + hours.toLocaleString("nl-NL") + ' uur</b><small>' + esc(label) + '</small></span></div>',
+  ).join("");
+
+  renderHoursRegistrations(selected, periodLabel);
 }
 
-function selectHoursYear(period) {
-  document.getElementById("hoursYear").value = period;
-  emptyHours = false;
+function renderHoursRegistrations(selected, periodLabel) {
+  const search = document.getElementById("hoursSearch").value.trim().toLowerCase();
+  const sort = document.getElementById("hoursSort").value;
+  const perPage = Number(document.getElementById("hoursPerPage").value);
+  let filtered = records.filter((record) => {
+    const periodMatches = selected === "total" || Number(record.year) === Number(selected);
+    const phaseMatches = hoursPhaseFilter === "all" || (record.phases || []).includes(hoursPhaseFilter);
+    const linked = (record.outcomeCodes || []).map((code) => outcomes.find((outcome) => outcome.code === code)).filter(Boolean);
+    const searchable = [record.title, record.type, record.description, ...linked.flatMap((outcome) => [outcome.short, outcome.code])].join(" ").toLowerCase();
+    return periodMatches && phaseMatches && (!search || searchable.includes(search));
+  });
+
+  filtered.sort((left, right) => {
+    if (sort === "title") return left.title.localeCompare(right.title, "nl");
+    if (sort === "hours-desc") return Number(right.hours) - Number(left.hours);
+    const direction = sort === "date-asc" ? 1 : -1;
+    return direction * String(left.dateIso || "").localeCompare(String(right.dateIso || ""));
+  });
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
+  hoursPage = Math.min(hoursPage, pageCount);
+  const visibleRecords = filtered.slice((hoursPage - 1) * perPage, hoursPage * perPage);
+  const start = filtered.length ? (hoursPage - 1) * perPage + 1 : 0;
+  const end = Math.min(hoursPage * perPage, filtered.length);
+
+  document.querySelectorAll("[data-hours-phase]").forEach((button) => {
+    const active = button.dataset.hoursPhase === hoursPhaseFilter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  document.getElementById("registrationsYear").textContent = periodLabel;
+  document.getElementById("hoursResultCount").textContent = filtered.length ? start + " – " + end + " van " + filtered.length + " registraties" : "0 registraties";
+  document.getElementById("hoursList").innerHTML = visibleRecords.length
+    ? visibleRecords.map(renderHoursRow).join("")
+    : '<div class="hours-empty"><span>⌕</span><h3>Geen registraties gevonden</h3><p>Pas de periode, fase of zoekopdracht aan.</p></div>';
+  document.getElementById("hoursPagination").innerHTML = renderHoursPagination(pageCount);
+}
+
+function renderHoursRow(record) {
+  const index = records.indexOf(record);
+  const linked = (record.outcomeCodes || []).map((code) => outcomes.find((outcome) => outcome.code === code)).filter(Boolean);
+  const phaseBadges = (record.phases || []).map((code) => '<span class="hours-phase-badge ' + code + '">' + esc(hoursPhaseName(code)) + '</span>').join("");
+  const outcomeChips = linked.slice(0, 3).map((outcome) =>
+    '<span class="hours-outcome-chip ' + esc(outcome.phase) + '" title="' + esc(hoursPhaseName(outcome.phase)) + '">' + uiIcon("outcomes") + esc(outcome.short) + '</span>',
+  ).join("") + (linked.length > 3 ? '<span class="hours-outcome-more">+' + (linked.length - 3) + '</span>' : '');
+
+  return '<button type="button" class="hours-registration-row" onclick="openHourRegistration(' + index + ')">' +
+    '<span class="hours-assignment-cell"><span class="hours-assignment-icon">' + assignmentIcon(record) + '</span><span><strong>' + esc(record.title) + '</strong><small>' + esc(record.type) + ' · Leerjaar ' + record.year + '</small></span></span>' +
+    '<span class="hours-phase-cell">' + phaseBadges + '</span>' +
+    '<span class="hours-outcome-cell">' + outcomeChips + '</span>' +
+    '<strong class="hours-value">' + Number(record.hours).toLocaleString("nl-NL") + ' uur</strong>' +
+    '<span class="hours-date">' + esc(record.date) + '</span><span class="hours-chevron" aria-hidden="true">›</span></button>';
+}
+
+function renderHoursPagination(pageCount) {
+  if (pageCount <= 1) return "";
+  let html = '<button type="button" ' + (hoursPage === 1 ? 'disabled' : '') + ' onclick="goToHoursPage(' + (hoursPage - 1) + ')">‹</button>';
+  for (let page = 1; page <= pageCount; page += 1) {
+    html += '<button type="button" class="' + (page === hoursPage ? 'active' : '') + '" onclick="goToHoursPage(' + page + ')">' + page + '</button>';
+  }
+  return html + '<button type="button" ' + (hoursPage === pageCount ? 'disabled' : '') + ' onclick="goToHoursPage(' + (hoursPage + 1) + ')">›</button>';
+}
+
+function resetHoursAndRender() {
+  hoursPage = 1;
   renderHours();
 }
 
+function selectHoursPhase(phaseCode) {
+  hoursPhaseFilter = phaseCode;
+  resetHoursAndRender();
+}
+
+function goToHoursPage(page) {
+  hoursPage = page;
+  renderHours();
+}
+
+function hoursPhaseName(code) {
+  return phases.find((phaseItem) => phaseItem[0] === code)?.[1] || code;
+}
+
 function openHourRegistration(index) {
-  const record = records[index],
-    meta = registrationMeta[index],
-    outcome = outcomes.find((item) => item.code === record[2]),
-    phaseName = outcome ? (phases.find((item) => item[0] === outcome.phase) || [])[1] : "Onbekende fase";
-  selectedRegistrationCode = record[2];
-  document.getElementById("registrationDetailTitle").textContent = record[0];
-  document.getElementById("registrationDetailType").textContent = record[1];
-  document.getElementById("registrationDetailHours").textContent = record[3] + " uur";
-  document.getElementById("registrationDetailYear").textContent = "Leerjaar " + record[4];
-  document.getElementById("registrationDetailPhase").textContent = phaseName;
-  document.getElementById("registrationDetailDate").textContent = meta[0];
-  document.getElementById("registrationDetailApprover").textContent = meta[1];
-  document.getElementById("registrationDetailOutcomeName").textContent = outcome ? outcome.short : "Leeruitkomst";
-  document.getElementById("registrationDetailCode").textContent = record[2];
+  const record = records[index];
+  const linked = (record.outcomeCodes || []).map((code) => outcomes.find((outcome) => outcome.code === code)).filter(Boolean);
+  selectedRegistrationRecord = record;
+  selectedRegistrationCode = linked[0]?.code || null;
+  document.getElementById("registrationDetailTitle").textContent = record.title;
+  document.getElementById("registrationDetailType").textContent = record.type;
+  document.getElementById("registrationDetailDescription").textContent = record.description || "";
+  document.getElementById("registrationDetailHours").textContent = Number(record.hours).toLocaleString("nl-NL") + " uur";
+  document.getElementById("registrationDetailYear").textContent = "Leerjaar " + record.year;
+  document.getElementById("registrationDetailPhase").textContent = (record.phases || []).map(hoursPhaseName).join(" · ");
+  document.getElementById("registrationDetailDate").textContent = record.date;
+  document.getElementById("registrationDetailApprover").textContent = record.approver;
+  document.getElementById("registrationDetailOutcomeList").innerHTML = renderRegistrationOutcomeGroups(linked);
   document.getElementById("registrationDetailModal").classList.remove("hidden");
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => document.querySelector("#registrationDetailModal .modal-close").focus());
+}
+
+function renderRegistrationOutcomeGroups(linked) {
+  return ["OF", "VF", "AF"].map((phaseCode) => {
+    const phaseOutcomes = linked.filter((outcome) => outcome.phase === phaseCode);
+    if (!phaseOutcomes.length) return "";
+    return '<section class="registration-outcome-group"><span class="hours-phase-badge ' + phaseCode + '">' + esc(hoursPhaseName(phaseCode)) + '</span>' +
+      phaseOutcomes.map((outcome) => '<button type="button" onclick="openRegistrationOutcome(\'' + esc(outcome.code) + '\')"><span><strong>' + esc(outcome.short) + '</strong><small>' + esc(outcome.code) + '</small></span><span aria-hidden="true">›</span></button>').join("") + '</section>';
+  }).join("");
 }
 
 function closeRegistrationDetail() {
@@ -141,10 +159,15 @@ function closeRegistrationDetail() {
   document.body.classList.remove("modal-open");
 }
 
-function openRegistrationOutcome() {
-  const code = selectedRegistrationCode;
+function openRegistrationOutcome(code) {
   closeRegistrationDetail();
-  if (code) openOutcome(code);
+  if (code) openOutcome(code, "hours");
+}
+
+function openRegistrationAssignment() {
+  const assignmentId = selectedRegistrationRecord?.assignmentId;
+  closeRegistrationDetail();
+  if (assignmentId) openAssignment(assignmentId);
 }
 
 function renderHourApprovals() {

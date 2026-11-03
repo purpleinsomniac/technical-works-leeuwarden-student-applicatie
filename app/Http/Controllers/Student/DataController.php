@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 
 use App\Models\Assignment;
+use App\Models\AssignmentFile;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
@@ -12,6 +13,7 @@ use App\Models\Reflection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class DataController extends Controller
 {
@@ -127,6 +129,73 @@ class DataController extends Controller
         return response()->json(['id' => $assignment->id, 'status' => $assignment->status]);
     }
 
+    public function reopenAssignment(Request $request, Assignment $assignment): JsonResponse
+    {
+        $this->requireStudent($request);
+        abort_unless($assignment->gebruiker_id === $request->user()->id, 403);
+        abort_unless($assignment->status === 'review', 422);
+        $assignment->update(['status' => 'active']);
+
+        return response()->json(['id' => $assignment->id, 'status' => $assignment->status]);
+    }
+
+    public function storeAssignmentFile(Request $request, Assignment $assignment): JsonResponse
+    {
+        $this->requireStudent($request);
+        abort_unless($assignment->gebruiker_id === $request->user()->id, 403);
+        abort_unless(in_array($assignment->status, ['active', 'concept'], true), 422, 'Zet de opdracht eerst terug om bestanden toe te voegen.');
+
+        $request->validate([
+            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,doc,docx,txt,png,jpg,jpeg,gif,webp,xls,xlsx,csv,ppt,pptx,zip'],
+        ]);
+
+        $upload = $request->file('file');
+        $directory = storage_path('app/private/opdrachten/'.$assignment->id);
+        if (! is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        $extension = strtolower($upload->getClientOriginalExtension());
+        $storedName = (string) Str::uuid().($extension ? '.'.$extension : '');
+        $upload->move($directory, $storedName);
+
+        $file = $assignment->files()->create([
+            'originele_naam' => $upload->getClientOriginalName(),
+            'opslagpad' => 'opdrachten/'.$assignment->id.'/'.$storedName,
+            'mime_type' => $upload->getClientMimeType(),
+            'bestandsgrootte' => filesize($directory.DIRECTORY_SEPARATOR.$storedName),
+        ]);
+
+        return response()->json($this->assignmentFilePayload($file), 201);
+    }
+
+    public function downloadAssignmentFile(Request $request, AssignmentFile $assignmentFile)
+    {
+        $this->requireStudent($request);
+        abort_unless($assignmentFile->assignment->gebruiker_id === $request->user()->id, 403);
+        $path = storage_path('app/private/'.$assignmentFile->opslagpad);
+        abort_unless(is_file($path), 404);
+
+        return response()->download($path, $assignmentFile->originele_naam, [
+            'Content-Type' => $assignmentFile->mime_type ?: 'application/octet-stream',
+        ]);
+    }
+
+    public function destroyAssignmentFile(Request $request, AssignmentFile $assignmentFile): JsonResponse
+    {
+        $this->requireStudent($request);
+        abort_unless($assignmentFile->assignment->gebruiker_id === $request->user()->id, 403);
+        abort_unless(in_array($assignmentFile->assignment->status, ['active', 'concept'], true), 422, 'Zet de opdracht eerst terug om bestanden te verwijderen.');
+
+        $path = storage_path('app/private/'.$assignmentFile->opslagpad);
+        if (is_file($path)) {
+            unlink($path);
+        }
+        $assignmentFile->delete();
+
+        return response()->json(['deleted' => true]);
+    }
+
     private function requireStudent(Request $request): void
     {
         abort_unless($request->user()->rol === 'student', 403);
@@ -158,6 +227,18 @@ class DataController extends Controller
             'improve' => $feedback->wat_kan_beter,
             'action' => $feedback->volgende_stap,
             'date' => $feedback->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
+        ];
+    }
+
+    private function assignmentFilePayload(AssignmentFile $file): array
+    {
+        return [
+            'id' => $file->id,
+            'name' => $file->originele_naam,
+            'size' => $file->bestandsgrootte,
+            'mime' => $file->mime_type,
+            'downloadUrl' => route('assignments.files.download', $file),
+            'uploadedAt' => $file->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
         ];
     }
 }

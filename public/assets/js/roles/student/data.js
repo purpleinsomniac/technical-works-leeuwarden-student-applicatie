@@ -51,8 +51,8 @@ const assignmentStatuses = {
 
 // Extra gegevens van urenregistraties worden eveneens door Laravel aangeleverd.
 const registrationMeta = records.map((record) => [
-  record[5] || "Datum onbekend",
-  record[6] || "Beoordelaar onbekend",
+  record.date || record[5] || "Datum onbekend",
+  record.approver || record[6] || "Beoordelaar onbekend",
 ]);
 
 function isOutcomeCompleted(outcome) {

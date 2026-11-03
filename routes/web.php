@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LeeruitkomstController;
 use App\Http\Controllers\Coach\DashboardController as CoachDashboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
@@ -33,6 +34,12 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/coach', CoachDashboardController::class)->middleware('role:coach')->name('coach.dashboard');
     Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');
     Route::get('/beheer', AdminDashboardController::class)->middleware('role:beheerder')->name('admin.dashboard');
+
+    Route::middleware('role:beheerder')->prefix('beheer/leeruitkomsten')->name('admin.learning-outcomes.')->group(function (): void {
+        Route::post('/', [LeeruitkomstController::class, 'store'])->name('store');
+        Route::put('/{learningOutcome}', [LeeruitkomstController::class, 'update'])->name('update');
+        Route::delete('/{learningOutcome}', [LeeruitkomstController::class, 'destroy'])->name('destroy');
+    });
 
     Route::middleware('role:student')->group(function (): void {
         Route::put('/mijn-gegevens', [StateController::class, 'update'])->name('state.save');

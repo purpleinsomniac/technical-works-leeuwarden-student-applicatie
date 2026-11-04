@@ -87,14 +87,21 @@
 
   <section class="admin-panel admin-user-list">
     <div class="admin-panel-heading">
-      <div><h2>Alle accounts</h2><p>{{ $roleData['users']->count() }} gebruikers</p></div>
+      <div><h2>Alle accounts</h2><p id="adminUsersCount" aria-live="polite">{{ $roleData['users']->count() }} gebruikers</p></div>
+    </div>
+    <div class="admin-user-filter">
+      <label for="adminUserRoleFilter">Filter op accounttype</label>
+      <select class="input" id="adminUserRoleFilter">
+        <option value="all">Alle accounttypen</option>
+        @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}">{{ ucfirst($role->naam) }}</option>@endforeach
+      </select>
     </div>
     <div class="admin-users-table-wrap">
       <table class="admin-users-table">
         <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Beheren</th></tr></thead>
         <tbody>
           @forelse ($roleData['users'] as $managedUser)
-            <tr>
+            <tr data-user-role="{{ $managedUser->primaryRole?->naam ?? $managedUser->rol }}">
               <td>{{ $managedUser->naam }}</td>
               <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
               <td>{{ ucfirst($managedUser->primaryRole?->naam ?? $managedUser->rol) }}</td>
@@ -127,8 +134,9 @@
               </td>
             </tr>
           @empty
-            <tr><td colspan="4">Er zijn nog geen accounts.</td></tr>
+            <tr data-user-empty><td colspan="4">Er zijn nog geen accounts.</td></tr>
           @endforelse
+          <tr id="adminUsersNoMatches" hidden><td colspan="4">Geen gebruikers gevonden voor dit accounttype.</td></tr>
         </tbody>
       </table>
     </div>

@@ -67,6 +67,9 @@
 .admin-user-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0 16px; }
 .admin-user-fields label { color: #405b6a; font-size: 12px; font-weight: 650; }
 .admin-user-fields .input { margin: 6px 0 15px; }
+.admin-user-filter { display: flex; max-width: 290px; flex-direction: column; gap: 3px; margin-bottom: 12px; }
+.admin-user-filter label { color: #405b6a; font-size: 12px; font-weight: 650; }
+.admin-user-filter .input { margin: 4px 0 0; }
 .admin-users-table-wrap { overflow-x: auto; }
 .admin-users-table { width: 100%; min-width: 640px; border-collapse: collapse; text-align: left; }
 .admin-users-table th,

@@ -37,9 +37,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/beheer', AdminDashboardController::class)->middleware('role:beheerder')->name('admin.dashboard');
 
     Route::middleware('role:beheerder')->prefix('beheer/leeruitkomsten')->name('admin.learning-outcomes.')->group(function (): void {
-        Route::post('/', [LeeruitkomstController::class, 'store'])->name('store');
         Route::put('/{learningOutcome}', [LeeruitkomstController::class, 'update'])->name('update');
-        Route::delete('/{learningOutcome}', [LeeruitkomstController::class, 'destroy'])->name('destroy');
     });
 
     Route::middleware('role:beheerder')->prefix('beheer/gebruikers')->name('admin.users.')->group(function (): void {

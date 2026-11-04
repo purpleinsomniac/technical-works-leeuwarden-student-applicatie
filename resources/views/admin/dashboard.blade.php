@@ -165,45 +165,18 @@
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
       <h1>Leeruitkomsten</h1>
-      <p>Bekijk en beheer leeruitkomsten, gesorteerd per studiefase en code.</p>
+      <p>Bekijk leeruitkomsten en wijzig alleen de normwaarden, gesorteerd per studiefase en code.</p>
     </div>
-    <button class="button admin-hero-action" id="toggleLearningOutcomeForm" type="button" aria-controls="createLearningOutcome" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleLearningOutcomeForm()">Leeruitkomst toevoegen <span aria-hidden="true">+</span></button>
   </header>
-  {{-- Surface successful saves and validation failures on this management page. --}}
+  {{-- Surface successful edits and validation failures on this management page. --}}
   @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
   @if ($errors->any())
     <div class="notice" role="alert">
-      <p>De leeruitkomst is niet opgeslagen. Controleer de volgende velden:</p>
+      <p>De wijzigingen zijn niet opgeslagen. Controleer de volgende velden:</p>
       <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
   @endif
 
-  {{-- The query flag keeps the form open after redirects that return validation errors. --}}
-  {{-- Keep the create form closed by default, but open it after validation redirects. --}}
-  <section class="admin-panel admin-outcome-create" id="createLearningOutcome" aria-labelledby="create-learning-outcome" @if (!request()->boolean('new')) hidden @endif>
-    <div class="admin-panel-heading"><div><h2 id="create-learning-outcome">Nieuwe leeruitkomst</h2><p>Vul de gegevens in om een leeruitkomst toe te voegen.</p></div></div>
-    {{-- Outcomes require an existing study phase to satisfy their database relationship. --}}
-    @if ($roleData['studyPhases']->isEmpty())
-      <p class="dim">Voeg eerst een studiefase toe voordat je een leeruitkomst kunt aanmaken.</p>
-    @else
-      <form action="{{ route('admin.learning-outcomes.store', ['page' => 'leeruitkomsten', 'new' => 1]) }}" method="post">
-        @csrf
-        {{-- old() restores submitted values when validation sends the user back. --}}
-        <label for="new-outcome-phase">Studiefase</label>
-        {{-- A learning outcome must reference one of the study phases already in the database. --}}
-        <select class="input" id="new-outcome-phase" name="studiefase_id" required>
-          <option value="">Selecteer een studiefase</option>
-          @foreach ($roleData['studyPhases'] as $phase)<option value="{{ $phase->id }}" @selected(old('studiefase_id') == $phase->id)>{{ $phase->naam }}</option>@endforeach
-        </select>
-        <label for="new-outcome-code">Code</label><input class="input" id="new-outcome-code" name="code" value="{{ old('code') }}" maxlength="100" required>
-        <label for="new-outcome-title">Titel</label><input class="input" id="new-outcome-title" name="titel" value="{{ old('titel') }}" maxlength="255" required>
-        <label for="new-outcome-type">Type (optioneel)</label><input class="input" id="new-outcome-type" name="type" value="{{ old('type') }}" maxlength="45">
-        <label for="new-outcome-description">Omschrijving</label><textarea class="input" id="new-outcome-description" name="omschrijving" required>{{ old('omschrijving') }}</textarea>
-        <label for="new-outcome-values">Normwaarden (optioneel)</label><textarea class="input" id="new-outcome-values" name="normwaarden" rows="3">{{ old('normwaarden') }}</textarea>
-        <button class="button dark" type="submit">Opslaan</button>
-      </form>
-    @endif
-  </section>
   {{-- The controller orders tiles by study phase and then code for predictable scanning. --}}
   <div class="admin-outcome-tiles">
     @forelse ($roleData['learningOutcomes'] as $outcome)
@@ -216,31 +189,16 @@
         {{-- Escape administrator-entered text before preserving its line breaks for display. --}}
         <div class="admin-detail"><span>Normwaarden</span><strong>{!! nl2br(e($outcome->normwaarden ?? 'Niet ingesteld')) !!}</strong></div>
 
-        {{-- Each tile owns its edit form so submitted values stay tied to that outcome. --}}
+        {{-- Only normwaarden can be changed; all other outcome details are read-only here. --}}
         <details class="admin-outcome-edit">
-          <summary class="button">Wijzigen</summary>
+          <summary class="button">Normwaarden wijzigen</summary>
           <form action="{{ route('admin.learning-outcomes.update', ['learningOutcome' => $outcome, 'page' => 'leeruitkomsten']) }}" method="post">
             @csrf
             @method('PUT')
-            <label for="outcome-{{ $outcome->id }}-phase">Studiefase</label>
-            <select class="input" id="outcome-{{ $outcome->id }}-phase" name="studiefase_id" required>
-              @foreach ($roleData['studyPhases'] as $phase)<option value="{{ $phase->id }}" @selected($outcome->studiefase_id === $phase->id)>{{ $phase->naam }}</option>@endforeach
-            </select>
-            <label for="outcome-{{ $outcome->id }}-code">Code</label><input class="input" id="outcome-{{ $outcome->id }}-code" name="code" value="{{ $outcome->code }}" maxlength="100" required>
-            <label for="outcome-{{ $outcome->id }}-title">Titel</label><input class="input" id="outcome-{{ $outcome->id }}-title" name="titel" value="{{ $outcome->titel }}" maxlength="255" required>
-            <label for="outcome-{{ $outcome->id }}-type">Type (optioneel)</label><input class="input" id="outcome-{{ $outcome->id }}-type" name="type" value="{{ $outcome->type }}" maxlength="45">
-            <label for="outcome-{{ $outcome->id }}-description">Omschrijving</label><textarea class="input" id="outcome-{{ $outcome->id }}-description" name="omschrijving" required>{{ $outcome->omschrijving }}</textarea>
             <label for="outcome-{{ $outcome->id }}-values">Normwaarden (optioneel)</label><textarea class="input" id="outcome-{{ $outcome->id }}-values" name="normwaarden" rows="3">{{ $outcome->normwaarden }}</textarea>
-            <button class="button dark" type="submit">Wijzigingen opslaan</button>
+            <button class="button dark" type="submit">Normwaarden opslaan</button>
           </form>
         </details>
-
-        {{-- Warn before deleting because the database cascades to dependent learning data. --}}
-        <form action="{{ route('admin.learning-outcomes.destroy', ['learningOutcome' => $outcome, 'page' => 'leeruitkomsten']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je deze leeruitkomst wilt verwijderen? Gekoppelde voortgang, opdrachtkoppelingen, reflecties en feedback worden ook verwijderd.')">
-          @csrf
-          @method('DELETE')
-          <button class="button" type="submit">Verwijderen</button>
-        </form>
       </article>
     {{-- Keep the page useful when the database has no outcomes yet. --}}
     @empty
@@ -279,3 +237,4 @@
   </section>
 </section>
 @endsection
+{{-- this is the blade template for the admin dashboard --}}

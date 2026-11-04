@@ -14,11 +14,6 @@
     >
       <span id="sidebarAvatar" class="sidebar-avatar" aria-hidden="true">ST</span>
       <span class="sidebar-account-copy"><b id="actor"></b><small id="sidebarRole">Student</small></span>
-      <span class="sidebar-account-arrow" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="m9 18 6-6-6-6"></path>
-        </svg>
-      </span>
     </button>
     <form action="{{ route('logout') }}" method="post">
       @csrf

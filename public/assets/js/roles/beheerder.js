@@ -2,7 +2,9 @@ window.RoleApp.initializeRole({
   label: "Beheerder",
   routes: [
     ["Overzicht", "adminProcessing"],
+    ["Gebruikers", "adminUsers"],
     ["Leeruitkomsten", "adminLearningOutcomes"],
+    ["Leeractiviteiten", "adminLearningActivities"],
     ["Logboek", "adminLog"],
   ],
 });
@@ -23,4 +25,12 @@ function toggleLearningOutcomeForm() {
 
 if (new URLSearchParams(window.location.search).get("page") === "leeruitkomsten") {
   show("adminLearningOutcomes");
+}
+
+if (new URLSearchParams(window.location.search).get("page") === "leeractiviteiten") {
+  show("adminLearningActivities");
+}
+
+if (new URLSearchParams(window.location.search).get("page") === "gebruikers") {
+  show("adminUsers");
 }

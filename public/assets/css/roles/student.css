@@ -1100,8 +1100,6 @@ body { background: #f3f6f9; }
 .sidebar-account-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
 .sidebar-account-copy b { overflow: hidden; color: #fff; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-account-copy small { color: #a9cbd5; font-size: 10px; }
-.sidebar-account-arrow { display: grid; width: 18px; height: 18px; flex: none; place-items: center; color: #d9f4f5; }
-.sidebar-account-arrow svg { width: 15px; height: 15px; }
 .side .foot .sidebar-logout { gap: 13px; min-height: 39px; margin-top: 5px; padding-left: 15px; color: #e6f0f3; }
 .side .foot .sidebar-logout:hover { background: rgba(18, 82, 104, 0.55); color: #fff; }
 

@@ -170,7 +170,9 @@ class DashboardController extends RoleDashboardController
         $phaseTotals = collect(['OF', 'VF', 'AF'])->mapWithKeys(function (string $phase) use ($outcomes): array {
             $items = $outcomes->where('phase', $phase)->whereNotNull('hours');
             $hours = (int) $items->sum('hours');
-            $target = (int) $items->sum('target');
+            $target = $items->sum(
+                fn (array $item): float => is_numeric($item['target']) ? (float) $item['target'] : 0.0,
+            );
 
             return [$phase => [
                 'hours' => $hours,

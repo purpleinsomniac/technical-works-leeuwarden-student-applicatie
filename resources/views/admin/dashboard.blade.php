@@ -46,6 +46,95 @@
   </section>
 </section>
 
+<section id="adminUsers" class="view hidden admin-dashboard">
+  <header class="admin-hero">
+    <div class="admin-hero-copy">
+      <span class="admin-eyebrow">Beheeromgeving</span>
+      <h1>Gebruikers</h1>
+      <p>Maak accounts aan, wijzig gegevens en beheer accountrollen.</p>
+    </div>
+  </header>
+
+  @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
+  @if ($errors->any())
+    <div class="notice" role="alert">
+      <p>De wijziging is niet opgeslagen. Controleer de volgende melding(en):</p>
+      <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+    </div>
+  @endif
+
+  <section class="admin-panel admin-user-create">
+    <div class="admin-panel-heading">
+      <div><h2>Account aanmaken</h2><p>Vul de gegevens in en kies het accounttype.</p></div>
+    </div>
+    <form action="{{ route('admin.users.store', ['page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+      @csrf
+      <div class="admin-user-fields">
+        <div><label for="new-user-name">Naam</label><input class="input" id="new-user-name" name="naam" value="{{ old('naam') }}" maxlength="255" required></div>
+        <div><label for="new-user-email">E-mailadres</label><input class="input" id="new-user-email" name="email" type="email" value="{{ old('email') }}" maxlength="255" required></div>
+        <div>
+          <label for="new-user-role">Accounttype</label>
+          <select class="input" id="new-user-role" name="rol" required>
+            @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(old('rol', 'student') === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
+          </select>
+        </div>
+        <div><label for="new-user-password">Tijdelijk wachtwoord</label><input class="input" id="new-user-password" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
+        <div><label for="new-user-password-confirmation">Herhaal wachtwoord</label><input class="input" id="new-user-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" required></div>
+      </div>
+      <button class="button dark" type="submit">Account aanmaken</button>
+    </form>
+  </section>
+
+  <section class="admin-panel admin-user-list">
+    <div class="admin-panel-heading">
+      <div><h2>Alle accounts</h2><p>{{ $roleData['users']->count() }} gebruikers</p></div>
+    </div>
+    <div class="admin-users-table-wrap">
+      <table class="admin-users-table">
+        <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Beheren</th></tr></thead>
+        <tbody>
+          @forelse ($roleData['users'] as $managedUser)
+            <tr>
+              <td>{{ $managedUser->naam }}</td>
+              <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
+              <td>{{ ucfirst($managedUser->primaryRole?->naam ?? $managedUser->rol) }}</td>
+              <td>
+                <details class="admin-user-edit">
+                  <summary class="button">Wijzigen</summary>
+                  <form action="{{ route('admin.users.update', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+                    @csrf
+                    @method('PUT')
+                    <div class="admin-user-fields">
+                      <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
+                      <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
+                      <div>
+                        <label for="user-{{ $managedUser->id }}-role">Accounttype</label>
+                        <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" required>
+                          @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(($managedUser->primaryRole?->naam ?? $managedUser->rol) === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
+                        </select>
+                      </div>
+                      <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
+                      <div><label for="user-{{ $managedUser->id }}-password-confirmation">Herhaal nieuw wachtwoord</label><input class="input" id="user-{{ $managedUser->id }}-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8"></div>
+                    </div>
+                    <button class="button dark" type="submit">Wijzigingen opslaan</button>
+                  </form>
+                </details>
+                <form action="{{ route('admin.users.destroy', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je dit account wilt verwijderen? Gekoppelde voortgang, opdrachten, reflecties en feedback worden ook verwijderd.')">
+                  @csrf
+                  @method('DELETE')
+                  <button class="button admin-user-delete" type="submit">Verwijderen</button>
+                </form>
+              </td>
+            </tr>
+          @empty
+            <tr><td colspan="4">Er zijn nog geen accounts.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+
 {{-- Shows learning outcomes as sorted tiles and keeps their create/edit controls on a dedicated page. --}}
 <section id="adminLearningOutcomes" class="view hidden admin-dashboard">
   <header class="admin-hero">
@@ -131,6 +220,23 @@
       <p class="dim">Er zijn nog geen leeruitkomsten om te beheren.</p>
     @endforelse
   </div>
+</section>
+
+{{-- Placeholder for the learning-activities page until its contents are defined. --}}
+<section id="adminLearningActivities" class="view hidden admin-dashboard">
+  <header class="admin-hero">
+    <div class="admin-hero-copy">
+      <span class="admin-eyebrow">Beheeromgeving</span>
+      <h1>Leeractiviteiten</h1>
+      <p>De inhoud van deze pagina wordt later bepaald.</p>
+    </div>
+  </header>
+  <section class="admin-empty-state">
+    <span class="admin-empty-icon" aria-hidden="true">▤</span>
+    <span class="admin-eyebrow">Binnenkort beschikbaar</span>
+    <h2>Leeractiviteiten</h2>
+    <p>Deze pagina is alvast toegevoegd. De inhoud volgt zodra die is afgestemd.</p>
+  </section>
 </section>
 
 {{-- The log page is an honest placeholder until an audit-log table is implemented. --}}

@@ -1,6 +1,7 @@
 @extends('layouts.application')
 
 @section('role-content')
+{{-- Each section is a separate dashboard view; the role navigation shows one at a time. --}}
 <section id="adminProcessing" class="view hidden admin-dashboard">
   <header class="admin-hero">
     <div class="admin-hero-copy">
@@ -46,6 +47,7 @@
   </section>
 </section>
 
+{{-- Account management: create accounts, filter the list, and edit or delete existing users. --}}
 <section id="adminUsers" class="view hidden admin-dashboard">
   <header class="admin-hero">
     <div class="admin-hero-copy">
@@ -53,8 +55,11 @@
       <h1>Gebruikers</h1>
       <p>Maak accounts aan, wijzig gegevens en beheer accountrollen.</p>
     </div>
+    {{-- The query flag keeps the form open after validation redirects back to this page. --}}
+    <button class="button admin-hero-action" id="toggleAdminUserForm" type="button" aria-controls="createAdminUser" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleAdminUserForm()">Account aanmaken <span aria-hidden="true">+</span></button>
   </header>
 
+  {{-- Give administrators a visible result after a save or a validation error. --}}
   @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
   @if ($errors->any())
     <div class="notice" role="alert">
@@ -63,17 +68,21 @@
     </div>
   @endif
 
-  <section class="admin-panel admin-user-create">
+  {{-- Keep account creation collapsed until requested, or reopened after a failed submission. --}}
+  <section class="admin-panel admin-user-create" id="createAdminUser" @if (!request()->boolean('new')) hidden @endif>
     <div class="admin-panel-heading">
       <div><h2>Account aanmaken</h2><p>Vul de gegevens in en kies het accounttype.</p></div>
     </div>
-    <form action="{{ route('admin.users.store', ['page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+    <form action="{{ route('admin.users.store', ['page' => 'gebruikers', 'new' => 1]) }}" method="post" class="admin-user-form">
+      {{-- Protect the account-creation request against cross-site form submissions. --}}
       @csrf
+      {{-- Restore non-sensitive fields after validation; passwords must be entered again. --}}
       <div class="admin-user-fields">
         <div><label for="new-user-name">Naam</label><input class="input" id="new-user-name" name="naam" value="{{ old('naam') }}" maxlength="255" required></div>
         <div><label for="new-user-email">E-mailadres</label><input class="input" id="new-user-email" name="email" type="email" value="{{ old('email') }}" maxlength="255" required></div>
         <div>
           <label for="new-user-role">Accounttype</label>
+          {{-- Role options come from the roles supplied by the administrator controller. --}}
           <select class="input" id="new-user-role" name="rol" required>
             @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(old('rol', 'student') === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
           </select>
@@ -85,10 +94,12 @@
     </form>
   </section>
 
+  {{-- The table is rendered server-side; the role selector filters its rows in the browser. --}}
   <section class="admin-panel admin-user-list">
     <div class="admin-panel-heading">
       <div><h2>Alle accounts</h2><p id="adminUsersCount" aria-live="polite">{{ $roleData['users']->count() }} gebruikers</p></div>
     </div>
+    {{-- Option values match each row's data-user-role attribute for the JavaScript filter. --}}
     <div class="admin-user-filter">
       <label for="adminUserRoleFilter">Filter op accounttype</label>
       <select class="input" id="adminUserRoleFilter">
@@ -100,16 +111,19 @@
       <table class="admin-users-table">
         <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Beheren</th></tr></thead>
         <tbody>
+          {{-- Show a data-driven row for each account so its existing role is available to the filter. --}}
           @forelse ($roleData['users'] as $managedUser)
             <tr data-user-role="{{ $managedUser->primaryRole?->naam ?? $managedUser->rol }}">
               <td>{{ $managedUser->naam }}</td>
               <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
               <td>{{ ucfirst($managedUser->primaryRole?->naam ?? $managedUser->rol) }}</td>
               <td>
+                {{-- Keep each edit form beside its user to avoid mixing account identifiers. --}}
                 <details class="admin-user-edit">
                   <summary class="button">Wijzigen</summary>
                   <form action="{{ route('admin.users.update', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" class="admin-user-form">
                     @csrf
+                    {{-- Laravel interprets this form as an update while the browser submits POST. --}}
                     @method('PUT')
                     <div class="admin-user-fields">
                       <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
@@ -126,6 +140,7 @@
                     <button class="button dark" type="submit">Wijzigingen opslaan</button>
                   </form>
                 </details>
+                {{-- Warn that deleting a user also removes their linked learning records. --}}
                 <form action="{{ route('admin.users.destroy', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je dit account wilt verwijderen? Gekoppelde voortgang, opdrachten, reflecties en feedback worden ook verwijderd.')">
                   @csrf
                   @method('DELETE')
@@ -136,6 +151,7 @@
           @empty
             <tr data-user-empty><td colspan="4">Er zijn nog geen accounts.</td></tr>
           @endforelse
+          {{-- The filter reveals this row when accounts exist but none match the chosen role. --}}
           <tr id="adminUsersNoMatches" hidden><td colspan="4">Geen gebruikers gevonden voor dit accounttype.</td></tr>
         </tbody>
       </table>
@@ -163,6 +179,7 @@
   @endif
 
   {{-- The query flag keeps the form open after redirects that return validation errors. --}}
+  {{-- Keep the create form closed by default, but open it after validation redirects. --}}
   <section class="admin-panel admin-outcome-create" id="createLearningOutcome" aria-labelledby="create-learning-outcome" @if (!request()->boolean('new')) hidden @endif>
     <div class="admin-panel-heading"><div><h2 id="create-learning-outcome">Nieuwe leeruitkomst</h2><p>Vul de gegevens in om een leeruitkomst toe te voegen.</p></div></div>
     {{-- Outcomes require an existing study phase to satisfy their database relationship. --}}
@@ -173,6 +190,7 @@
         @csrf
         {{-- old() restores submitted values when validation sends the user back. --}}
         <label for="new-outcome-phase">Studiefase</label>
+        {{-- A learning outcome must reference one of the study phases already in the database. --}}
         <select class="input" id="new-outcome-phase" name="studiefase_id" required>
           <option value="">Selecteer een studiefase</option>
           @foreach ($roleData['studyPhases'] as $phase)<option value="{{ $phase->id }}" @selected(old('studiefase_id') == $phase->id)>{{ $phase->naam }}</option>@endforeach
@@ -195,6 +213,7 @@
         <h3>{{ $outcome->titel }}</h3>
         <p>{{ $outcome->omschrijving }}</p>
         <div class="admin-detail"><span>Type</span><strong>{{ $outcome->type ?: 'Niet ingesteld' }}</strong></div>
+        {{-- Escape administrator-entered text before preserving its line breaks for display. --}}
         <div class="admin-detail"><span>Normwaarden</span><strong>{!! nl2br(e($outcome->normwaarden ?? 'Niet ingesteld')) !!}</strong></div>
 
         {{-- Each tile owns its edit form so submitted values stay tied to that outcome. --}}

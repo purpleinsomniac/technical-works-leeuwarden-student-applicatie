@@ -23,6 +23,20 @@ function toggleLearningOutcomeForm() {
   }
 }
 
+function toggleAdminUserForm() {
+  const form = document.getElementById("createAdminUser");
+  const button = document.getElementById("toggleAdminUserForm");
+
+  if (!form || !button) return;
+
+  form.hidden = !form.hidden;
+  button.setAttribute("aria-expanded", String(!form.hidden));
+
+  if (!form.hidden) {
+    form.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
 if (new URLSearchParams(window.location.search).get("page") === "leeruitkomsten") {
   show("adminLearningOutcomes");
 }

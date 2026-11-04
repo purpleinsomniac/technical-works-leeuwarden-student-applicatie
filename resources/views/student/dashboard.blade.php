@@ -96,6 +96,7 @@
             </section>
           </div>
 
+          {{-- Meldingenvenster voor nieuw verwerkte uren; de inhoud wordt door de dashboard-JavaScript gevuld. --}}
           <div id="hoursApprovalModal" class="card hours-approval-modal hidden" role="dialog" aria-modal="true" aria-labelledby="hoursApprovalTitle">
             <div class="approval-modal-head">
               <div>
@@ -124,6 +125,7 @@
           </div>
         </section>
 
+        {{-- Persoonlijke voorkeuren voor dashboardweergave en zichtbare widgets. --}}
         <section id="dashboardSettings" class="view hidden dashboard-settings-page">
           <div class="settings-page-head">
             <button class="back-link" type="button" onclick="show('studentDashboard')">← Terug naar dashboard</button>
@@ -174,6 +176,7 @@
           </div>
         </section>
 
+        {{-- Doorzoekbare catalogus met filters, sortering en paginering voor leeruitkomsten. --}}
         <section id="learningOutcomes" class="view hidden">
           <div class="head learning-catalog-head">
             <div>
@@ -251,6 +254,7 @@
             <nav id="catalogPagination" class="catalog-pagination" aria-label="Pagina's leeruitkomsten"></nav>
           </div>
         </section>
+        {{-- De JavaScript vult deze detailweergave met de gekozen leeruitkomst en persoonlijke voortgang. --}}
         <section id="outcomeDetail" class="view hidden">
           <button id="outcomeBackButton" class="mutedlink" type="button" onclick="backFromOutcome()">← Terug naar leeruitkomsten</button>
           <div class="head">
@@ -315,6 +319,7 @@
               </div>
             </aside>
           </div>
+          {{-- Deze modals tonen volledige reflectie- en feedbackdetails bij de huidige leeruitkomst. --}}
           <div
             id="outcomeReflectionDetailModal"
             class="card outcome-reflection-modal hidden"
@@ -397,6 +402,7 @@
           <input id="assignmentSearch" type="hidden" value="">
           <input id="assignmentStatus" type="hidden" value="active">
 
+          {{-- De uitgelichte opdracht wordt dynamisch gekozen op basis van de actieve opdrachten. --}}
           <article id="currentAssignmentCard" class="current-assignment-card" aria-labelledby="currentAssignmentTitle">
             <div class="current-assignment-main">
               <span id="currentAssignmentIcon" class="current-assignment-icon" aria-hidden="true"></span>
@@ -431,7 +437,7 @@
           <div id="assignmentList" class="assignment-list"></div>
         </section>
 
-        {{-- Detailpagina van één opdracht; de inhoud wordt vanuit student.js ingevuld. --}}
+        {{-- Detailpagina met bestanden, inleveractie en gekoppelde leeruitkomsten van één opdracht. --}}
         <section id="assignmentDetail" class="view hidden">
           <button class="mutedlink" type="button" onclick="show('assignments')">← Terug naar opdrachten</button>
           <div class="head assignment-detail-head">
@@ -446,6 +452,7 @@
             <article class="card assignment-detail-main">
               <h2>Over deze opdracht</h2>
               <p id="assignmentDetailDescription"></p>
+              {{-- Bestandsacties en de lijst worden door assignments.js aan de gekozen opdracht gekoppeld. --}}
               <section class="assignment-files" aria-labelledby="assignmentFilesTitle">
                 <div class="assignment-files-head">
                   <div>
@@ -490,6 +497,7 @@
           </div>
         </section>
 
+        {{-- Urenoverzicht met filters per leerjaar en fase, plus details per registratie. --}}
         <section id="hours" class="view hidden hours-page">
           <header class="hours-page-head">
             <div>
@@ -561,6 +569,7 @@
             </footer>
           </section>
 
+          {{-- Toont details van één urenregistratie zonder de student uit het urenoverzicht te halen. --}}
           <div id="registrationDetailModal" class="card registration-modal hidden" role="dialog" aria-modal="true" aria-labelledby="registrationDetailTitle">
             <div class="registration-modal-head">
               <div>
@@ -589,6 +598,7 @@
           </div>
         </section>
 
+        {{-- Een persoonlijk leerdoel wordt gekoppeld aan een leeruitkomst uit de gekozen fase. --}}
         <section id="goals" class="view hidden">
           <div class="head">
             <div>
@@ -649,6 +659,7 @@
           </div>
         </section>
 
+        {{-- Reflectiejournaal en formulier voor een gestructureerde terugblik op een leerervaring. --}}
         <section id="reflections" class="view hidden">
           <div class="head">
             <div>
@@ -673,6 +684,7 @@
               <div class="reflection-filter" id="reflectionPhaseFilter" aria-label="Filter reflecties per fase"></div>
               <div id="reflectionList" class="reflection-list" aria-live="polite"></div>
             </div>
+            {{-- Dit verborgen formulier wordt geopend via de knop en opgeslagen door reflections.js. --}}
             <form id="reflectionForm" class="card reflection-form reflection-modal hidden" onsubmit="saveReflection(event)">
               <div class="form-heading">
                 <span class="step-number">1</span>
@@ -731,6 +743,7 @@
           </div>
         </section>
 
+        {{-- Overzicht en invoer van ontvangen of gegeven feedback, gekoppeld aan leeruitkomsten. --}}
         <section id="feedback" class="view hidden">
           <div class="head">
             <div>
@@ -762,6 +775,7 @@
           </div>
           <div id="feedbackList" class="feedback-list" aria-live="polite"></div>
 
+          {{-- Het formulier blijft verborgen totdat de student ervoor kiest feedback toe te voegen. --}}
           <form id="feedbackForm" class="card feedback-form feedback-modal hidden" onsubmit="saveFeedback(event)">
             <div class="form-heading">
               <span class="step-number">1</span>
@@ -814,4 +828,3 @@
         </section>
 
 @endsection
-

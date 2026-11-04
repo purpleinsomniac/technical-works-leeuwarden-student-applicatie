@@ -1,6 +1,7 @@
 @extends('layouts.application')
 
 @section('role-content')
+{{-- This section is the coach's roster; selecting a student opens that student's detail section below. --}}
 <section id="coachStudents" class="view hidden coach-page">
   <header class="coach-page-hero">
     <div>
@@ -10,10 +11,12 @@
     </div>
   </header>
 
+  {{-- Show confirmation after a coach saves a progress update. --}}
   @if (session('status'))
     <div class="notice coach-success" role="status">{{ session('status') }}</div>
   @endif
 
+  {{-- Summary values are calculated from the student and outcome data supplied by the controller. --}}
   <section class="coach-summary" aria-label="Begeleiding in cijfers">
     <article class="coach-summary-card">
       <span class="coach-summary-icon" aria-hidden="true">♙</span>
@@ -47,8 +50,10 @@
       <span class="coach-section-count">{{ count($roleData) }} in totaal</span>
     </div>
 
+    {{-- Only render student cards when the coach has students assigned to their overview. --}}
     @if (count($roleData))
       <div class="coach-student-grid">
+        {{-- Each card navigates to a detail section whose id includes this student's database id. --}}
         @foreach ($roleData as $student)
           <button class="coach-student-card" type="button" onclick="show('coachStudent-{{ $student['id'] }}')" aria-label="Bekijk voortgang van {{ $student['name'] }}">
             <span class="coach-student-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($student['name'], 0, 1)) }}</span>
@@ -65,6 +70,7 @@
         @endforeach
       </div>
     @else
+      {{-- Explain the empty roster instead of leaving the coach with a blank page. --}}
       <div class="coach-empty-state">
         <span class="coach-empty-icon" aria-hidden="true">♙</span>
         <h3>Er zijn nog geen studenten</h3>
@@ -74,6 +80,7 @@
   </section>
 </section>
 
+{{-- Render one initially hidden detail view per student so navigation stays within the dashboard. --}}
 @foreach ($roleData as $student)
   <section id="coachStudent-{{ $student['id'] }}" class="view hidden coach-page coach-student-detail">
     <div class="coach-detail-top">
@@ -91,6 +98,7 @@
       </div>
     </header>
 
+    {{-- These figures give context before the coach reviews individual learning outcomes. --}}
     <section class="coach-student-stats" aria-label="Studentvoortgang">
       <article class="coach-detail-stat">
         <span class="coach-detail-stat-label">Gevalideerde uren</span>
@@ -116,6 +124,7 @@
         <span class="coach-section-count">{{ count($student['outcomes']) }} leeruitkomsten</span>
       </div>
 
+      {{-- Each outcome has its own update form, tied to this student and outcome in the route. --}}
       @forelse ($student['outcomes'] as $outcome)
         <article class="coach-outcome-card">
           <div class="coach-outcome-heading">
@@ -127,6 +136,7 @@
           </div>
 
           <form class="coach-outcome-form" method="POST" action="{{ route('progress.update', [$student['id'], $outcome['id']]) }}">
+            {{-- Protect the update request and tell Laravel to handle the POST as a PATCH. --}}
             @csrf
             @method('PATCH')
             <label class="label coach-field">
@@ -135,12 +145,14 @@
                 <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
                 <span>uur</span>
               </span>
+              {{-- Escape the target text before displaying it, while retaining its line breaks. --}}
               @if ($outcome['target'])
                 <small>Normwaarden: {!! nl2br(e($outcome['target'])) !!}</small>
               @endif
             </label>
             <label class="label coach-field">
               Voortgangsstatus
+              {{-- Keep the status choices aligned with the progress values accepted by the controller. --}}
               <select class="input" name="status" required>
                 @foreach ([
                   'niet_gestart' => 'Niet gestart',
@@ -156,6 +168,7 @@
           </form>
         </article>
       @empty
+        {{-- Give a clear explanation when no progress rows exist for this student yet. --}}
         <div class="coach-empty-state coach-outcomes-empty">
           <span class="coach-empty-icon" aria-hidden="true">◎</span>
           <h3>Nog geen voortgang geregistreerd</h3>

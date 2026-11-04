@@ -1092,14 +1092,7 @@ body { background: #f3f6f9; }
 .registration-outcome-group button strong { font-size: 11px; }
 .registration-outcome-group button small { color: #748a99; font-size: 9px; }
 
-/* Account en uitloggen linksonder in de navigatie. */
-.sidebar-account { display: flex; width: 100%; align-items: center; gap: 11px; border: 0; border-radius: 10px; background: rgba(11, 84, 107, 0.72); color: inherit; padding: 8px 13px; text-align: left; }
-.sidebar-account:hover,
-.sidebar-account[aria-expanded="true"] { background: rgba(13, 100, 124, 0.86); }
-.sidebar-avatar { display: grid; width: 38px; height: 38px; flex: none; place-items: center; border-radius: 50%; background: linear-gradient(145deg, #14a7b7, #087b91); color: #eafffb; box-shadow: inset 0 0 0 1px rgba(119, 231, 230, 0.2); font-size: 10px; font-weight: 850; }
-.sidebar-account-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
-.sidebar-account-copy b { overflow: hidden; color: #fff; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.sidebar-account-copy small { color: #a9cbd5; font-size: 10px; }
+/* Logout action remains specific to the student sidebar layout. */
 .side .foot .sidebar-logout { gap: 13px; min-height: 39px; margin-top: 5px; padding-left: 15px; color: #e6f0f3; }
 .side .foot .sidebar-logout:hover { background: rgba(18, 82, 104, 0.55); color: #fff; }
 

@@ -22,6 +22,7 @@ class DataController extends Controller
         $this->requireStudent($request);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'assignmentId' => ['nullable', 'integer', Rule::exists('opdrachten', 'id')->where('gebruiker_id', $request->user()->id)],
             'code' => ['required', 'string', Rule::exists('leeruitkomsten', 'code')],
             'situation' => ['required', 'string', 'min:10', 'max:3000'],
             'good' => ['required', 'string', 'min:10', 'max:3000'],
@@ -29,8 +30,13 @@ class DataController extends Controller
             'next' => ['required', 'string', 'min:10', 'max:3000'],
         ]);
         $outcome = LearningOutcome::where('code', $data['code'])->firstOrFail();
+        if (!empty($data['assignmentId'])) {
+            $project = $request->user()->assignments()->with('learningOutcomes')->findOrFail($data['assignmentId']);
+            abort_unless($project->learningOutcomes->contains('id',$outcome->id) && $project->learningOutcomes->sortBy('id')->first()?->studiefase_id === $outcome->studiefase_id, 422, 'Kies een leeruitkomst die bij dit project hoort.');
+        }
 
         $reflection = Reflection::create([
+            'opdracht_id' => $data['assignmentId'] ?? null,
             'gebruiker_id' => $request->user()->id,
             'leeruitkomst_id' => $outcome->id,
             'onderwerp' => $data['title'],
@@ -92,14 +98,10 @@ class DataController extends Controller
     {
         $this->requireStudent($request);
         $data = $request->validate([
-            'description' => ['required', 'string', 'min:10', 'max:2000'],
+            'description' => ['required', 'string', 'min:10', 'max:500'],
             'code' => ['required', 'string', Rule::exists('leeruitkomsten', 'code')],
         ]);
-        $outcome = LearningOutcome::where('code', $data['code'])->firstOrFail();
-
-        LearningGoal::where('gebruiker_id', $request->user()->id)
-            ->where('status', 'actief')
-            ->update(['status' => 'afgerond']);
+        $outcome = LearningOutcome::with('studyPhase')->where('code', $data['code'])->firstOrFail();
 
         $goal = LearningGoal::create([
             'gebruiker_id' => $request->user()->id,
@@ -116,6 +118,12 @@ class DataController extends Controller
             'status' => $goal->status,
             'code' => $outcome->code,
             'outcome' => $outcome->titel,
+            'phaseCode' => match ($outcome->studyPhase?->naam) {
+                'Verdiepingsfase' => 'VF',
+                'Afrondingsfase' => 'AF',
+                default => 'OF',
+            },
+            'phase' => $outcome->studyPhase?->naam,
         ], 201);
     }
 
@@ -206,6 +214,7 @@ class DataController extends Controller
         return [
             'id' => (string) $reflection->id,
             'title' => $reflection->onderwerp,
+            'assignmentId' => $reflection->opdracht_id,
             'code' => $reflection->learningOutcome->code,
             'situation' => $reflection->situatie,
             'good' => $reflection->wat_ging_goed,

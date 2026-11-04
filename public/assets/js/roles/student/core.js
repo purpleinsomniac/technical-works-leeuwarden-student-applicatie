@@ -2,6 +2,7 @@
 
 // Laravel synchronisatie: opgeslagen gebruikersgegevens worden bij het openen ingeladen.
 const persistentKeys = [
+  'weekly-plan',
   "archived-learning-outcomes",
   "hours-processing-latest-read",
   "ontwikkeling-dashboard-instellingen",
@@ -32,11 +33,23 @@ async function apiRequest(url, options = {}) {
     const validationMessage = Object.values(body.errors || {}).flat()[0];
     throw new Error(validationMessage || body.message || "Opslaan is mislukt.");
   }
+  if (options.method && options.method !== 'GET' && url !== window.LARAVEL_API?.challengeSync && typeof syncChallenges === 'function') syncChallenges();
   return body;
 }
 
 function apiUrl(template, id) {
   return template.replace("__ID__", String(id));
+}
+
+// Gedeelde paginering voor leerdoelen, leeruitkomsten en puntenregistraties.
+function pageButtons(page, total, handler) {
+  if (total <= 1) return '';
+  const arrow = (label, target, disabled, icon) => `<button type="button" aria-label="${label}" ${disabled ? 'disabled' : ''} onclick="${handler}(${target})">${icon}</button>`;
+  const pages = Array.from({length: total}, (_, index) => {
+    const number = index + 1;
+    return `<button type="button" class="${number === page ? 'active' : ''}" ${number === page ? 'aria-current="page"' : ''} onclick="${handler}(${number})">${number}</button>`;
+  }).join('');
+  return arrow('Vorige pagina', page - 1, page === 1, '‹') + pages + arrow('Volgende pagina', page + 1, page === total, '›');
 }
 function loadLocalState(key) {
   if (!window.LARAVEL_USER) return localStorage.getItem(key);

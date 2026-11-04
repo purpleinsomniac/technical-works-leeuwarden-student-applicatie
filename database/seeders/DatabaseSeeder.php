@@ -286,6 +286,8 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($opdrachten as $gegevens) {
+            // In de demo werkt de student aan één huidig project.
+            $gegevens['status'] = $gegevens['onderwerp'] === 'Werkplek installeren' ? 'active' : 'completed';
             $codes = $gegevens['codes'];
             unset($gegevens['codes']);
             $opdracht = Assignment::updateOrCreate(
@@ -297,6 +299,7 @@ class DatabaseSeeder extends Seeder
             );
         }
 
+        $this->call(SchoolPointsSeeder::class);
         $eersteLeeruitkomst = LearningOutcome::where('code', 'IT_OF_LU_Hardskills_001')->firstOrFail();
         Reflection::updateOrCreate(
             ['gebruiker_id' => $student->id, 'onderwerp' => 'Installatieopdracht'],
@@ -320,13 +323,37 @@ class DatabaseSeeder extends Seeder
                 'volgende_stap' => 'Voeg bij de volgende presentatie per keuze een risico en een alternatief toe.',
             ],
         );
-        LearningGoal::updateOrCreate(
-            ['gebruiker_id' => $student->id, 'status' => 'actief'],
+        $voorbeeldLeerdoelen = [
             [
-                'leeruitkomst_id' => $eersteLeeruitkomst->id,
+                'code' => 'IT_VF_LU_Hardskills_001',
+                'onderwerp' => 'Complexe taken uitvoeren',
+                'omschrijving' => 'Ik wil complexe technische taken zelfstandig plannen, uitvoeren en mijn gemaakte keuzes duidelijk onderbouwen.',
+                'status' => 'actief',
+            ],
+            [
+                'code' => 'IT_AF_LU_Hardskills_005',
+                'onderwerp' => 'Voortgang bewaken en bijsturen',
+                'omschrijving' => 'Ik wil de voortgang van mijn werk tijdig controleren en mijn aanpak aanpassen wanneer dat nodig is.',
+                'status' => 'afgerond',
+            ],
+            [
+                'code' => 'IT_OF_LU_Hardskills_008',
                 'onderwerp' => 'Technische keuzes zelfstandig uitleggen',
                 'omschrijving' => 'Ik wil na een installatie duidelijk kunnen toelichten welke keuzes ik heb gemaakt en waarom.',
+                'status' => 'afgerond',
             ],
-        );
+        ];
+
+        foreach ($voorbeeldLeerdoelen as $voorbeeldLeerdoel) {
+            $leeruitkomst = LearningOutcome::where('code', $voorbeeldLeerdoel['code'])->firstOrFail();
+            LearningGoal::updateOrCreate(
+                ['gebruiker_id' => $student->id, 'onderwerp' => $voorbeeldLeerdoel['onderwerp']],
+                [
+                    'leeruitkomst_id' => $leeruitkomst->id,
+                    'omschrijving' => $voorbeeldLeerdoel['omschrijving'],
+                    'status' => $voorbeeldLeerdoel['status'],
+                ],
+            );
+        }
     }
 }

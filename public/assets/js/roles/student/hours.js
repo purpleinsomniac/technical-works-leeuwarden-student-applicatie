@@ -1,48 +1,86 @@
 // Urenoverzicht, registratiedetails en urenmeldingen.
-let hoursPhaseFilter = "all";
+let hoursPhaseFilter = "OF";
+// Voorlopige puntendoelen; pas deze aan zodra de opdrachtgever de normen vastlegt.
+const phasePointTargets = { OF: 800, VF: 800, AF: 800 };
 let hoursPage = 1;
 let selectedRegistrationRecord = null;
+let challengeState = null;
+let challengeSyncBusy = false;
+
+async function syncChallenges() {
+  if (challengeSyncBusy || !window.LARAVEL_API?.challengeSync) return;
+  challengeSyncBusy = true;
+  try {
+    challengeState = await apiRequest(window.LARAVEL_API.challengeSync, { method: 'POST', body: '{}' });
+    challengeState.completed.forEach((item) => hint('Challenge voltooid: ' + item.title + '! Je hebt ' + item.reward + ' XP verdiend.'));
+    renderXp();
+    const card = document.querySelector('.xp-challenge');
+    const active = challengeState.active;
+    card.querySelector('h2').textContent = active?.title || 'Alle challenges voltooid';
+    card.querySelector('p').textContent = active ? active.description : 'Binnenkort volgt een nieuwe uitdaging.';
+    card.querySelector('button').onclick = openChallengeDetail;
+    document.getElementById('xpChallengeProgress').textContent = active ? active.progress + ' / ' + active.target + ' · +' + active.reward + ' XP' : 'Bekijk je historie';
+    document.getElementById('xpChallengeBar').style.width = active ? Math.min(100, active.progress / active.target * 100) + '%' : '100%';
+  } catch (error) {
+    document.querySelector('.xp-challenge p').textContent = 'Challenges konden niet worden geladen. Open Punten opnieuw om het nogmaals te proberen.';
+  } finally { challengeSyncBusy = false; }
+}
+
+function openChallengeDetail() {
+  const modal = document.getElementById('challengeModal');
+  const active = challengeState?.active;
+  document.getElementById('challengeDetailTitle').textContent = active?.title || 'Alle challenges voltooid';
+  document.getElementById('challengeDetailCopy').textContent = active ? active.description + ' Fase: ' + active.phase + '. Voortgang: ' + active.progress + ' / ' + active.target + '. Beloning: ' + active.reward + ' XP.' : 'Je hebt alle beschikbare challenges voltooid.';
+  document.getElementById('challengeHistory').innerHTML = (challengeState?.history || []).map((item) => '<li>' + esc(item.title) + ' · +' + item.reward + ' XP · Voltooid</li>').join('') || '<li>Je hebt nog geen challenges voltooid.</li>';
+  modal.classList.remove('hidden');
+  modal.querySelector('.modal-close').focus();
+}
+function closeChallengeDetail() { document.getElementById('challengeModal').classList.add('hidden'); }
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeChallengeDetail(); });
+window.addEventListener('focus', syncChallenges);
 
 function renderHours() {
   const selected = document.getElementById("hoursYear").value;
-  const totalData = Object.values(hoursByYear).reduce(
-    (sum, item) => ({
-      total: sum.total + item.total,
-      orientation: sum.orientation + item.orientation,
-      deepening: sum.deepening + item.deepening,
-      completion: sum.completion + item.completion,
-    }),
-    { total: 0, orientation: 0, deepening: 0, completion: 0 },
-  );
   const isTotal = selected === "total";
-  const data = isTotal ? totalData : hoursByYear[Number(selected)];
-  const target = isTotal ? 3200 : 800;
-  const remaining = Math.max(0, target - data.total);
-  const percentage = target ? Math.round((data.total / target) * 100) : 0;
+  const target = outcomes.filter((outcome) => outcome.phase === hoursPhaseFilter).reduce((sum, outcome) => sum + Number(outcome.target || 0), 0) || phasePointTargets[hoursPhaseFilter];
+  const phasePoints = records
+    .filter((record) => (isTotal || Number(record.year) === Number(selected)) && record.phases?.[0] === hoursPhaseFilter)
+    .reduce((sum, record) => sum + (Number(record.hours) || 0), 0);
+  const remaining = Math.max(0, target - phasePoints);
+  const percentage = target ? Math.min(100, Math.round((phasePoints / target) * 100)) : 0;
   const periodLabel = isTotal ? "Totaal opleiding" : "Leerjaar " + selected;
 
   document.getElementById("registrationsYear").textContent = periodLabel;
-  document.getElementById("hoursYearTotal").textContent = data.total.toLocaleString("nl-NL");
+  document.getElementById("hoursYearTotal").textContent = phasePoints.toLocaleString("nl-NL");
   document.getElementById("hoursTarget").textContent = target.toLocaleString("nl-NL");
   document.getElementById("hoursProgressPercent").textContent = percentage + "%";
   document.getElementById("hoursProgressRing").style.setProperty("--hours-progress", Math.min(360, percentage * 3.6) + "deg");
-  document.getElementById("hoursYearPercentage").textContent = "van de urennorm behaald";
-
-  const segments = [
-    ["orientation", data.orientation, "Oriëntatiefase"],
-    ["deepening", data.deepening, "Verdiepingsfase"],
-    ["completion", data.completion, "Afrondingsfase"],
-    ["remaining", remaining, "Nog te behalen"],
-  ];
-  document.getElementById("hoursStackedBar").innerHTML = segments.map(([kind, hours, label]) =>
-    '<span class="hours-segment ' + kind + '" style="width:' + Math.max(0, (hours / target) * 100) + '%" title="' + esc(label) + ': ' + hours + ' uur"></span>',
-  ).join("");
-  document.getElementById("hoursLegend").innerHTML = segments.map(([kind, hours, label]) =>
-    '<div><span class="legend-color ' + kind + '"></span><span><b>' + hours.toLocaleString("nl-NL") + ' uur</b><small>' + esc(label) + '</small></span></div>',
-  ).join("");
+  document.getElementById("hoursYearPercentage").textContent = hoursPhaseName(hoursPhaseFilter) + ' · ' + (remaining === 0 ? 'Puntendoel behaald' : 'Nog ' + remaining.toLocaleString('nl-NL') + ' punten nodig');
 
   renderHoursRegistrations(selected, periodLabel);
+  renderXp();
+  syncChallenges();
 }
+
+function renderXp() {
+  const xp = challengeState?.xp || 0;
+  const level = Math.floor(xp / 1000) + 1;
+  const progress = xp % 1000;
+  document.getElementById('xpLevelTitle').textContent = 'Level ' + level;
+  const titles = ['Nieuwkomer', 'Ontdekker', 'Aanpakker', 'Probleemoplosser', 'Projectbouwer', 'Zelfstandig specialist', 'Projectprofessional', 'Innovator', 'Expert', 'Meester'];
+  document.getElementById('xpLevelName').textContent = titles[level - 1] || 'Meester · rang ' + (level - 9);
+  document.getElementById('xpLevelProgress').textContent = xp.toLocaleString('nl-NL') + ' / ' + (level * 1000).toLocaleString('nl-NL') + ' XP';
+  document.getElementById('xpHelpProgress').textContent = document.getElementById('xpLevelProgress').textContent;
+  ['xpLevelBar', 'xpHelpBar'].forEach((id) => document.getElementById(id).style.width = (progress / 10) + '%');
+  document.getElementById('xpRemaining').textContent = 'Nog ' + (1000 - progress) + ' XP tot level ' + (level + 1) + '!';
+}
+
+function openXpHelp() {
+  document.getElementById('xpHelpPanel').classList.remove('hidden');
+  document.getElementById('xpHelpPanel').querySelector('button').focus();
+}
+function closeXpHelp() { document.getElementById('xpHelpPanel').classList.add('hidden'); }
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeXpHelp(); });
 
 function renderHoursRegistrations(selected, periodLabel) {
   const search = document.getElementById("hoursSearch").value.trim().toLowerCase();
@@ -78,13 +116,21 @@ function renderHoursRegistrations(selected, periodLabel) {
   document.getElementById("hoursResultCount").textContent = filtered.length ? start + " – " + end + " van " + filtered.length + " registraties" : "0 registraties";
   document.getElementById("hoursList").innerHTML = visibleRecords.length
     ? visibleRecords.map(renderHoursRow).join("")
-    : '<div class="hours-empty"><span>⌕</span><h3>Geen registraties gevonden</h3><p>Pas de periode, fase of zoekopdracht aan.</p></div>';
+    : '<div class="hours-empty"><span>⌕</span><h3>Geen registraties gevonden</h3><p>Pas de periode, fase of zoekproject aan.</p></div>';
   document.getElementById("hoursPagination").innerHTML = renderHoursPagination(pageCount);
+}
+
+function registrationOutcomes(record) {
+  const project = assignments.find((item) => Number(item.id) === Number(record.assignmentId));
+  const phaseCode = project?.phase || record.phases?.[0];
+  return (record.outcomeCodes || [])
+    .map((code) => outcomes.find((outcome) => outcome.code === code))
+    .filter((outcome) => outcome && outcome.phase === phaseCode);
 }
 
 function renderHoursRow(record) {
   const index = records.indexOf(record);
-  const linked = (record.outcomeCodes || []).map((code) => outcomes.find((outcome) => outcome.code === code)).filter(Boolean);
+  const linked = registrationOutcomes(record);
   const phaseBadges = (record.phases || []).map((code) => '<span class="hours-phase-badge ' + code + '">' + esc(hoursPhaseName(code)) + '</span>').join("");
   const outcomeChips = linked.slice(0, 3).map((outcome) =>
     '<span class="hours-outcome-chip ' + esc(outcome.phase) + '" title="' + esc(hoursPhaseName(outcome.phase)) + '">' + uiIcon("outcomes") + esc(outcome.short) + '</span>',
@@ -94,17 +140,12 @@ function renderHoursRow(record) {
     '<span class="hours-assignment-cell"><span class="hours-assignment-icon">' + assignmentIcon(record) + '</span><span><strong>' + esc(record.title) + '</strong><small>' + esc(record.type) + ' · Leerjaar ' + record.year + '</small></span></span>' +
     '<span class="hours-phase-cell">' + phaseBadges + '</span>' +
     '<span class="hours-outcome-cell">' + outcomeChips + '</span>' +
-    '<strong class="hours-value">' + Number(record.hours).toLocaleString("nl-NL") + ' uur</strong>' +
+    '<strong class="hours-value">' + Number(record.hours).toLocaleString("nl-NL") + ' punten</strong>' +
     '<span class="hours-date">' + esc(record.date) + '</span><span class="hours-chevron" aria-hidden="true">›</span></button>';
 }
 
 function renderHoursPagination(pageCount) {
-  if (pageCount <= 1) return "";
-  let html = '<button type="button" ' + (hoursPage === 1 ? 'disabled' : '') + ' onclick="goToHoursPage(' + (hoursPage - 1) + ')">‹</button>';
-  for (let page = 1; page <= pageCount; page += 1) {
-    html += '<button type="button" class="' + (page === hoursPage ? 'active' : '') + '" onclick="goToHoursPage(' + page + ')">' + page + '</button>';
-  }
-  return html + '<button type="button" ' + (hoursPage === pageCount ? 'disabled' : '') + ' onclick="goToHoursPage(' + (hoursPage + 1) + ')">›</button>';
+  return pageButtons(hoursPage, pageCount, 'goToHoursPage');
 }
 
 function resetHoursAndRender() {
@@ -128,13 +169,12 @@ function hoursPhaseName(code) {
 
 function openHourRegistration(index) {
   const record = records[index];
-  const linked = (record.outcomeCodes || []).map((code) => outcomes.find((outcome) => outcome.code === code)).filter(Boolean);
+  const linked = registrationOutcomes(record);
   selectedRegistrationRecord = record;
-  selectedRegistrationCode = linked[0]?.code || null;
   document.getElementById("registrationDetailTitle").textContent = record.title;
   document.getElementById("registrationDetailType").textContent = record.type;
   document.getElementById("registrationDetailDescription").textContent = record.description || "";
-  document.getElementById("registrationDetailHours").textContent = Number(record.hours).toLocaleString("nl-NL") + " uur";
+  document.getElementById("registrationDetailHours").textContent = Number(record.hours).toLocaleString("nl-NL") + " punten";
   document.getElementById("registrationDetailYear").textContent = "Leerjaar " + record.year;
   document.getElementById("registrationDetailPhase").textContent = (record.phases || []).map(hoursPhaseName).join(" · ");
   document.getElementById("registrationDetailDate").textContent = record.date;
@@ -176,11 +216,11 @@ function renderHourApprovals() {
   const badge = document.querySelector("#processingNotification .processing-badge");
 
   if (badge) badge.textContent = totalHours;
-  document.getElementById("hoursApprovalTitle").textContent = totalHours + " nieuwe uren";
+  document.getElementById("hoursApprovalTitle").textContent = totalHours + " nieuwe punten";
   document.getElementById("hoursApprovalDescription").textContent = hourApprovals.length
-    ? "Deze uren zijn gecontroleerd en gekoppeld aan " + hourApprovals.length + " onderdelen."
-    : "Er zijn nog geen gevalideerde uren beschikbaar.";
-  document.getElementById("hoursApprovalTotal").textContent = totalHours + " uur";
+    ? "Deze punten zijn gecontroleerd en gekoppeld aan " + hourApprovals.length + " onderdelen."
+    : "Er zijn nog geen gevalideerde punten beschikbaar.";
+  document.getElementById("hoursApprovalTotal").textContent = totalHours + " punten";
   document.getElementById("hoursApprovalCount").textContent = hourApprovals.length;
   document.getElementById("hoursApprovalDate").textContent = latestDate;
   document.getElementById("hoursApprovalEyebrow").textContent = "URENVERWERKING · " + latestDate.toUpperCase();
@@ -190,7 +230,7 @@ function renderHourApprovals() {
           (approval) =>
             '<article class="approval-item"><div class="approval-hours">' +
             Number(approval.hours || 0) +
-            '<span>uur</span></div><div><h3>' +
+            '<span>punten</span></div><div><h3>' +
             esc(approval.title) +
             "</h3><strong>" +
             esc(approval.outcome) +
@@ -205,7 +245,7 @@ function renderHourApprovals() {
             "</small></div></article>",
         )
         .join("")
-    : '<p class="dashboard-empty">Er zijn nog geen gevalideerde uren.</p>';
+    : '<p class="dashboard-empty">Er zijn nog geen gevalideerde punten.</p>';
 }
 
 function openHoursApprovalModal() {
@@ -231,7 +271,7 @@ function updateHoursProcessingReadState() {
   notification.classList.toggle("read", isRead);
   badge.classList.toggle("hidden", isRead);
   const totalHours = hourApprovals.reduce((total, approval) => total + Number(approval.hours || 0), 0);
-  notification.setAttribute("aria-label", isRead ? "Laatste urenverwerking bekijken" : totalHours + " nieuwe uren bekijken");
+  notification.setAttribute("aria-label", isRead ? "Laatste urenverwerking bekijken" : totalHours + " nieuwe punten bekijken");
   notification.title = isRead ? "Urenverwerking gelezen" : "Nieuwe urenverwerking";
   status.textContent = isRead ? "Gelezen" : "Ongelezen";
   status.className = "processing-read-status " + (isRead ? "read" : "unread");

@@ -1,3 +1,7 @@
+function outcomePointTarget(outcome) {
+  const target = Number(outcome.target);
+  return target > 0 ? target.toLocaleString('nl-NL') + ' punten' : 'Nog niet vastgesteld';
+}
 // Leeruitkomsten, leerdoelen, filters en paginering.
 
 function practicalExplanation(outcome) {
@@ -25,13 +29,13 @@ function openOutcome(code, returnPage = "learningOutcomes") {
   document.getElementById("outcomeCode").textContent = x.code;
   document.getElementById("outcomeText").textContent = x.description;
   document.getElementById("outcomePractical").textContent = practicalExplanation(x);
-  document.getElementById("detailPercent").textContent = hasProgress ? x.pct + "%" : "—";
-  document.getElementById("detailBar").style.width = (x.pct || 0) + "%";
-  document.getElementById("detailHours").textContent = x.hours === null ? "Nog geen uren" : x.hours + " uur";
-  document.getElementById("detailTarget").textContent = "80%";
+  document.getElementById("detailPercent").textContent = (Number(x.pct) || 0) + "%";
+  document.getElementById("detailBar").style.width = Math.min(100, x.pct || 0) + "%";
+  document.getElementById("detailHours").textContent = (Number(x.hours) || 0) + " punten";
+  document.getElementById("detailTarget").textContent = outcomePointTarget(x);
   document.getElementById("detailStatus").textContent = !hasProgress
     ? "Nog niet gestart"
-    : x.pct >= 80
+    : Number(x.hours) >= Number(x.target)
       ? "Richtwaarde behaald"
       : x.pct >= 40
         ? "In ontwikkeling"
@@ -45,96 +49,6 @@ function backFromOutcome() {
   show(outcomeReturnPage);
 }
 
-function renderGoalOptions() {
-  const select = document.getElementById("goalCodes"),
-    phaseSelect = document.getElementById("goalPhase"),
-    choices = document.getElementById("goalOutcomeChoices");
-  if (!select || !phaseSelect || !choices) return;
-  const previous = select.value,
-    phaseCode = phaseSelect.value,
-    list = outcomes.filter((o) => o.phase === phaseCode);
-  select.innerHTML = list.map((o) => '<option value="' + o.code + '">' + esc(o.short) + " — " + o.code + "</option>").join("");
-  if (list.some((o) => o.code === previous)) select.value = previous;
-  const selected = select.value;
-  document.getElementById("goalChoiceCount").textContent = list.length + " " + (list.length === 1 ? "leeruitkomst" : "leeruitkomsten");
-  choices.innerHTML = list
-    .map(
-      (o) =>
-        '<button type="button" role="option" aria-selected="' +
-        (o.code === selected) +
-        '" class="goal-outcome-choice ' +
-        (o.code === selected ? "selected" : "") +
-        '" onclick="selectGoalOutcome(\'' +
-        o.code +
-        '\')"><span class="goal-choice-number">' +
-        String(o.number).padStart(2, "0") +
-        "</span><span><strong>" +
-        esc(o.short) +
-        "</strong><small>" +
-        (o.kind === "Hardskills" ? "Vakvaardigheid" : "Persoonlijke vaardigheid") +
-        '</small><span class="code">' +
-        esc(o.code) +
-        '</span></span><span class="goal-choice-check">✓</span></button>',
-    )
-    .join("");
-  showGoalOutcomePreview();
-}
-
-function selectGoalOutcome(code) {
-  document.getElementById("goalCodes").value = code;
-  renderGoalOptions();
-}
-
-function showGoalOutcomePreview() {
-  const outcome = outcomes.find((o) => o.code === document.getElementById("goalCodes").value),
-    preview = document.getElementById("goalOutcomePreview");
-  if (!outcome) {
-    preview.innerHTML = "";
-    return;
-  }
-  preview.innerHTML =
-    '<span class="small dim">Geselecteerde leeruitkomst</span><strong>' +
-    esc(outcome.short) +
-    '</strong><span class="code">' +
-    esc(outcome.code) +
-    "</span><p>" +
-    esc(outcome.description) +
-    "</p>";
-}
-
-function renderActiveGoal(goal = window.LARAVEL_DATA?.goals?.find((item) => item.status === "actief")) {
-  if (!goal) return;
-  document.getElementById("activeGoalStatus").textContent = "ACTIEF LEERDOEL";
-  document.getElementById("activeGoalTitle").textContent = goal.title;
-  document.getElementById("activeGoalDescription").textContent = goal.description;
-  document.getElementById("activeGoalOutcome").textContent = goal.outcome || "Leeruitkomst";
-  document.getElementById("activeGoalCode").textContent = goal.code || "—";
-}
-
-async function saveGoal() {
-  const description = document.getElementById("goalText").value.trim();
-  const code = document.getElementById("goalCodes").value;
-  const message = document.getElementById("goalMessage");
-  if (description.length < 10 || !code) {
-    message.textContent = "Beschrijf je leerdoel in minimaal 10 tekens en kies een leeruitkomst.";
-    message.className = "form-message error";
-    return;
-  }
-  try {
-    const goal = await apiRequest(window.LARAVEL_API.goalStore, {
-      method: "POST",
-      body: JSON.stringify({ description, code }),
-    });
-    renderActiveGoal(goal);
-    document.getElementById("goalText").value = "";
-    message.textContent = "Je leerdoel is opgeslagen.";
-    message.className = "form-message success";
-  } catch (error) {
-    message.textContent = error.message;
-    message.className = "form-message error";
-  }
-}
-
 const catalogPageSize = 4;
 
 function getOutcomeProgress(outcome) {
@@ -144,7 +58,7 @@ function getOutcomeProgress(outcome) {
 
 function getOutcomeStatus(outcome) {
   const percentage = getOutcomeProgress(outcome);
-  if (percentage >= 80) return "completed";
+  if (Number(outcome.hours) >= Number(outcome.target) && Number(outcome.target) > 0) return "completed";
   if (percentage > 0) return "active";
   return "todo";
 }
@@ -184,6 +98,14 @@ function renderCatalogSummary(selectedPhase) {
   document.getElementById("catalogCompletedCount").textContent = completed;
   document.getElementById("catalogActiveCount").textContent = active;
   document.getElementById("catalogTodoCount").textContent = todo;
+  document.getElementById('devTotal').textContent = total;
+  [['devCompletedPct',completed],['devActivePct',active],['devTodoPct',todo]].forEach(([id,count]) => document.getElementById(id).textContent = (total ? Math.round(count / total * 100) : 0) + '%');
+  document.getElementById('developmentSkills').innerHTML = ['Softskills','Hardskills'].map((kind) => {
+    const list = phaseOutcomes.filter((item) => item.kind === kind);
+    const pct = list.length ? Math.round(list.reduce((sum,item) => sum + getOutcomeProgress(item),0)/list.length) : 0;
+    return '<div class="development-skill ' + (kind === 'Softskills' ? 'soft' : '') + '"><strong>' + (kind === 'Softskills' ? 'Soft skills' : 'Hard skills') + '</strong><span class="bar"><span style="width:' + pct + '%"></span></span><b>' + pct + '%</b></div>';
+  }).join('');
+  document.getElementById('developmentPhasePoints').innerHTML = phases.map(([code,name]) => '<div class="development-phase-points"><span>' + esc(name) + '</span><b>' + outcomes.filter((item) => item.phase === code).reduce((sum,item) => sum + (Number(item.hours)||0),0).toLocaleString('nl-NL') + ' punten</b></div>').join('');
 }
 
 function renderCatalogPhaseTabs(selectedPhase) {
@@ -202,35 +124,7 @@ function renderCatalogPhaseTabs(selectedPhase) {
 }
 
 function renderCatalogPagination(totalPages) {
-  const pagination = document.getElementById("catalogPagination");
-  if (totalPages <= 1) {
-    pagination.innerHTML = "";
-    return;
-  }
-
-  let buttons =
-    '<button type="button" aria-label="Vorige pagina" ' +
-    (catalogPage === 1 ? "disabled" : 'onclick="setCatalogPage(' + (catalogPage - 1) + ')"') +
-    ">‹</button>";
-
-  for (let page = 1; page <= totalPages; page++) {
-    buttons +=
-      '<button type="button" class="' +
-      (page === catalogPage ? "active" : "") +
-      '" ' +
-      (page === catalogPage ? 'aria-current="page"' : "") +
-      ' onclick="setCatalogPage(' +
-      page +
-      ')">' +
-      page +
-      "</button>";
-  }
-
-  buttons +=
-    '<button type="button" aria-label="Volgende pagina" ' +
-    (catalogPage === totalPages ? "disabled" : 'onclick="setCatalogPage(' + (catalogPage + 1) + ')"') +
-    ">›</button>";
-  pagination.innerHTML = buttons;
+  document.getElementById("catalogPagination").innerHTML = pageButtons(catalogPage, totalPages, 'setCatalogPage');
 }
 
 function renderCatalog() {
@@ -250,72 +144,32 @@ function renderCatalog() {
     const matchesStatus =
       selectedStatus === "archived" ? isArchived : !isArchived && (selectedStatus === "all" || getOutcomeStatus(outcome) === selectedStatus);
     const searchable = (outcome.code + " " + outcome.short + " " + outcome.description).toLowerCase();
-    return matchesStatus && (!catalogAttentionOnly || attentionOutcomeCodes.includes(outcome.code)) && searchable.includes(search);
+    return matchesStatus && searchable.includes(search);
   });
 
   if (selectedSort === "progress-desc") filtered.sort((a, b) => getOutcomeProgress(b) - getOutcomeProgress(a));
   if (selectedSort === "progress-asc") filtered.sort((a, b) => getOutcomeProgress(a) - getOutcomeProgress(b));
   if (selectedSort === "alphabetical") filtered.sort((a, b) => a.short.localeCompare(b.short, "nl"));
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / catalogPageSize));
+  const totalPages = 1;
   catalogPage = Math.min(catalogPage, totalPages);
   const start = (catalogPage - 1) * catalogPageSize;
-  const visibleOutcomes = filtered.slice(start, start + catalogPageSize);
+  const visibleOutcomes = filtered;
 
-  document.getElementById("catalogAttentionNotice").classList.toggle("hidden", !catalogAttentionOnly);
   document.getElementById("archiveFilterNotice").classList.toggle("hidden", selectedStatus !== "archived");
   document.getElementById("catalogCount").textContent = filtered.length
-    ? "Toont " + (start + 1) + " t/m " + Math.min(start + catalogPageSize, filtered.length) + " van de " + filtered.length + " leeruitkomsten"
+    ? filtered.length + " leeruitkomsten"
     : "Geen leeruitkomsten gevonden";
 
-  document.getElementById("catalogList").innerHTML = visibleOutcomes.length
-    ? visibleOutcomes
-        .map((outcome) => {
-          const percentage = getOutcomeProgress(outcome);
-          const status = getOutcomeStatus(outcome);
-          const statusIcon = status === "completed" ? "✓" : status === "active" ? "◷" : "";
-          const hours = outcome.hours === null ? 0 : outcome.hours;
-          return (
-            '<button class="catalog-outcome-row ' +
-            status +
-            (archived.includes(outcome.code) ? " archived" : "") +
-            '" type="button" onclick="openOutcome(\'' +
-            outcome.code +
-            '\')"><span class="catalog-status-icon" aria-hidden="true">' +
-            statusIcon +
-            '</span><span class="catalog-outcome-name"><strong>' +
-            esc(outcome.short) +
-            '</strong><span class="code catalog-code">' +
-            esc(outcome.code) +
-            '</span></span><span class="catalog-outcome-description">' +
-            esc(outcome.description) +
-            '</span><span class="catalog-row-progress"><span class="catalog-progress-line"><span class="bar"><span style="width:' +
-            percentage +
-            '%"></span></span><b>' +
-            percentage +
-            '%</b></span><small>' +
-            hours +
-            ' uur · Richtwaarde 80%</small></span><span class="catalog-row-arrow" aria-hidden="true">›</span></button>'
-          );
-        })
-        .join("")
-    : '<div class="catalog-empty-archive"><h2>Geen leeruitkomsten gevonden</h2><p>Pas je zoekopdracht of filters aan.</p></div>';
+  document.getElementById("catalogList").innerHTML = ['Softskills','Hardskills'].map((kind) => {
+    const items = visibleOutcomes.filter((outcome) => outcome.kind === kind);
+    const pct = items.length ? Math.round(items.reduce((sum,item) => sum + getOutcomeProgress(item),0) / items.length) : 0;
+    return '<details class="development-group ' + (kind === 'Softskills' ? 'soft' : 'hard') + '" open><summary><span class="dev-metric-icon">' + (kind === 'Softskills' ? '♧' : '▱') + '</span><h2>' + (kind === 'Softskills' ? 'Soft skills' : 'Hard skills') + '</h2><small>' + items.length + ' leeruitkomsten</small><span class="development-group-total"><span class="bar"><span style="width:' + pct + '%"></span></span><b>' + pct + '%</b></span></summary><div class="development-table-head"><span>Leeruitkomst</span><span>Voortgang</span><span>Punten</span></div>' +
+    (items.map((outcome) => {
+      const progress = getOutcomeProgress(outcome), status = getOutcomeStatus(outcome);
+      return '<button class="development-outcome development-skill-link" type="button" onclick="openOutcome(\'' + outcome.code + '\')"><span class="development-status ' + status + '">' + (status === 'completed' ? '✓' : status === 'active' ? '◷' : '') + '</span><span class="development-outcome-title"><strong>' + esc(outcome.short) + '</strong><small>' + esc(outcome.code) + '</small></span><span class="development-row-bar"><span class="bar"><span style="width:' + progress + '%"></span></span><b>' + progress + '%</b></span><span class="development-points">' + (Number(outcome.hours)||0) + (Number(outcome.target) > 0 ? ' / ' + Number(outcome.target) : ' punten') + '</span><span class="development-chevron" aria-hidden="true">›</span></button>';
+    }).join('') || '<p class="development-empty">Geen leeruitkomsten voor deze filters.</p>') + '</details>';
+  }).join('');
 
   renderCatalogPagination(filtered.length ? totalPages : 0);
-}
-
-function showAttentionOutcomes() {
-  catalogAttentionOnly = true;
-  document.getElementById("catalogPhase").value = phase;
-  document.getElementById("outcomeSearch").value = "";
-  document.getElementById("catalogArchiveFilter").value = "all";
-  catalogPage = 1;
-  renderCatalog();
-  show("learningOutcomes");
-}
-
-function clearAttentionOutcomes() {
-  catalogAttentionOnly = false;
-  catalogPage = 1;
-  renderCatalog();
 }

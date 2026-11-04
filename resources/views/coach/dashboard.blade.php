@@ -6,7 +6,7 @@
     <div>
       <span class="coach-eyebrow">SLB'er / coach</span>
       <h1>Studenten begeleiden</h1>
-      <p>Bekijk de voortgang van je studenten en werk uren en status per leeruitkomst bij.</p>
+      <p>Bekijk de voortgang van je studenten en werk punten en status per leeruitkomst bij.</p>
     </div>
     <span class="coach-student-count">{{ count($roleData) }} <span>studenten</span></span>
   </header>
@@ -16,6 +16,11 @@
   @endif
 
   <section class="coach-summary" aria-label="Begeleiding in cijfers">
+    <div class="card"><h2>Verwerkte feedback bevestigen</h2><p>Bevestig alleen wanneer je hebt gecontroleerd dat de student je feedback heeft toegepast.</p>
+      @foreach (\App\Models\Feedback::where('auteur_id', auth()->id())->where('type', 'received')->whereNull('processed_confirmed_at')->with('student')->get() as $feedbackItem)
+        <form method="POST" action="{{ route('feedback.confirmProcessed', $feedbackItem) }}">@csrf <p>{{ $feedbackItem->student->naam }} · {{ $feedbackItem->onderwerp }}</p><button class="button" type="submit">Feedback is verwerkt</button></form>
+      @endforeach
+    </div>
     <article class="coach-summary-card">
       <span class="coach-summary-icon" aria-hidden="true">♙</span>
       <div>
@@ -27,7 +32,7 @@
       <span class="coach-summary-icon coach-summary-icon-hours" aria-hidden="true">◷</span>
       <div>
         <strong>{{ collect($roleData)->sum('hours') }}</strong>
-        <span>Gevalideerde uren</span>
+        <span>Gevalideerde punten</span>
       </div>
     </article>
     <article class="coach-summary-card">
@@ -59,7 +64,7 @@
             </span>
             <span class="coach-student-arrow" aria-hidden="true">→</span>
             <span class="coach-student-meta">
-              <span><strong>{{ $student['hours'] }}</strong> gevalideerde uren</span>
+              <span><strong>{{ $student['hours'] }}</strong> gevalideerde punten</span>
               <span><strong>{{ count($student['outcomes']) }}</strong> leeruitkomsten</span>
             </span>
           </button>
@@ -94,8 +99,8 @@
 
     <section class="coach-student-stats" aria-label="Studentvoortgang">
       <article class="coach-detail-stat">
-        <span class="coach-detail-stat-label">Gevalideerde uren</span>
-        <strong>{{ $student['hours'] }} <small>uur</small></strong>
+        <span class="coach-detail-stat-label">Gevalideerde punten</span>
+        <strong>{{ $student['hours'] }} <small>punten</small></strong>
       </article>
       <article class="coach-detail-stat">
         <span class="coach-detail-stat-label">Leeruitkomsten</span>
@@ -112,7 +117,7 @@
         <div>
           <span class="coach-eyebrow">Begeleiding</span>
           <h2>Voortgang per leeruitkomst</h2>
-          <p>Pas uren en status aan op basis van jullie gesprek.</p>
+          <p>Pas punten en status aan op basis van jullie gesprek.</p>
         </div>
         <span class="coach-section-count">{{ count($student['outcomes']) }} leeruitkomsten</span>
       </div>
@@ -131,13 +136,13 @@
             @csrf
             @method('PATCH')
             <label class="label coach-field">
-              Gevalideerde uren
+              Gevalideerde punten
               <span class="coach-input-wrap">
                 <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
-                <span>uur</span>
+                <span>punten</span>
               </span>
               @if ($outcome['target'])
-                <small>Norm: {{ $outcome['target'] }} uur</small>
+                <small>Norm: {{ $outcome['target'] }} punten</small>
               @endif
             </label>
             <label class="label coach-field">

@@ -29,9 +29,11 @@ class DashboardController extends RoleDashboardController
                 'js/roles/student/core.js',
                 'js/roles/student/data.js',
                 'js/roles/student/app.js',
+                'js/roles/student/week-plan.js',
                 'js/roles/student/dashboard.js',
                 'js/roles/student/assignments.js',
                 'js/roles/student/learning-outcomes.js',
+                'js/roles/student/goals.js',
                 'js/roles/student/hours.js',
                 'js/roles/student/reflections.js',
                 'js/roles/student/feedback.js',
@@ -45,6 +47,9 @@ class DashboardController extends RoleDashboardController
      */
     private function studentData(User $user): array
     {
+        $pointService = app(\App\Services\ProjectPoints::class);
+        $allocation = $pointService->allocation($user);
+        $projectPoints = $allocation['outcomes'];
         $coachName = User::query()
             ->where('rol', 'coach')
             ->value('naam') ?? 'Coach';
@@ -56,10 +61,10 @@ class DashboardController extends RoleDashboardController
             ])
             ->orderBy('code')
             ->get()
-            ->map(function ($outcome): array {
+            ->map(function ($outcome) use ($projectPoints, $pointService): array {
                 $progress = $outcome->progress->first();
-                $hours = $progress?->gevalideerde_uren;
-                $target = $progress?->normuren ?? $outcome->normuren;
+                $hours = $projectPoints[$outcome->id] ?? 0;
+                $target = $pointService->norm($outcome);
                 $percentage = $hours !== null && $target
                     ? min(100, (int) round(($hours / $target) * 100))
                     : null;
@@ -75,7 +80,7 @@ class DashboardController extends RoleDashboardController
                     'hours' => $hours,
                     'target' => $target,
                     'short' => $outcome->titel,
-                    'status' => $progress?->status ?? 'niet_gestart',
+                    'status' => $hours >= $target ? 'behaald' : ($hours > 0 ? 'in_ontwikkeling' : 'niet_gestart'),
                     'updatedAt' => $progress?->updated_at?->locale('nl')->translatedFormat('j F Y'),
                 ];
             })
@@ -92,8 +97,9 @@ class DashboardController extends RoleDashboardController
                 'type' => $assignment->type,
                 'description' => $assignment->omschrijving,
                 'status' => $assignment->status,
-                'phase' => $this->phaseCode($assignment->learningOutcomes->first()?->studyPhase?->naam),
+                'phase' => $this->phaseCode($assignment->learningOutcomes->sortBy('id')->first()?->studyPhase?->naam),
                 'phases' => $assignment->learningOutcomes
+                    ->sortBy('id')->take(1)
                     ->map(fn ($outcome): string => $this->phaseCode($outcome->studyPhase?->naam))
                     ->filter()
                     ->unique()
@@ -103,8 +109,9 @@ class DashboardController extends RoleDashboardController
                 'dueDateIso' => $assignment->inleverdatum?->format('Y-m-d'),
                 'registeredAt' => $assignment->updated_at?->locale('nl')->translatedFormat('j F Y'),
                 'registeredAtIso' => $assignment->updated_at?->format('Y-m-d'),
-                'hours' => $assignment->gevalideerde_uren,
-                'outcomeCodes' => $assignment->learningOutcomes->pluck('code')->values()->all(),
+                'hours' => $allocation['projects'][$assignment->id] ?? 0,
+                'maxPoints' => $allocation['maximums'][$assignment->id] ?? 0,
+                'outcomeCodes' => $assignment->learningOutcomes->where('studiefase_id', $assignment->learningOutcomes->sortBy('id')->first()?->studiefase_id)->pluck('code')->values()->all(),
                 'files' => $assignment->files->map(fn ($file): array => [
                     'id' => $file->id,
                     'name' => $file->originele_naam,
@@ -117,18 +124,21 @@ class DashboardController extends RoleDashboardController
             ->values();
 
         $reflections = Reflection::query()
+            ->withTrashed()
             ->where('gebruiker_id', $user->id)
-            ->with('learningOutcome')
+            ->with('learningOutcome.studyPhase')
             ->latest()
             ->get()
             ->map(fn ($reflection): array => [
                 'id' => (string) $reflection->id,
                 'title' => $reflection->onderwerp,
+                'assignmentId' => $reflection->opdracht_id,
                 'code' => $reflection->learningOutcome->code,
                 'situation' => $reflection->situatie,
                 'good' => $reflection->wat_ging_goed,
                 'improve' => $reflection->wat_kan_beter,
                 'next' => $reflection->volgende_stap,
+                'deleted' => $reflection->trashed(),
                 'date' => $reflection->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
             ])
             ->values();
@@ -163,6 +173,8 @@ class DashboardController extends RoleDashboardController
                 'status' => $goal->status,
                 'code' => $goal->learningOutcome?->code,
                 'outcome' => $goal->learningOutcome?->titel,
+                'phaseCode' => $this->phaseCode($goal->learningOutcome?->studyPhase?->naam),
+                'phase' => $goal->learningOutcome?->studyPhase?->naam,
             ])
             ->values();
 
@@ -203,6 +215,12 @@ class DashboardController extends RoleDashboardController
             'reflections' => $reflections,
             'feedback' => $feedback,
             'goals' => $goals,
+            'goalInsights' => [
+                'activities' => $user->learningGoals()->get()->map(fn ($goal) => ['title'=>'Nieuw leerdoel · '.$goal->onderwerp,'date'=>$goal->created_at->toIso8601String()])
+                    ->concat($user->reflections()->get()->map(fn ($item) => ['title'=>'Reflectie toegevoegd · '.$item->onderwerp,'date'=>$item->created_at->toIso8601String()]))
+                    ->concat($user->progress()->get()->map(fn ($item) => ['title'=>'Voortgang bijgewerkt','date'=>$item->updated_at->toIso8601String()]))
+                    ->sortByDesc('date')->values(),
+            ],
             'hourApprovals' => $hourApprovals,
             'phases' => [
                 ['OF', 'Oriëntatiefase', $phaseTotals['OF']['percentage'], $phaseTotals['OF']['hours']],

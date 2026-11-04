@@ -40,7 +40,7 @@ class LearningOutcome extends Model
             'opdracht_leeruitkomst',
             'leeruitkomst_id',
             'opdracht_id',
-        )->withPivot('urenpercentage');
+        )->withPivot('urenpercentage', 'max_points');
     }
 
     public function progress(): HasMany

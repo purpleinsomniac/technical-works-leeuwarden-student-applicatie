@@ -81,9 +81,14 @@ function renderOutcomeReflections() {
     : '<div class="outcome-reflection-empty compact"><strong>Nog geen reflectie</strong><p>Voeg je eerste reflectie toe.</p></div>';
 }
 
-function openOutcomeReflectionDetail(id) {
-  const item = getReflections().find((reflection) => reflection.id === id);
+let reflectionDetailTrigger = null;
+let selectedReflectionId = null;
+let editingReflectionId = null;
+function openOutcomeReflectionDetail(id, fromList = false) {
+  const item = reflections.find((reflection) => String(reflection.id) === String(id));
   if (!item) return;
+  selectedReflectionId = item.id;
+  reflectionDetailTrigger = document.activeElement;
   document.getElementById("reflectionDetailDate").textContent = item.date;
   document.getElementById("reflectionDetailTitle").textContent = item.title;
   document.getElementById("reflectionDetailCode").textContent = item.code;
@@ -98,15 +103,34 @@ function openOutcomeReflectionDetail(id) {
       esc(item.next) +
       "</p></div></section>"
     : "<section><span>1</span><div><h3>Reflectie</h3><p>" + esc(item.text || "") + "</p></div></section>";
-  document.getElementById("outcomeReflectionDetailModal").classList.remove("hidden");
+  const modal = document.getElementById('outcomeReflectionDetailModal');
+  if (!modal.querySelector('.reflection-detail-art')) {
+    const art = document.querySelector('.goal-detail-art')?.cloneNode(true);
+    if (art) { art.setAttribute('class','reflection-detail-art'); modal.querySelector('.reflection-detail-modal-head').appendChild(art); }
+  }
+  document.body.appendChild(modal);
+  document.getElementById('reflectionEditButton').classList.toggle('hidden', Boolean(item.deleted));
+  if (fromList) document.getElementById('reflectionDetailContent').insertAdjacentHTML('beforeend', '<div class="reflection-modal-actions"><button class="button" type="button" onclick="' + (item.deleted ? 'restoreReflection' : 'deleteReflection') + '(\'' + esc(item.id) + '\')">' + (item.deleted ? 'Reflectie herstellen' : 'Reflectie verwijderen') + '</button></div>');
+  modal.classList.remove("hidden");
   document.body.classList.add("modal-open");
-  requestAnimationFrame(() => document.querySelector("#outcomeReflectionDetailModal .modal-close").focus());
+  requestAnimationFrame(() => modal.querySelector('.modal-close').focus({preventScroll:true}));
 }
 
 function closeOutcomeReflectionDetail() {
   document.getElementById("outcomeReflectionDetailModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
+  reflectionDetailTrigger?.focus({preventScroll:true});
 }
+
+document.addEventListener('click', (event) => {
+  const summary = event.target.closest('#reflectionList .reflection-table-row > summary');
+  if (!summary) return;
+  event.preventDefault();
+  openOutcomeReflectionDetail(summary.parentElement.id.replace('reflection-row-', ''), true);
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !document.getElementById('outcomeReflectionDetailModal').classList.contains('hidden')) closeOutcomeReflectionDetail();
+});
 
 function openReflectionForCurrentOutcome() {
   const outcome = outcomes.find((o) => o.code === currentOutcomeCode);
@@ -142,13 +166,15 @@ function renderReflections() {
     button.textContent = (type === 'all' ? 'Alle reflecties' : type === 'project' ? 'Projecten' : 'Leeruitkomsten') + ' (' + count + ')';
   });
   const list = phaseItems.filter((item) => (reflectionTypeFilter === "all" || (reflectionTypeFilter === "project" ? Boolean(item.assignmentId) : !item.assignmentId)) && (status === 'all' || (status === 'deleted' ? item.deleted : !item.deleted)) && (!selectedOutcome || item.code === selectedOutcome) && [item.title,item.code,item.situation,item.good,item.improve,item.next].join(' ').toLowerCase().includes(search));
-  document.getElementById('reflectionCount').textContent = getReflections().length + ' REFLECTIES';
+  const reflectionTotal = getReflections().length;
+  document.getElementById('reflectionCount').textContent = reflectionTotal + (reflectionTotal === 1 ? ' reflectie' : ' reflecties');
   document.getElementById('reflectionPhaseFilter').innerHTML = phases.map(([code,name]) => {
     const count = getReflectionCountForPhase(getReflections(),code);
     return '<button type="button" aria-pressed="' + (code === phaseCode) + '" class="reflection-filter-button ' + (code === phaseCode ? 'active' : '') + '" onclick="filterReflectionsByPhase(\'' + code + '\')"><i class="reflection-phase-icon" aria-hidden="true">' + (code === 'OF' ? '✓' : code === 'VF' ? '◇' : '⚑') + '</i><span class="reflection-phase-copy"><strong>' + esc(name) + '</strong><small>' + count + ' ' + (count === 1 ? 'reflectie' : 'reflecties') + '</small></span><i class="reflection-phase-indicator" aria-hidden="true"></i></button>';
   }).join('');
   document.getElementById('reflectionLatestTitle').textContent = current[0]?.title || 'Nog geen reflectie';
   document.getElementById('reflectionLatestDate').textContent = current[0]?.date || 'Schrijf je eerste terugblik.';
+  document.getElementById('reflectionLatestButton').disabled = !current.length;
   document.getElementById('reflectionNextCopy').textContent = 'Schrijf een nieuwe reflectie in de ' + (phases.find(([code])=>code === phaseCode)?.[1] || 'gekozen fase') + '.';
   document.getElementById('reflectionList').innerHTML = list.map((item) => {
     const outcome = outcomes.find((entry) => entry.code === item.code);
@@ -159,6 +185,7 @@ function renderReflections() {
 async function restoreReflection(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.reflectionRestore,id), {method:'POST',body:'{}'});
+    closeOutcomeReflectionDetail();
     reflections = reflections.map((item)=>item.id === id ? {...item,deleted:false} : item);
     renderReflections();
     renderOutcomeReflections();
@@ -179,9 +206,7 @@ function openLatestReflection() {
   document.getElementById('reflectionHardOutcome').value = 'all';
   document.getElementById('reflectionSearch').value = '';
   renderReflections();
-  const row = document.getElementById('reflection-row-' + item.id);
-  row.open = true;
-  row.scrollIntoView({behavior:'smooth',block:'center'});
+  openOutcomeReflectionDetail(item.id, true);
 }
 
 function getReflectionCountForPhase(list, phaseCode) {
@@ -216,11 +241,12 @@ async function saveReflection(event) {
     return;
   }
   try {
-    const saved = await apiRequest(window.LARAVEL_API.reflectionStore, {
-      method: "POST",
+    const saved = await apiRequest(editingReflectionId ? apiUrl(window.LARAVEL_API.reflectionUpdate, editingReflectionId) : window.LARAVEL_API.reflectionStore, {
+      method: editingReflectionId ? 'PUT' : 'POST',
       body: JSON.stringify({ title, code, situation, good, improve, next, assignmentId: document.getElementById('reflectionLinkType').value === 'project' ? Number(document.getElementById('reflectionProject').value) : null }),
     });
-    reflections.unshift(saved);
+    if (editingReflectionId) reflections = reflections.map((item) => String(item.id) === String(editingReflectionId) ? saved : item);
+    else reflections.unshift(saved);
     event.target.reset();
     message.textContent = "Je reflectie is bewaard.";
     message.className = "form-message success";
@@ -285,6 +311,7 @@ function openReflectionForm(returnToOutcome = false) {
 }
 
 function closeReflectionForm() {
+  editingReflectionId = null;
   document.getElementById("reflectionForm").classList.add("hidden");
   document.getElementById('reflectionLinkType').value = 'outcome';
   document.getElementById('reflectionProjectLabel').classList.add('hidden');
@@ -292,9 +319,29 @@ function closeReflectionForm() {
   reflectionReturnToOutcome = false;
 }
 
+function editSelectedReflection() {
+  const item = getReflections().find((entry) => String(entry.id) === String(selectedReflectionId));
+  if (!item) return;
+  closeOutcomeReflectionDetail();
+  show('reflections');
+  openReflectionForm();
+  editingReflectionId = item.id;
+  document.getElementById('reflectionPhase').value = outcomes.find((o) => o.code === item.code)?.phase || 'OF';
+  document.getElementById('reflectionLinkType').value = item.assignmentId ? 'project' : 'outcome';
+  updateReflectionLinkType();
+  if (item.assignmentId) {
+    document.getElementById('reflectionProject').value = item.assignmentId;
+    selectReflectionProject();
+  }
+  document.getElementById('reflectionOutcome').value = item.code;
+  for (const [id, value] of Object.entries({reflectionTitle:item.title,reflectionSituation:item.situation,reflectionGood:item.good,reflectionImprove:item.improve,reflectionNext:item.next})) document.getElementById(id).value = value || '';
+  showReflectionOutcomePreview();
+}
+
 async function deleteReflection(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.reflectionDelete, id), { method: "DELETE" });
+    closeOutcomeReflectionDetail();
     reflections = reflections.map((item) => item.id === id ? {...item, deleted:true} : item);
     renderReflections();
     renderOutcomeReflections();

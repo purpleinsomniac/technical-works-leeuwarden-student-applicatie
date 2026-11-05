@@ -17,9 +17,10 @@ use Illuminate\Support\Str;
 
 class DataController extends Controller
 {
-    public function storeReflection(Request $request): JsonResponse
+    public function storeReflection(Request $request, ?Reflection $reflection = null): JsonResponse
     {
         $this->requireStudent($request);
+        if ($reflection?->exists) abort_unless($reflection->gebruiker_id === $request->user()->id, 403);
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'assignmentId' => ['nullable', 'integer', Rule::exists('opdrachten', 'id')->where('gebruiker_id', $request->user()->id)],
@@ -35,7 +36,8 @@ class DataController extends Controller
             abort_unless($project->learningOutcomes->contains('id',$outcome->id) && $project->learningOutcomes->sortBy('id')->first()?->studiefase_id === $outcome->studiefase_id, 422, 'Kies een leeruitkomst die bij dit project hoort.');
         }
 
-        $reflection = Reflection::create([
+        $editing = $reflection?->exists;
+        $reflection = ($reflection ?? new Reflection())->fill([
             'opdracht_id' => $data['assignmentId'] ?? null,
             'gebruiker_id' => $request->user()->id,
             'leeruitkomst_id' => $outcome->id,
@@ -45,8 +47,9 @@ class DataController extends Controller
             'wat_kan_beter' => $data['improve'],
             'volgende_stap' => $data['next'],
         ]);
+        $reflection->save();
 
-        return response()->json($this->reflectionPayload($reflection->load('learningOutcome')), 201);
+        return response()->json($this->reflectionPayload($reflection->load('learningOutcome')), $editing ? 200 : 201);
     }
 
     public function destroyReflection(Request $request, Reflection $reflection): JsonResponse

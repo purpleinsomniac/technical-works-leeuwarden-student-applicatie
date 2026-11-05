@@ -227,7 +227,7 @@ class DashboardController extends RoleDashboardController
                 ['VF', 'Verdiepingsfase', $phaseTotals['VF']['percentage'], $phaseTotals['VF']['hours']],
                 ['AF', 'Afrondingsfase', $phaseTotals['AF']['percentage'], $phaseTotals['AF']['hours']],
             ],
-            'records' => $assignments->map(fn (array $assignment): array => [
+            'records' => $assignments->where('status', 'completed')->map(fn (array $assignment): array => [
                 'assignmentId' => $assignment['id'],
                 'title' => $assignment['title'],
                 'type' => $assignment['type'],

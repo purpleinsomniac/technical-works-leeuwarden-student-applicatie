@@ -32,6 +32,7 @@ function openOutcome(code, returnPage = "learningOutcomes") {
   document.getElementById("detailPercent").textContent = (Number(x.pct) || 0) + "%";
   document.getElementById("detailBar").style.width = Math.min(100, x.pct || 0) + "%";
   document.getElementById("detailHours").textContent = (Number(x.hours) || 0) + " punten";
+  document.getElementById('detailPointsBadge').textContent = (Number(x.hours) || 0) + ' / ' + (Number(x.target) || 0) + ' punten';
   document.getElementById("detailTarget").textContent = outcomePointTarget(x);
   document.getElementById("detailStatus").textContent = !hasProgress
     ? "Nog niet gestart"
@@ -77,7 +78,6 @@ function selectCatalogPhase(selectedPhase) {
 function setCatalogPage(pageNumber) {
   catalogPage = pageNumber;
   renderCatalog();
-  document.getElementById("catalogList")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderCatalogSummary(selectedPhase) {

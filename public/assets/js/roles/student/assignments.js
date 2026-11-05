@@ -1,4 +1,6 @@
 // Projectenoverzicht, projectdetails en inleveren.
+let assignmentPage = 1;
+let assignmentFilterKey = '';
 
 // Bouwt het projectenoverzicht en zoekt de gekoppelde leeruitkomsten op.
 function renderAssignments() {
@@ -12,6 +14,12 @@ function renderAssignments() {
     if (sort === "title") return left.title.localeCompare(right.title, "nl");
     return assignmentDeadlineValue(left) - assignmentDeadlineValue(right);
   });
+  const filterKey = JSON.stringify([selectedStatus, search, sort]);
+  if (filterKey !== assignmentFilterKey) assignmentPage = 1;
+  assignmentFilterKey = filterKey;
+  const pageCount = Math.max(1, Math.ceil(list.length / 4));
+  assignmentPage = Math.min(assignmentPage, pageCount);
+  const visibleProjects = list.slice((assignmentPage - 1) * 4, assignmentPage * 4);
 
   const activeCount = assignments.filter((item) => assignmentCategory(item) === "active").length;
   document.getElementById("assignmentTotal").textContent = assignments.length + " PROJECTEN";
@@ -38,7 +46,7 @@ function renderAssignments() {
   document.getElementById("assignmentSectionDescription").textContent = sectionCopy[1];
 
   document.getElementById("assignmentList").innerHTML = list.length
-    ? list
+    ? visibleProjects
         .map((assignment) => {
           const icon = assignmentIcon(assignment);
           const displayStatus = assignmentCategory(assignment);
@@ -47,13 +55,20 @@ function renderAssignments() {
             '<button class="assignment-row-open" type="button" onclick="openAssignment(' + assignment.id + ')" aria-label="Bekijk ' + esc(assignment.title) + '">' +
             '<span class="assignment-row-icon" aria-hidden="true">' + icon + '</span>' +
             '<span class="assignment-row-copy"><strong>' + esc(assignment.title) + '</strong><small>' + esc(assignment.description) + '</small><span class="assignment-phase-badges" aria-label="Fases">' + phaseBadges + '</span></span>' +
-            '<span class="assignment-row-meta assignment-outcome-meta">' + assignmentListIcon("book") + '<span><b>' + esc(assignmentPhaseNames(assignment)[0]) + '</b><small>' + Number(assignment.hours || 0).toLocaleString('nl-NL') + ' punten toegekend</small></span></span>' +
+            '<span class="assignment-row-meta assignment-outcome-meta">' + assignmentListIcon("book") + '<span><b>' + esc(assignmentPhaseNames(assignment)[0]) + '</b><small>' + (assignment.status === 'completed' ? Number(assignment.hours || 0).toLocaleString('nl-NL') + ' punten toegekend' : 'Nog geen punten toegekend') + '</small></span></span>' +
             '<span class="assignment-row-meta">' + assignmentListIcon("calendar") + '<b>' + esc(assignment.dueDate || "Geen deadline") + '</b></span>' +
             '<span class="assignment-row-status ' + displayStatus + '"><i></i>' + assignmentDisplayStatus(assignment) + '</span>' +
             '<span class="assignment-row-chevron" aria-hidden="true">›</span></button></article>';
         })
         .join("")
     : '<div class="empty-state"><span class="empty-icon">⌕</span><h2>Geen projecten gevonden</h2><p>Pas de zoekterm of filters aan.</p></div>';
+  document.getElementById('assignmentPagination').innerHTML = pageButtons(assignmentPage, pageCount, 'goToAssignmentPage');
+  keepPaginationPosition('assignmentList', filterKey);
+}
+
+function goToAssignmentPage(page) {
+  assignmentPage = page;
+  renderAssignments();
 }
 
 function selectAssignmentStatus(status) {
@@ -108,7 +123,7 @@ function renderCurrentAssignment(selectedStatus) {
   document.getElementById("currentAssignmentDescription").textContent = current.description;
   document.getElementById("currentAssignmentPhases").textContent = assignmentPhaseNames(current).join(" · ");
   document.getElementById("currentAssignmentDueDate").textContent = current.dueDate || "Geen deadline";
-  document.getElementById("currentAssignmentOutcomes").textContent = current.hours + ' punten';
+  document.getElementById("currentAssignmentOutcomes").textContent = 'Max. ' + current.maxPoints + ' punten';
   document.getElementById("currentAssignmentButton").onclick = () => openAssignment(current.id);
 }
 

@@ -112,6 +112,7 @@ function renderGoalList() {
   document.getElementById('goalPagination').innerHTML = pageButtons(goalListPage, pageCount, 'setGoalPage');
   if (!filtered.length) {
     list.innerHTML = '<div class="goal-list-empty"><span>◎</span><h3>Geen leerdoelen gevonden</h3><p>Pas je filters aan of maak een nieuw leerdoel.</p></div>';
+    keepPaginationPosition(list.id, [selectedPhase, goalStatusFilter, search]);
     return;
   }
 
@@ -157,6 +158,7 @@ function renderGoalList() {
       );
     })
     .join("");
+  keepPaginationPosition(list.id, [selectedPhase, goalStatusFilter, search]);
 }
 
 function renderGoalPhaseChoices() {
@@ -332,6 +334,7 @@ function openGoalDetail(id) {
   document.getElementById("goalDetailDescription").textContent = goal.description;
   document.getElementById("goalDetailOutcome").textContent = goal.outcome || "Leeruitkomst";
   document.getElementById("goalDetailCode").textContent = goal.code || "—";
+  document.getElementById('goalDetailOutcomeLink').disabled = !outcomes.some((item) => item.code === goal.code);
   document.getElementById('goalCompleteButton').classList.toggle('hidden', goal.status === 'afgerond');
   document.getElementById('goalCompleteMessage').textContent = '';
   modal.classList.remove("hidden");
@@ -342,6 +345,13 @@ function openGoalDetail(id) {
 function closeGoalDetail() {
   document.getElementById("goalDetailModal")?.classList.add("hidden");
   document.body.classList.remove("account-modal-open");
+}
+
+function openGoalLinkedOutcome() {
+  const goal = goalItems.find((item) => Number(item.id) === Number(selectedGoalId));
+  if (!goal || !outcomes.some((item) => item.code === goal.code)) return;
+  closeGoalDetail();
+  openOutcome(goal.code, 'goals');
 }
 
 async function saveGoal() {

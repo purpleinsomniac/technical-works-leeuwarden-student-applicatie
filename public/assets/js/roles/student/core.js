@@ -44,13 +44,35 @@ function apiUrl(template, id) {
 // Gedeelde paginering voor leerdoelen, leeruitkomsten en puntenregistraties.
 function pageButtons(page, total, handler) {
   if (total <= 1) return '';
-  const arrow = (label, target, disabled, icon) => `<button type="button" aria-label="${label}" ${disabled ? 'disabled' : ''} onclick="${handler}(${target})">${icon}</button>`;
+  const arrow = (label, target, disabled, icon) => `<button type="button" aria-label="${label}" ${disabled ? 'disabled' : ''} onclick="paginateWithoutScrolling(() => ${handler}(${target}))">${icon}</button>`;
   const pages = Array.from({length: total}, (_, index) => {
     const number = index + 1;
-    return `<button type="button" class="${number === page ? 'active' : ''}" ${number === page ? 'aria-current="page"' : ''} onclick="${handler}(${number})">${number}</button>`;
+    return `<button type="button" class="${number === page ? 'active' : ''}" ${number === page ? 'aria-current="page"' : ''} onclick="paginateWithoutScrolling(() => ${handler}(${number}))">${number}</button>`;
   }).join('');
   return arrow('Vorige pagina', page - 1, page === 1, '‹') + pages + arrow('Volgende pagina', page + 1, page === total, '›');
 }
+function paginateWithoutScrolling(render) {
+  const position = {left:window.scrollX, top:window.scrollY, behavior:'instant'};
+  render();
+  window.scrollTo(position);
+  requestAnimationFrame(() => window.scrollTo(position));
+}
+// Houd ruimte voor een volle pagina vrij, zodat de navigatie niet verspringt.
+function keepPaginationPosition(id, filterKey) {
+  const list = document.getElementById(id);
+  const width = Math.round(list.getBoundingClientRect().width);
+  if (!width) return;
+  const key = JSON.stringify([filterKey, width]);
+  if (list.dataset.paginationSizeKey !== key) {
+    list.dataset.paginationSizeKey = key;
+    list.dataset.paginationHeight = '0';
+  }
+  list.style.minHeight = '0';
+  const height = Math.max(Number(list.dataset.paginationHeight), list.getBoundingClientRect().height);
+  list.dataset.paginationHeight = String(height);
+  list.style.minHeight = height + 'px';
+}
+
 function loadLocalState(key) {
   if (!window.LARAVEL_USER) return localStorage.getItem(key);
   return localStorage.getItem("laravel-" + window.LARAVEL_USER.id + "-" + key);

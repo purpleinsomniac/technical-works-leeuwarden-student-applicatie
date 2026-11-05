@@ -118,6 +118,7 @@ function renderHoursRegistrations(selected, periodLabel) {
     ? visibleRecords.map(renderHoursRow).join("")
     : '<div class="hours-empty"><span>⌕</span><h3>Geen registraties gevonden</h3><p>Pas de periode, fase of zoekproject aan.</p></div>';
   document.getElementById("hoursPagination").innerHTML = renderHoursPagination(pageCount);
+  keepPaginationPosition('hoursList', [selected, hoursPhaseFilter, search, sort, perPage]);
 }
 
 function registrationOutcomes(record) {
@@ -132,16 +133,16 @@ function renderHoursRow(record) {
   const index = records.indexOf(record);
   const linked = registrationOutcomes(record);
   const phaseBadges = (record.phases || []).map((code) => '<span class="hours-phase-badge ' + code + '">' + esc(hoursPhaseName(code)) + '</span>').join("");
-  const outcomeChips = linked.slice(0, 3).map((outcome) =>
-    '<span class="hours-outcome-chip ' + esc(outcome.phase) + '" title="' + esc(hoursPhaseName(outcome.phase)) + '">' + uiIcon("outcomes") + esc(outcome.short) + '</span>',
-  ).join("") + (linked.length > 3 ? '<span class="hours-outcome-more">+' + (linked.length - 3) + '</span>' : '');
+  const outcomeChips = linked.slice(0, 2).map((outcome) =>
+    '<span class="hours-outcome-chip ' + esc(outcome.phase) + '" title="' + esc(outcome.short + ' · ' + hoursPhaseName(outcome.phase)) + '">' + uiIcon("outcomes") + esc(outcome.short) + '</span>',
+  ).join("") + (linked.length > 2 ? '<span class="hours-outcome-more" title="' + esc(linked.slice(2).map((outcome) => outcome.short).join(', ')) + '">+' + (linked.length - 2) + '</span>' : '');
 
   return '<button type="button" class="hours-registration-row" onclick="openHourRegistration(' + index + ')">' +
     '<span class="hours-assignment-cell"><span class="hours-assignment-icon">' + assignmentIcon(record) + '</span><span><strong>' + esc(record.title) + '</strong><small>' + esc(record.type) + ' · Leerjaar ' + record.year + '</small></span></span>' +
     '<span class="hours-phase-cell">' + phaseBadges + '</span>' +
     '<span class="hours-outcome-cell">' + outcomeChips + '</span>' +
-    '<strong class="hours-value">' + Number(record.hours).toLocaleString("nl-NL") + ' punten</strong>' +
-    '<span class="hours-date">' + esc(record.date) + '</span><span class="hours-chevron" aria-hidden="true">›</span></button>';
+    '<strong class="hours-value"><span>' + Number(record.hours).toLocaleString("nl-NL") + ' punten</span></strong>' +
+    '<span class="hours-date">' + uiIcon('calendar') + esc(record.date) + '</span><span class="hours-chevron" aria-hidden="true">›</span></button>';
 }
 
 function renderHoursPagination(pageCount) {

@@ -32,6 +32,7 @@
     window.LARAVEL_API = {{ Illuminate\Support\Js::from([
         'challengeSync' => route('challenges.sync'),
         'reflectionStore' => route('reflections.store'),
+        'reflectionUpdate' => route('reflections.update', ['reflection' => '__ID__']),
         'reflectionRestore' => route('reflections.restore', ['id'=>'__ID__']),
         'reflectionDelete' => route('reflections.destroy', ['reflection' => '__ID__']),
         'feedbackStore' => route('feedback.store'),

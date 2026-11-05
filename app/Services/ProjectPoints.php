@@ -25,6 +25,8 @@ class ProjectPoints
             if ($linked->isEmpty()) continue;
             $maximum = min(80, (int) $linked->sum(fn ($outcome) => min(20, $outcome->pivot->max_points)));
             $maxProjects[$project->id] = $maximum;
+            // Punten tellen pas mee nadat het project is afgerond.
+            if ($project->status !== 'completed') continue;
             $total = max(0, min((int) $project->gevalideerde_uren, $maximum));
             if ($maximum > 0) {
                 $shares = [];

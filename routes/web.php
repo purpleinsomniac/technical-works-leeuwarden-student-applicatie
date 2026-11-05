@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function (): void {
         })->name('challenges.sync');
         Route::put('/mijn-gegevens', [StateController::class, 'update'])->name('state.save');
         Route::post('/mijn-reflecties', [StudentDataController::class, 'storeReflection'])->name('reflections.store');
+        Route::put('/mijn-reflecties/{reflection}', [StudentDataController::class, 'storeReflection'])->name('reflections.update');
         Route::delete('/mijn-reflecties/{reflection}', [StudentDataController::class, 'destroyReflection'])->name('reflections.destroy');
         Route::post('/mijn-reflecties/{id}/herstellen', function (\Illuminate\Http\Request $request, string $id) {
             $reflection = \App\Models\Reflection::withTrashed()->where('gebruiker_id',$request->user()->id)->findOrFail($id);

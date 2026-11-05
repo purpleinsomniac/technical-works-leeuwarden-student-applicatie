@@ -14,7 +14,7 @@ class SchoolPointsSeeder extends Seeder
         if (!$student) return;
         DB::transaction(function () use ($student) {
             // De legacy 80%-norm van 50 staat gelijk aan 40 vereiste punten.
-            LearningOutcome::query()->update(['normuren'=>50]);
+            LearningOutcome::query()->update(['normwaarden'=>'50']);
             $projects = $student->assignments()->with('learningOutcomes')->orderBy('id')->get();
             $groups = $projects->groupBy(fn ($project) => $project->learningOutcomes->sortBy('id')->first()?->studiefase_id);
             foreach ($groups as $phase => $phaseProjects) {

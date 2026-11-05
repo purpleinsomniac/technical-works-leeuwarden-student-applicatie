@@ -64,11 +64,9 @@ class ProjectPoints
 
     public function norm($outcome): int
     {
-        $legacyNorm = $outcome->normuren ?: match ($outcome->studyPhase?->naam) {
-            'Verdiepingsfase' => 200,
-            'Afrondingsfase' => 300,
-            default => 150,
-        };
+        // Main bewaart normwaarden als tekst; het puntendoel moet numeriek blijven.
+        $value = $outcome->getAttributes()['normwaarden'] ?? $outcome->getAttributes()['normuren'] ?? null;
+        $legacyNorm = is_numeric($value) && (float) $value > 0 ? (float) $value : 50;
         return (int) ceil($legacyNorm * .8);
     }
 }

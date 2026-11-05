@@ -96,7 +96,7 @@ class DatabaseSeeder extends Seeder
                     'titel' => $leeruitkomstTitels[$leeruitkomst['code']] ?? $leeruitkomst['short'],
                     'type' => $leeruitkomst['kind'],
                     'omschrijving' => $leeruitkomst['description'],
-                    'normuren' => $leeruitkomst['target'],
+                    'normwaarden' => (string) $leeruitkomst['target'],
                 ],
             );
         }
@@ -143,7 +143,7 @@ class DatabaseSeeder extends Seeder
 
             Progress::updateOrCreate(
                 ['gebruiker_id' => $student->id, 'leeruitkomst_id' => $leeruitkomst->id],
-                ['gevalideerde_uren' => $uren, 'normuren' => $gegevens['target'], 'status' => $status],
+                ['gevalideerde_uren' => $uren, 'normwaarden' => (string) $gegevens['target'], 'status' => $status],
             );
         }
 

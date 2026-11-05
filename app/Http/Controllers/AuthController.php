@@ -10,12 +10,8 @@ use Illuminate\Support\Facades\Auth;
 class AuthController extends Controller
 {
     // Toon het formulier direct, zodat fout- en succesmeldingen bewaard blijven.
-    public function showLogin(Request $request): View|RedirectResponse
+    public function showLogin(): View
     {
-        if ($request->user()) {
-            return redirect()->route('home');
-        }
-
         return view('auth.login');
     }
 

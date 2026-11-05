@@ -44,7 +44,7 @@ class DashboardController extends RoleDashboardController
                     'title' => $progress->learningOutcome->titel,
                     'code' => $progress->learningOutcome->code,
                     'hours' => $progress->gevalideerde_uren,
-                    'target' => $progress->normuren ?? $progress->learningOutcome->normuren,
+                    'target' => $progress->normwaarden ?? $progress->learningOutcome->normwaarden,
                     'status' => $progress->status,
                 ])->values(),
             ])

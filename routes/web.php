@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\LeeruitkomstController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Coach\DashboardController as CoachDashboardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PasswordResetController;
@@ -14,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/inloggen', [AuthController::class, 'login'])->middleware('guest')->name('login.submit');
+Route::post('/inloggen', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/uitloggen', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('guest')->group(function (): void {
@@ -33,6 +35,18 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/coach', CoachDashboardController::class)->middleware('role:coach')->name('coach.dashboard');
     Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');
     Route::get('/beheer', AdminDashboardController::class)->middleware('role:beheerder')->name('admin.dashboard');
+
+    Route::middleware('role:beheerder')->prefix('beheer/leeruitkomsten')->name('admin.learning-outcomes.')->group(function (): void {
+        Route::post('/', [LeeruitkomstController::class, 'store'])->name('store');
+        Route::put('/{learningOutcome}', [LeeruitkomstController::class, 'update'])->name('update');
+        Route::delete('/{learningOutcome}', [LeeruitkomstController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::middleware('role:beheerder')->prefix('beheer/gebruikers')->name('admin.users.')->group(function (): void {
+        Route::post('/', [AdminUserController::class, 'store'])->name('store');
+        Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
+    });
 
     Route::middleware('role:student')->group(function (): void {
         Route::post('/mijn-challenges/synchroniseren', function (\Illuminate\Http\Request $request, \App\Services\ChallengeService $challenges) {

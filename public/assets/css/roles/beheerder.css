@@ -103,3 +103,39 @@
   .admin-outcome-tiles { grid-template-columns: 1fr; }
   .admin-stat { min-height: 148px; }
 }
+
+.admin-hero { align-items: flex-start; padding-top: 4px; }
+.admin-hero h1 { color: #162f43; font-size: 32px; letter-spacing: -1px; }
+.admin-hero p { color: #697e90; font-size: 14px; }
+.admin-eyebrow { color: #168479; }
+.admin-stats { gap: 15px; }
+.admin-stat { min-height: 180px; padding: 22px; border: 0; border-radius: 17px; box-shadow: none; }
+.admin-stat-users { background: linear-gradient(115deg, #e5f8ef, #c1efdf); }
+.admin-stat-students { background: linear-gradient(115deg, #f1ebff, #e6dfff); }
+.admin-stat-outcomes { background: linear-gradient(115deg, #fff8eb, #ffedcc); }
+.admin-stat-progress { background: linear-gradient(115deg, #eaf3fb, #dce8f5); }
+.admin-stat-icon { width: 40px; height: 40px; border-radius: 10px; }
+.admin-stat-users .admin-stat-icon { background: #d4f0e8; color: #179b89; }
+.admin-stat-students .admin-stat-icon { background: #e2dffc; color: #6858d4; }
+.admin-stat-outcomes .admin-stat-icon { background: #ffedcc; color: #b57d29; }
+.admin-stat-progress .admin-stat-icon { background: #dceaf5; color: #4a7ca2; }
+.admin-stat-label { margin-top: 12px; color: #526b7b; }
+.admin-stat strong { color: #193b48; font-size: 37px; line-height: 1.35; letter-spacing: -1.5px; }
+.admin-stat-note { color: #6b7c8e; }
+.admin-content-grid { gap: 15px; }
+.admin-panel { border-color: #dfe8ed; border-radius: 15px; box-shadow: 0 3px 10px #16334a08; }
+.admin-panel-icon { border-radius: 10px; }
+.admin-role-row { border-color: #e6edf0; border-radius: 11px; background: #f8fbfc; }
+.admin-processing-note { border-color: #dce8e5; border-radius: 12px; background: linear-gradient(115deg, #f1faf6, #fff); }
+.admin-empty-state { border-color: #dfe8ed; border-top: 3px solid #58cdbc; border-radius: 17px; box-shadow: 0 8px 24px rgba(22, 47, 67, 0.06); }
+.admin-empty-icon { border-radius: 12px; background: #e1f4ee; color: #188c7d; }
+.admin-users-table th { background: #f7fafb; }
+.admin-users-table tbody tr:hover { background: #f3f9f7; }
+.admin-users-table td a { color: #167e72; }
+.admin-user-delete { border-color: #efd8d5; background: #fff6f4; }
+.admin-user-delete:hover { border-color: #e6bbb5; background: #fff0ed; }
+
+@media (max-width: 680px) {
+  .admin-hero { padding-bottom: 20px; }
+  .admin-stat { min-height: 160px; }
+}

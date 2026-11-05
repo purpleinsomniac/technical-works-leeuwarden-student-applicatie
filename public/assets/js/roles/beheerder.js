@@ -4,8 +4,7 @@ window.RoleApp.initializeRole({
     ["Overzicht", "adminProcessing"],
     ["Gebruikers", "adminUsers"],
     ["Leeruitkomsten", "adminLearningOutcomes"],
-    ["Leeractiviteiten", "adminLearningActivities"],
-    ["Logboek", "adminLog"],
+    ["Applicatie-instellingen", "adminApplicationSettings"],
   ],
 });
 
@@ -27,12 +26,12 @@ if (new URLSearchParams(window.location.search).get("page") === "leeruitkomsten"
   show("adminLearningOutcomes");
 }
 
-if (new URLSearchParams(window.location.search).get("page") === "leeractiviteiten") {
-  show("adminLearningActivities");
-}
-
 if (new URLSearchParams(window.location.search).get("page") === "gebruikers") {
   show("adminUsers");
+}
+
+if (new URLSearchParams(window.location.search).get("page") === "applicatie-instellingen") {
+  show("adminApplicationSettings");
 }
 
 const adminUserRoleFilter = document.getElementById("adminUserRoleFilter");

@@ -9,7 +9,6 @@
       <h1>Alles op één plek</h1>
       <p>Houd overzicht over studenten, begeleiding en de gegevens in de leeromgeving.</p>
     </div>
-    <button class="button admin-hero-action" type="button" onclick="show('adminLog')">Bekijk het logboek <span aria-hidden="true">→</span></button>
   </header>
   {{-- Shows the database totals supplied by the administrator dashboard controller. --}}
   <section class="admin-stats" aria-label="Databaseoverzicht">
@@ -207,34 +206,21 @@
   </div>
 </section>
 
-{{-- Placeholder for the learning-activities page until its contents are defined. --}}
-<section id="adminLearningActivities" class="view hidden admin-dashboard">
+<section id="adminApplicationSettings" class="view hidden admin-dashboard">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
-      <h1>Leeractiviteiten</h1>
-      <p>De inhoud van deze pagina wordt later bepaald.</p>
+      <h1>Applicatie-instellingen</h1>
+      <p>Beheer hier de algemene instellingen van de leeromgeving.</p>
     </div>
   </header>
   <section class="admin-empty-state">
-    <span class="admin-empty-icon" aria-hidden="true">▤</span>
-    <span class="admin-eyebrow">Binnenkort beschikbaar</span>
-    <h2>Leeractiviteiten</h2>
-    <p>Deze pagina is alvast toegevoegd. De inhoud volgt zodra die is afgestemd.</p>
+    <span class="admin-empty-icon" aria-hidden="true">⚙</span>
+    <span class="admin-eyebrow">Instellingen</span>
+    <h2>Applicatie-instellingen</h2>
+    <p>Er zijn nog geen algemene instellingen beschikbaar om te wijzigen.</p>
   </section>
 </section>
 
-{{-- The log page is an honest placeholder until an audit-log table is implemented. --}}
-<section id="adminLog" class="view hidden admin-dashboard">
-  <header class="admin-hero admin-log-hero">
-    <div class="admin-hero-copy"><span class="admin-eyebrow">Beheeromgeving</span><h1>Verwerkingslogboek</h1><p>Bekijk hier later welke beheerhandelingen zijn uitgevoerd.</p></div>
-    <button class="button admin-hero-action" type="button" onclick="show('adminProcessing')"><span aria-hidden="true">←</span> Terug naar overzicht</button>
-  </header>
-  <section class="admin-empty-state">
-    <span class="admin-empty-icon" aria-hidden="true">◷</span><span class="admin-eyebrow">Nog niet beschikbaar</span>
-    <h2>Er zijn nog geen logregels</h2>
-    <p>Er bestaat nog geen auditlogtabel. Daarom worden hier geen logregels getoond. Een auditlog kan later worden toegevoegd zodra de gewenste handelingen en bewaartermijnen zijn vastgesteld.</p>
-  </section>
-</section>
 @endsection
 {{-- this is the blade template for the admin dashboard --}}

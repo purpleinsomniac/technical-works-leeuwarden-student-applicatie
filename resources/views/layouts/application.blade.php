@@ -9,7 +9,7 @@
 @endif
 
 @section('content')
-  <div class="app" id="app">
+  <div class="app role-{{ $frontendUser['role'] }}" id="app">
     @include('components.sidebar')
 
     <main class="main">

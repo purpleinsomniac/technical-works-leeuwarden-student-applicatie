@@ -30,11 +30,15 @@
     window.LARAVEL_DATA = {{ Illuminate\Support\Js::from($frontendData) }};
     window.LARAVEL_SAVE_URL = {{ Illuminate\Support\Js::from(route('state.save')) }};
     window.LARAVEL_API = {{ Illuminate\Support\Js::from([
+        'challengeSync' => route('challenges.sync'),
         'reflectionStore' => route('reflections.store'),
+        'reflectionUpdate' => route('reflections.update', ['reflection' => '__ID__']),
+        'reflectionRestore' => route('reflections.restore', ['id'=>'__ID__']),
         'reflectionDelete' => route('reflections.destroy', ['reflection' => '__ID__']),
         'feedbackStore' => route('feedback.store'),
         'feedbackDelete' => route('feedback.destroy', ['feedback' => '__ID__']),
         'goalStore' => route('goals.store'),
+        'goalComplete' => route('goals.complete', ['goal'=>'__ID__']),
         'assignmentSubmit' => route('assignments.submit', ['assignment' => '__ID__']),
         'assignmentReopen' => route('assignments.reopen', ['assignment' => '__ID__']),
         'assignmentFileStore' => route('assignments.files.store', ['assignment' => '__ID__']),

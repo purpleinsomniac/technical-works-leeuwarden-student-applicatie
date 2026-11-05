@@ -1,3 +1,53 @@
+let reflectionTypeFilter = 'all';
+function selectReflectionOutcomeFilter(kind) {
+  document.getElementById(kind === 'Softskills' ? 'reflectionHardOutcome' : 'reflectionSoftOutcome').value = 'all';
+  renderReflections();
+}
+let reflectionSkillFilter = 'Hardskills';
+function selectReflectionSkill(kind) {
+  reflectionSkillFilter = kind;
+  renderReflectionOutcomePicker();
+}
+function chooseReflectionOutcome(code) {
+  document.getElementById('reflectionOutcome').value = code;
+  showReflectionOutcomePreview();
+}
+function renderReflectionOutcomePicker() {
+  const select = document.getElementById('reflectionOutcome');
+  const allowed = new Set([...select.options].map((option) => option.value));
+  const available = outcomes.filter((item) => allowed.has(item.code));
+  const search = document.getElementById('reflectionOutcomeSearch').value.trim().toLowerCase();
+  document.querySelectorAll('[data-reflection-skill]').forEach((button) => {
+    const kind = button.dataset.reflectionSkill;
+    button.textContent = (kind === 'Hardskills' ? 'Hard skills' : 'Soft skills') + ' (' + available.filter((item) => item.kind === kind).length + ')';
+    button.classList.toggle('active', kind === reflectionSkillFilter);
+    button.setAttribute('aria-pressed', String(kind === reflectionSkillFilter));
+  });
+  const list = available.filter((item) => item.kind === reflectionSkillFilter && (item.short + ' ' + item.code).toLowerCase().includes(search));
+  document.getElementById('reflectionOutcomePicker').innerHTML = list.map((item) => '<button type="button" aria-pressed="' + (select.value === item.code) + '" class="reflection-outcome-option ' + (select.value === item.code ? 'selected' : '') + '" onclick="chooseReflectionOutcome(\'' + item.code + '\')"><span class="nav-icon" aria-hidden="true">' + uiIcon(item.kind === 'Hardskills' ? 'layout' : 'feedback') + '</span><span><strong>' + esc(item.short) + '</strong><small>' + esc(item.code) + '</small></span><i aria-hidden="true">' + (select.value === item.code ? '✓' : '') + '</i></button>').join('') || '<p class="dim">Geen leeruitkomsten gevonden. Kies een andere vaardigheid, fase of project.</p>';
+}
+function selectReflectionType(type) { reflectionTypeFilter = type; renderReflections(); }
+function updateReflectionLinkType() {
+  const previousOutcome = document.getElementById('reflectionOutcome').value;
+  const isProject = document.getElementById('reflectionLinkType').value === 'project';
+  document.getElementById('reflectionProjectLabel').classList.toggle('hidden', !isProject);
+  const select = document.getElementById('reflectionProject');
+  const previous = select.value;
+  const phase = document.getElementById('reflectionPhase').value;
+  const available = assignments.filter((item) => item.phase === phase);
+  select.innerHTML = '<option value="">' + (available.length ? 'Kies een project' : 'Geen projecten in deze fase') + '</option>' + available.map((item) => '<option value="' + item.id + '">' + esc(item.title) + '</option>').join('');
+  select.value = available.some((item) => String(item.id) === previous) ? previous : '';
+  if (isProject) selectReflectionProject();
+  else updateReflectionOutcomeOptions();
+  const outcomeSelect = document.getElementById('reflectionOutcome');
+  if ([...outcomeSelect.options].some((option) => option.value === previousOutcome)) outcomeSelect.value = previousOutcome;
+  showReflectionOutcomePreview();
+}
+function selectReflectionProject() {
+  const project = assignments.find((item) => Number(item.id) === Number(document.getElementById('reflectionProject').value));
+  if (project) document.getElementById('reflectionPhase').value = project.phase;
+  updateReflectionOutcomeOptions();
+}
 // Reflecties tonen, toevoegen en verwijderen.
 
 // -----------------------------------------------------------------------------
@@ -8,7 +58,7 @@ let reflections = Array.isArray(window.LARAVEL_DATA?.reflections)
   : [];
 
 function getReflections() {
-  return reflections;
+  return reflections.filter((item) => !item.deleted);
 }
 
 function renderOutcomeReflections() {
@@ -31,9 +81,14 @@ function renderOutcomeReflections() {
     : '<div class="outcome-reflection-empty compact"><strong>Nog geen reflectie</strong><p>Voeg je eerste reflectie toe.</p></div>';
 }
 
-function openOutcomeReflectionDetail(id) {
-  const item = getReflections().find((reflection) => reflection.id === id);
+let reflectionDetailTrigger = null;
+let selectedReflectionId = null;
+let editingReflectionId = null;
+function openOutcomeReflectionDetail(id, fromList = false) {
+  const item = reflections.find((reflection) => String(reflection.id) === String(id));
   if (!item) return;
+  selectedReflectionId = item.id;
+  reflectionDetailTrigger = document.activeElement;
   document.getElementById("reflectionDetailDate").textContent = item.date;
   document.getElementById("reflectionDetailTitle").textContent = item.title;
   document.getElementById("reflectionDetailCode").textContent = item.code;
@@ -48,27 +103,34 @@ function openOutcomeReflectionDetail(id) {
       esc(item.next) +
       "</p></div></section>"
     : "<section><span>1</span><div><h3>Reflectie</h3><p>" + esc(item.text || "") + "</p></div></section>";
-  document.getElementById("outcomeReflectionDetailModal").classList.remove("hidden");
+  const modal = document.getElementById('outcomeReflectionDetailModal');
+  if (!modal.querySelector('.reflection-detail-art')) {
+    const art = document.querySelector('.goal-detail-art')?.cloneNode(true);
+    if (art) { art.setAttribute('class','reflection-detail-art'); modal.querySelector('.reflection-detail-modal-head').appendChild(art); }
+  }
+  document.body.appendChild(modal);
+  document.getElementById('reflectionEditButton').classList.toggle('hidden', Boolean(item.deleted));
+  if (fromList) document.getElementById('reflectionDetailContent').insertAdjacentHTML('beforeend', '<div class="reflection-modal-actions"><button class="button" type="button" onclick="' + (item.deleted ? 'restoreReflection' : 'deleteReflection') + '(\'' + esc(item.id) + '\')">' + (item.deleted ? 'Reflectie herstellen' : 'Reflectie verwijderen') + '</button></div>');
+  modal.classList.remove("hidden");
   document.body.classList.add("modal-open");
-  requestAnimationFrame(() => document.querySelector("#outcomeReflectionDetailModal .modal-close").focus());
+  requestAnimationFrame(() => modal.querySelector('.modal-close').focus({preventScroll:true}));
 }
 
 function closeOutcomeReflectionDetail() {
   document.getElementById("outcomeReflectionDetailModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
+  reflectionDetailTrigger?.focus({preventScroll:true});
 }
 
-function keepOnlyOneOutcomeItemOpen(item) {
-  if (!item.open) return;
-  document.querySelectorAll(".outcome-reflection-detail[open],.outcome-feedback-detail[open]").forEach((other) => {
-    if (other !== item) other.open = false;
-  });
-}
-
-function viewReflectionsForPhase(phaseCode) {
-  show("reflections");
-  filterReflectionsByPhase(phaseCode);
-}
+document.addEventListener('click', (event) => {
+  const summary = event.target.closest('#reflectionList .reflection-table-row > summary');
+  if (!summary) return;
+  event.preventDefault();
+  openOutcomeReflectionDetail(summary.parentElement.id.replace('reflection-row-', ''), true);
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !document.getElementById('outcomeReflectionDetailModal').classList.contains('hidden')) closeOutcomeReflectionDetail();
+});
 
 function openReflectionForCurrentOutcome() {
   const outcome = outcomes.find((o) => o.code === currentOutcomeCode);
@@ -83,69 +145,68 @@ function openReflectionForCurrentOutcome() {
 }
 
 function renderReflections() {
-  const all = getReflections(),
-    list =
-      reflectionPhaseFilter === "all"
-        ? all
-        : all.filter((item) => {
-            const outcome = outcomes.find((o) => o.code === item.code);
-            return outcome && outcome.phase === reflectionPhaseFilter;
-          });
-  document.getElementById("reflectionCount").textContent = all.length + " " + (all.length === 1 ? "REFLECTIE" : "REFLECTIES");
-  document.getElementById("reflectionPhaseFilter").innerHTML = [["all", "Alle fases"], ...phases.map(([code, name]) => [code, name])]
-    .map(
-      ([code, name]) =>
-        '<button type="button" class="reflection-filter-button ' +
-        (reflectionPhaseFilter === code ? "active" : "") +
-        '" onclick="filterReflectionsByPhase(\'' +
-        code +
-        "')\">" +
-        name +
-        "<span>" +
-        getReflectionCountForPhase(all, code) +
-        "</span></button>",
-    )
-    .join("");
-  document.getElementById("reflectionList").innerHTML = list.length
-    ? list
-        .map((item) => {
-          const outcome = outcomes.find((o) => o.code === item.code),
-            phaseName = outcome ? (phases.find((p) => p[0] === outcome.phase) || [])[1] : "Onbekende fase",
-            sections = item.situation
-              ? '<div class="reflection-sections"><div><b>1. Situatie</b><p>' +
-                esc(item.situation) +
-                "</p></div><div><b>2. Wat ging goed?</b><p>" +
-                esc(item.good) +
-                "</p></div><div><b>3. Wat kan beter?</b><p>" +
-                esc(item.improve) +
-                "</p></div><div><b>4. Volgende stap</b><p>" +
-                esc(item.next) +
-                "</p></div></div>"
-              : '<div class="legacy-reflection"><b>Terugblik</b><p>' + esc(item.text || "") + "</p></div>";
-          return (
-            '<details class="reflection-accordion"><summary><div class="reflection-summary"><div class="reflection-summary-top"><span class="reflection-date">' +
-            esc(item.date) +
-            '</span><span class="reflection-phase">' +
-            esc(phaseName) +
-            '</span><span class="skill-tag ' +
-            (outcome && outcome.kind === "Softskills" ? "soft" : "") +
-            '">' +
-            esc(outcome ? outcome.kind : "Leeruitkomst") +
-            "</span></div><h2>" +
-            esc(item.title) +
-            "</h2><strong>" +
-            esc(outcome ? outcome.short : "Leeruitkomst") +
-            '</strong><span class="code">' +
-            esc(item.code) +
-            '</span></div><span class="accordion-toggle" aria-hidden="true">⌄</span></summary><div class="reflection-accordion-body">' +
-            sections +
-            '<div class="reflection-actions"><button class="icon-button" type="button" onclick="deleteReflection(\'' +
-            esc(item.id) +
-            "')\">Reflectie verwijderen</button></div></div></details>"
-          );
-        })
-        .join("")
-    : '<div class="empty-state"><span class="empty-icon">✦</span><h2>Geen reflecties in deze fase</h2><p>Kies een andere fase of schrijf een nieuwe reflectie.</p></div>';
+  if (reflectionPhaseFilter === 'all') reflectionPhaseFilter = 'OF';
+  const phaseCode = reflectionPhaseFilter;
+  const status = document.getElementById('reflectionListStatus').value;
+  const search = document.getElementById('reflectionSearch').value.trim().toLowerCase();
+  for (const [id,kind,label] of [['reflectionSoftOutcome','Softskills','soft'],['reflectionHardOutcome','Hardskills','hard']]) {
+    const select = document.getElementById(id), previous = select.value;
+    const available = outcomes.filter((item) => item.phase === phaseCode && item.kind === kind);
+    select.innerHTML = '<option value="all">Alle ' + label + ' skills</option>' + available.map((item) => '<option value="' + esc(item.code) + '">' + esc(item.short) + '</option>').join('');
+    select.value = available.some((item) => item.code === previous) ? previous : 'all';
+  }
+  const selectedOutcome = [document.getElementById('reflectionSoftOutcome').value,document.getElementById('reflectionHardOutcome').value].find((value) => value !== 'all');
+  const phaseItems = reflections.filter((item) => outcomes.find((outcome) => outcome.code === item.code)?.phase === phaseCode);
+  const current = phaseItems.filter((item) => !item.deleted);
+  document.querySelectorAll('[data-reflection-type]').forEach((button) => {
+    const type = button.dataset.reflectionType;
+    const count = current.filter((item) => type === 'all' || (type === 'project' ? Boolean(item.assignmentId) : !item.assignmentId)).length;
+    button.classList.toggle('active', type === reflectionTypeFilter);
+    button.setAttribute('aria-pressed', String(type === reflectionTypeFilter));
+    button.textContent = (type === 'all' ? 'Alle reflecties' : type === 'project' ? 'Projecten' : 'Leeruitkomsten') + ' (' + count + ')';
+  });
+  const list = phaseItems.filter((item) => (reflectionTypeFilter === "all" || (reflectionTypeFilter === "project" ? Boolean(item.assignmentId) : !item.assignmentId)) && (status === 'all' || (status === 'deleted' ? item.deleted : !item.deleted)) && (!selectedOutcome || item.code === selectedOutcome) && [item.title,item.code,item.situation,item.good,item.improve,item.next].join(' ').toLowerCase().includes(search));
+  const reflectionTotal = getReflections().length;
+  document.getElementById('reflectionCount').textContent = reflectionTotal + (reflectionTotal === 1 ? ' reflectie' : ' reflecties');
+  document.getElementById('reflectionPhaseFilter').innerHTML = phases.map(([code,name]) => {
+    const count = getReflectionCountForPhase(getReflections(),code);
+    return '<button type="button" aria-pressed="' + (code === phaseCode) + '" class="reflection-filter-button ' + (code === phaseCode ? 'active' : '') + '" onclick="filterReflectionsByPhase(\'' + code + '\')"><i class="reflection-phase-icon" aria-hidden="true">' + (code === 'OF' ? '✓' : code === 'VF' ? '◇' : '⚑') + '</i><span class="reflection-phase-copy"><strong>' + esc(name) + '</strong><small>' + count + ' ' + (count === 1 ? 'reflectie' : 'reflecties') + '</small></span><i class="reflection-phase-indicator" aria-hidden="true"></i></button>';
+  }).join('');
+  document.getElementById('reflectionLatestTitle').textContent = current[0]?.title || 'Nog geen reflectie';
+  document.getElementById('reflectionLatestDate').textContent = current[0]?.date || 'Schrijf je eerste terugblik.';
+  document.getElementById('reflectionLatestButton').disabled = !current.length;
+  document.getElementById('reflectionNextCopy').textContent = 'Schrijf een nieuwe reflectie in de ' + (phases.find(([code])=>code === phaseCode)?.[1] || 'gekozen fase') + '.';
+  document.getElementById('reflectionList').innerHTML = list.map((item) => {
+    const outcome = outcomes.find((entry) => entry.code === item.code);
+    const sections = [['Situatie',item.situation],['Wat ging goed?',item.good],['Wat kan beter?',item.improve],['Volgende stap',item.next]];
+    return '<details id="reflection-row-' + esc(item.id) + '" class="reflection-table-row"><summary><span class="reflection-row-title"><i aria-hidden="true">▤</i><span><strong>' + esc(item.title) + '</strong><small>' + esc(outcome?.short || '') + '</small></span></span><span class="reflection-row-label">' + (item.assignmentId ? '▣ Project' : '◎ Leeruitkomst') + '</span><span class="reflection-row-code" title="' + esc(item.code) + '">' + esc(outcome?.short || item.code) + '</span><span class="reflection-row-status ' + (item.deleted ? 'deleted' : '') + '">' + (item.deleted ? 'Verwijderd' : '✓ Afgerond') + '</span><span class="reflection-row-date">' + esc(item.date) + '</span><span aria-hidden="true">›</span></summary><div class="reflection-table-body">' + sections.map(([title,text])=>'<section><h3>' + title + '</h3><p>' + esc(text || '') + '</p></section>').join('') + '<button class="button" type="button" onclick="' + (item.deleted ? 'restoreReflection' : 'deleteReflection') + '(\'' + esc(item.id) + '\')">' + (item.deleted ? 'Reflectie herstellen' : 'Reflectie verwijderen') + '</button></div></details>';
+  }).join('') || '<div class="empty-state"><h2>Geen reflecties gevonden</h2><p>Pas je filters aan of schrijf een nieuwe reflectie.</p></div>';
+}
+async function restoreReflection(id) {
+  try {
+    await apiRequest(apiUrl(window.LARAVEL_API.reflectionRestore,id), {method:'POST',body:'{}'});
+    closeOutcomeReflectionDetail();
+    reflections = reflections.map((item)=>item.id === id ? {...item,deleted:false} : item);
+    renderReflections();
+    renderOutcomeReflections();
+    hint('De reflectie is hersteld.');
+  } catch(error) { hint(error.message); }
+}
+function newReflectionInPhase() {
+  document.getElementById('reflectionPhase').value = reflectionPhaseFilter;
+  updateReflectionOutcomeOptions();
+  openReflectionForm();
+}
+function openLatestReflection() {
+  const item = getReflections().find((item)=>outcomes.find((outcome)=>outcome.code === item.code)?.phase === reflectionPhaseFilter);
+  if (!item) { newReflectionInPhase(); return; }
+  reflectionTypeFilter = 'all';
+  document.getElementById('reflectionListStatus').value = 'active';
+  document.getElementById('reflectionSoftOutcome').value = 'all';
+  document.getElementById('reflectionHardOutcome').value = 'all';
+  document.getElementById('reflectionSearch').value = '';
+  renderReflections();
+  openOutcomeReflectionDetail(item.id, true);
 }
 
 function getReflectionCountForPhase(list, phaseCode) {
@@ -170,17 +231,22 @@ async function saveReflection(event) {
     improve = document.getElementById("reflectionImprove").value.trim(),
     next = document.getElementById("reflectionNext").value.trim();
   const message = document.getElementById("reflectionMessage");
+  if (document.getElementById('reflectionLinkType').value === 'project' && !document.getElementById('reflectionProject').value) {
+    message.textContent = 'Kies een project om je reflectie aan te koppelen.';
+    return;
+  }
   if (!title || !code || [situation, good, improve, next].some((value) => value.length < 10)) {
     message.textContent = "Vul alle stappen in en schrijf bij iedere vraag minimaal 10 tekens.";
     message.className = "form-message error";
     return;
   }
   try {
-    const saved = await apiRequest(window.LARAVEL_API.reflectionStore, {
-      method: "POST",
-      body: JSON.stringify({ title, code, situation, good, improve, next }),
+    const saved = await apiRequest(editingReflectionId ? apiUrl(window.LARAVEL_API.reflectionUpdate, editingReflectionId) : window.LARAVEL_API.reflectionStore, {
+      method: editingReflectionId ? 'PUT' : 'POST',
+      body: JSON.stringify({ title, code, situation, good, improve, next, assignmentId: document.getElementById('reflectionLinkType').value === 'project' ? Number(document.getElementById('reflectionProject').value) : null }),
     });
-    reflections.unshift(saved);
+    if (editingReflectionId) reflections = reflections.map((item) => String(item.id) === String(editingReflectionId) ? saved : item);
+    else reflections.unshift(saved);
     event.target.reset();
     message.textContent = "Je reflectie is bewaard.";
     message.className = "form-message success";
@@ -209,7 +275,7 @@ function updateReflectionOutcomeOptions() {
     phaseName +
     '">' +
     outcomes
-      .filter((o) => o.phase === phaseCode)
+      .filter((o) => o.phase === phaseCode && (document.getElementById('reflectionLinkType').value !== 'project' || assignments.find((item) => Number(item.id) === Number(document.getElementById('reflectionProject').value))?.outcomeCodes.includes(o.code)))
       .map((o) => '<option value="' + o.code + '">' + esc(o.short) + " — " + o.code + "</option>")
       .join("") +
     "</optgroup>";
@@ -217,6 +283,7 @@ function updateReflectionOutcomeOptions() {
 }
 
 function showReflectionOutcomePreview() {
+  renderReflectionOutcomePicker();
   const outcome = outcomes.find((o) => o.code === document.getElementById("reflectionOutcome").value),
     preview = document.getElementById("reflectionOutcomePreview");
   if (!outcome) {
@@ -234,23 +301,48 @@ function showReflectionOutcomePreview() {
 }
 
 function openReflectionForm(returnToOutcome = false) {
+  if (!returnToOutcome) document.getElementById('reflectionPhase').value = reflectionPhaseFilter === 'all' ? 'OF' : reflectionPhaseFilter;
   reflectionReturnToOutcome = returnToOutcome;
   const form = document.getElementById("reflectionForm");
+  updateReflectionLinkType();
   form.classList.remove("hidden");
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => document.getElementById("reflectionTitle").focus());
 }
 
 function closeReflectionForm() {
+  editingReflectionId = null;
   document.getElementById("reflectionForm").classList.add("hidden");
+  document.getElementById('reflectionLinkType').value = 'outcome';
+  document.getElementById('reflectionProjectLabel').classList.add('hidden');
   document.body.classList.remove("modal-open");
   reflectionReturnToOutcome = false;
+}
+
+function editSelectedReflection() {
+  const item = getReflections().find((entry) => String(entry.id) === String(selectedReflectionId));
+  if (!item) return;
+  closeOutcomeReflectionDetail();
+  show('reflections');
+  openReflectionForm();
+  editingReflectionId = item.id;
+  document.getElementById('reflectionPhase').value = outcomes.find((o) => o.code === item.code)?.phase || 'OF';
+  document.getElementById('reflectionLinkType').value = item.assignmentId ? 'project' : 'outcome';
+  updateReflectionLinkType();
+  if (item.assignmentId) {
+    document.getElementById('reflectionProject').value = item.assignmentId;
+    selectReflectionProject();
+  }
+  document.getElementById('reflectionOutcome').value = item.code;
+  for (const [id, value] of Object.entries({reflectionTitle:item.title,reflectionSituation:item.situation,reflectionGood:item.good,reflectionImprove:item.improve,reflectionNext:item.next})) document.getElementById(id).value = value || '';
+  showReflectionOutcomePreview();
 }
 
 async function deleteReflection(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.reflectionDelete, id), { method: "DELETE" });
-    reflections = reflections.filter((item) => item.id !== id);
+    closeOutcomeReflectionDetail();
+    reflections = reflections.map((item) => item.id === id ? {...item, deleted:true} : item);
     renderReflections();
     renderOutcomeReflections();
   } catch (error) {

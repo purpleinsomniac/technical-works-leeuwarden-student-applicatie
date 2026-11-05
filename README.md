@@ -42,7 +42,9 @@ De JavaScript-code van de student staat per onderdeel in
 - `app.js`: navigatie en algemene interface;
 - `dashboard.js`: dashboard en instellingen;
 - `assignments.js`: opdrachten;
-- `learning-outcomes.js`: leeruitkomsten en leerdoelen;
+- `learning-outcomes.js`: leeruitkomsten, filters en paginering;
+- `goals.js`: leerdoelen, badges en de driestappenwizard;
+- `week-plan.js`: persoonlijke weekplanning;
 - `hours.js`: uren;
 - `reflections.js`: reflecties;
 - `feedback.js`: feedback;

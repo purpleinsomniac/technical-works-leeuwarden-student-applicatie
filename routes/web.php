@@ -47,12 +47,26 @@ Route::middleware('auth')->group(function (): void {
     });
 
     Route::middleware('role:student')->group(function (): void {
+        Route::post('/mijn-challenges/synchroniseren', function (\Illuminate\Http\Request $request, \App\Services\ChallengeService $challenges) {
+            return response()->json($challenges->sync($request->user()));
+        })->name('challenges.sync');
         Route::put('/mijn-gegevens', [StateController::class, 'update'])->name('state.save');
         Route::post('/mijn-reflecties', [StudentDataController::class, 'storeReflection'])->name('reflections.store');
+        Route::put('/mijn-reflecties/{reflection}', [StudentDataController::class, 'storeReflection'])->name('reflections.update');
         Route::delete('/mijn-reflecties/{reflection}', [StudentDataController::class, 'destroyReflection'])->name('reflections.destroy');
+        Route::post('/mijn-reflecties/{id}/herstellen', function (\Illuminate\Http\Request $request, string $id) {
+            $reflection = \App\Models\Reflection::withTrashed()->where('gebruiker_id',$request->user()->id)->findOrFail($id);
+            $reflection->restore();
+            return response()->json(['restored'=>true]);
+        })->name('reflections.restore');
         Route::post('/mijn-feedback', [StudentDataController::class, 'storeFeedback'])->name('feedback.store');
         Route::delete('/mijn-feedback/{feedback}', [StudentDataController::class, 'destroyFeedback'])->name('feedback.destroy');
         Route::post('/mijn-leerdoelen', [StudentDataController::class, 'storeGoal'])->name('goals.store');
+        Route::post('/mijn-leerdoelen/{goal}/afronden', function (\Illuminate\Http\Request $request, \App\Models\LearningGoal $goal) {
+            abort_unless($goal->gebruiker_id === $request->user()->id, 403);
+            $goal->update(['status'=>'afgerond']);
+            return response()->json(['id'=>$goal->id,'status'=>$goal->status]);
+        })->name('goals.complete');
         Route::post('/mijn-opdrachten/{assignment}/inleveren', [StudentDataController::class, 'submitAssignment'])->name('assignments.submit');
         Route::post('/mijn-opdrachten/{assignment}/terugzetten', [StudentDataController::class, 'reopenAssignment'])->name('assignments.reopen');
         Route::post('/mijn-opdrachten/{assignment}/bestanden', [StudentDataController::class, 'storeAssignmentFile'])->name('assignments.files.store');
@@ -63,4 +77,12 @@ Route::middleware('auth')->group(function (): void {
     Route::patch('/coach/studenten/{student}/voortgang/{learningOutcome}', [ProgressController::class, 'update'])
         ->middleware('role:coach')
         ->name('progress.update');
+    Route::post('/coach/feedback/{feedback}/verwerkt', function (\Illuminate\Http\Request $request, \App\Models\Feedback $feedback, \App\Services\ChallengeService $challenges) {
+        abort_unless($feedback->auteur_id === $request->user()->id && $feedback->type === 'received', 403);
+        if (!$feedback->processed_confirmed_at) {
+            $feedback->forceFill(['processed_confirmed_at'=>now()])->save();
+        }
+        $challenges->sync($feedback->student);
+        return back()->with('status', 'Verwerkte feedback bevestigd.');
+    })->middleware('role:coach')->name('feedback.confirmProcessed');
 });

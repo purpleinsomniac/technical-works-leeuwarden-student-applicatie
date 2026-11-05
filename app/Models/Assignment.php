@@ -46,7 +46,7 @@ class Assignment extends Model
             'opdracht_leeruitkomst',
             'opdracht_id',
             'leeruitkomst_id',
-        )->withPivot('urenpercentage');
+        )->withPivot('urenpercentage', 'max_points');
     }
 
     public function reflections(): HasMany

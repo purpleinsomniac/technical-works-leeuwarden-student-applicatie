@@ -7,6 +7,12 @@ let outcomes = Array.isArray(studentData.outcomes) ? [...studentData.outcomes] :
 let phases = Array.isArray(studentData.phases) ? [...studentData.phases] : [];
 let assignments = Array.isArray(studentData.assignments) ? [...studentData.assignments] : [];
 let records = Array.isArray(studentData.records) ? [...studentData.records] : [];
+// Elk project en zijn urenregistratie horen bij precies één fase.
+assignments.forEach((project) => { project.phases = [project.phase || project.phases?.[0] || "OF"]; });
+records.forEach((record) => {
+  const project = assignments.find((item) => Number(item.id) === Number(record.assignmentId));
+  record.phases = [project?.phases[0] || record.phases?.[0] || "OF"];
+});
 let hoursByYear = studentData.hoursByYear || {};
 const hourApprovals = Array.isArray(studentData.hourApprovals) ? [...studentData.hourApprovals] : [];
 
@@ -29,32 +35,12 @@ for (const phaseItem of phases) {
   };
 }
 
-// Bepaal aandachtspunten vanuit de laagste voortgang in de database.
-const attentionOutcomesByPhase = Object.fromEntries(
-  phases.map(([phaseCode]) => {
-    const lowestProgress = outcomes
-      .filter((outcome) => outcome.phase === phaseCode && !isOutcomeCompleted(outcome))
-      .sort((left, right) => (left.pct ?? 0) - (right.pct ?? 0))
-      .slice(0, 1)
-      .map((outcome) => outcome.code);
-
-    return [phaseCode, lowestProgress];
-  }),
-);
-const attentionOutcomeCodes = Object.values(attentionOutcomesByPhase).flat();
-
 const assignmentStatuses = {
   active: "Actief",
   review: "Beoordeling",
   completed: "Afgerond",
 };
 
-// Extra gegevens van urenregistraties worden eveneens door Laravel aangeleverd.
-const registrationMeta = records.map((record) => [
-  record.date || record[5] || "Datum onbekend",
-  record.approver || record[6] || "Beoordelaar onbekend",
-]);
-
 function isOutcomeCompleted(outcome) {
-  return outcome.status === "behaald" || Number(outcome.pct) >= 80;
+  return outcome.status === "behaald" || Number(outcome.hours) >= Number(outcome.target) && Number(outcome.target) > 0;
 }

@@ -15,11 +15,18 @@
     <span class="coach-hero-note"><span aria-hidden="true"></span> Alles op één plek</span>
   </header>
 
+  {{-- Show confirmation after a coach saves a progress update. --}}
   @if (session('status'))
     <div class="notice coach-success" role="status">{{ session('status') }}</div>
   @endif
 
+  {{-- Summary values are calculated from the student and outcome data supplied by the controller. --}}
   <section class="coach-summary" aria-label="Begeleiding in cijfers">
+    <div class="card"><h2>Verwerkte feedback bevestigen</h2><p>Bevestig alleen wanneer je hebt gecontroleerd dat de student je feedback heeft toegepast.</p>
+      @foreach (\App\Models\Feedback::where('auteur_id', auth()->id())->where('type', 'received')->whereNull('processed_confirmed_at')->with('student')->get() as $feedbackItem)
+        <form method="POST" action="{{ route('feedback.confirmProcessed', $feedbackItem) }}">@csrf <p>{{ $feedbackItem->student->naam }} · {{ $feedbackItem->onderwerp }}</p><button class="button" type="submit">Feedback is verwerkt</button></form>
+      @endforeach
+    </div>
     <article class="coach-summary-card">
       <span class="coach-summary-icon" aria-hidden="true">01</span>
       <div>
@@ -110,6 +117,7 @@
       </div>
       <p class="coach-no-results hidden" id="coachNoResults" role="status">Geen studenten gevonden.</p>
     @else
+      {{-- Explain the empty roster instead of leaving the coach with a blank page. --}}
       <div class="coach-empty-state">
         <span class="coach-empty-icon" aria-hidden="true">♙</span>
         <h3>Er zijn nog geen studenten</h3>
@@ -253,6 +261,7 @@
       </div>
     </header>
 
+    {{-- These figures give context before the coach reviews individual learning outcomes. --}}
     <section class="coach-student-stats" aria-label="Studentvoortgang">
       <article class="coach-detail-stat">
         <span class="coach-detail-stat-label">Gevalideerde uren</span>
@@ -301,7 +310,6 @@
           </label>
         </div>
       @endif
-
       @forelse ($student['outcomes'] as $outcome)
         <article
           class="coach-outcome-card"
@@ -317,20 +325,23 @@
           </div>
 
           <form class="coach-outcome-form" method="POST" action="{{ route('progress.update', [$student['id'], $outcome['id']]) }}">
+            {{-- Protect the update request and tell Laravel to handle the POST as a PATCH. --}}
             @csrf
             @method('PATCH')
             <label class="label coach-field">
-              Gevalideerde uren
+              Gevalideerde punten
               <span class="coach-input-wrap">
                 <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
-                <span>uur</span>
+                <span>punten</span>
               </span>
+              {{-- Escape the target text before displaying it, while retaining its line breaks. --}}
               @if ($outcome['target'])
-                <small>Norm: {{ $outcome['target'] }} uur</small>
+                <small>Normwaarden: {!! nl2br(e($outcome['target'])) !!}</small>
               @endif
             </label>
             <label class="label coach-field">
               Voortgangsstatus
+              {{-- Keep the status choices aligned with the progress values accepted by the controller. --}}
               <select class="input" name="status" required>
                 @foreach ([
                   'niet_gestart' => 'Niet gestart',
@@ -347,6 +358,7 @@
           </form>
         </article>
       @empty
+        {{-- Give a clear explanation when no progress rows exist for this student yet. --}}
         <div class="coach-empty-state coach-outcomes-empty">
           <span class="coach-empty-icon" aria-hidden="true">◎</span>
           <h3>Nog geen voortgang geregistreerd</h3>

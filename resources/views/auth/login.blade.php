@@ -7,12 +7,15 @@
     <div class="intro">
       <div class="brand">Ontwikkeling</div>
       <h1>Persoonlijke ontwikkelomgeving</h1>
-      <p>Ontwikkeling per WRO-fase, leeruitkomsten, uren en de opbouw over tijd.</p>
+      <p>Ontwikkeling per WRO-fase, leeruitkomsten, punten en de opbouw over tijd.</p>
     </div>
     <div class="form">
       <div>
         <h1>Inloggen</h1>
         <p class="dim">Gebruik je persoonlijke account.</p>
+        @auth
+          <div class="auth-message success" role="status">Je bent al ingelogd. Vul de gegevens van een ander account in om te wisselen.</div>
+        @endauth
         @if (session('status'))
           <div class="auth-message success" role="status">{{ session('status') }}</div>
         @endif

@@ -6,6 +6,7 @@ use App\Http\Controllers\RoleDashboardController;
 use App\Models\Assignment;
 use App\Models\LearningOutcome;
 use App\Models\Progress;
+use App\Models\Role;
 use App\Models\StudyPhase;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -39,6 +40,8 @@ class DashboardController extends RoleDashboardController
             'assignmentCount' => Assignment::count(),
             'outcomeCount' => LearningOutcome::count(),
             'lastProgressUpdate' => Progress::max('updated_at'),
+            'users' => User::with('primaryRole')->orderBy('naam')->get(),
+            'roles' => Role::orderBy('naam')->get(),
             'learningOutcomes' => LearningOutcome::query()
                 ->select('leeruitkomsten.*')
                 ->join('studiefases', 'studiefases.id', '=', 'leeruitkomsten.studiefase_id')

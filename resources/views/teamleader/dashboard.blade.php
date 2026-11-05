@@ -1,6 +1,7 @@
 @extends('layouts.application')
 
 @section('role-content')
+{{-- Compact overview of current student progress across the team. --}}
 <section id="managerGroups" class="view hidden">
   <div class="head">
     <div>
@@ -8,11 +9,13 @@
       <p class="dim">Actuele totalen op basis van de studentvoortgang in MySQL.</p>
     </div>
   </div>
+  {{-- Summary values are calculated from the latest student progress data by the controller. --}}
   <div class="grid3">
     <div class="card"><div class="big">{{ $roleData['studentCount'] }}</div><span class="dim">studenten</span></div>
     <div class="card"><div class="big">{{ $roleData['averagePercentage'] }}%</div><span class="dim">gemiddelde voortgang</span></div>
     <div class="card"><div class="big">{{ $roleData['attentionCount'] }}</div><span class="dim">voortgangsregels vragen aandacht</span></div>
   </div>
+  {{-- Show one average progress bar for each study phase, defaulting to zero when empty. --}}
   <div class="card">
     <h2>Gemiddelde per fase</h2>
     @foreach (['Oriëntatiefase', 'Verdiepingsfase', 'Afrondingsfase'] as $fase)
@@ -26,6 +29,7 @@
   </div>
 </section>
 
+{{-- Report view reuses the same totals and explains why export is not yet available. --}}
 <section id="managerReports" class="view hidden">
   <h1>Rapportages</h1>
   <p class="dim">Dezelfde actuele databasecijfers in een compact overzicht.</p>

@@ -21,7 +21,7 @@
       class="processing-notification {{ $frontendUser['role'] === 'student' ? '' : 'hidden' }}"
       type="button"
       @if ($frontendUser['role'] === 'student') onclick="openHoursApprovalModal()" @endif
-      aria-label="Nieuwe uren bekijken"
+      aria-label="Nieuwe punten bekijken"
       title="Nieuwe urenverwerking"
     >
       <span class="processing-icon" aria-hidden="true">

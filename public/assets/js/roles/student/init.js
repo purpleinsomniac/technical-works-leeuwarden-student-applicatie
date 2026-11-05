@@ -47,17 +47,10 @@ openOutcome = function (code) {
   updateOutcomeArchiveControls();
 };
 
-const renderHoursWithUpdatedLabels = renderHours;
-renderHours = function () {
-  renderHoursWithUpdatedLabels();
-  const emptyTitle = document.querySelector("#hoursList .empty-state h3");
-  if (emptyTitle) emptyTitle.textContent = "Nog geen uren";
-};
-
 if (window.LARAVEL_USER) {
   if (role === "student") {
     renderGoalOptions();
-    renderActiveGoal();
+    initializeGoals();
     renderReflectionOptions();
     showReflectionOutcomePreview();
     updateFeedbackOutcomeOptions();

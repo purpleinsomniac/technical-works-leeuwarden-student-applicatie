@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $titel
  * @property string|null $type
  * @property string $omschrijving
- * @property int|null $normuren
+ * @property string|null $normwaarden
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read StudyPhase $studyPhase
@@ -26,7 +26,7 @@ class LearningOutcome extends Model
 {
     protected $table = 'leeruitkomsten';
 
-    protected $fillable = ['studiefase_id', 'code', 'titel', 'type', 'omschrijving', 'normuren'];
+    protected $fillable = ['studiefase_id', 'code', 'titel', 'type', 'omschrijving', 'normwaarden'];
 
     public function studyPhase(): BelongsTo
     {
@@ -40,7 +40,7 @@ class LearningOutcome extends Model
             'opdracht_leeruitkomst',
             'leeruitkomst_id',
             'opdracht_id',
-        )->withPivot('urenpercentage');
+        )->withPivot('urenpercentage', 'max_points');
     }
 
     public function progress(): HasMany

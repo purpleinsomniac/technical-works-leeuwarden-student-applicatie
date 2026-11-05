@@ -1,25 +1,35 @@
-// Opdrachtenoverzicht, opdrachtdetails en inleveren.
+// Projectenoverzicht, projectdetails en inleveren.
+let assignmentPage = 1;
+let assignmentFilterKey = '';
 
-// Bouwt het opdrachtenoverzicht en zoekt de gekoppelde leeruitkomsten op.
+// Bouwt het projectenoverzicht en zoekt de gekoppelde leeruitkomsten op.
 function renderAssignments() {
   const selectedStatus = document.getElementById("assignmentStatus").value.trim();
 
-  const list = assignments.filter((assignment) => assignmentCategory(assignment) === selectedStatus);
+  const search = document.getElementById('projectSearch').value.trim().toLowerCase();
+  const list = assignments.filter((assignment) => assignmentCategory(assignment) === selectedStatus && [assignment.title,assignment.description,...assignment.outcomeCodes.map((code) => outcomes.find((item) => item.code === code)?.short || code)].join(' ').toLowerCase().includes(search));
 
   const sort = document.getElementById("assignmentSort")?.value || "deadline";
   list.sort((left, right) => {
     if (sort === "title") return left.title.localeCompare(right.title, "nl");
     return assignmentDeadlineValue(left) - assignmentDeadlineValue(right);
   });
+  const filterKey = JSON.stringify([selectedStatus, search, sort]);
+  if (filterKey !== assignmentFilterKey) assignmentPage = 1;
+  assignmentFilterKey = filterKey;
+  const pageCount = Math.max(1, Math.ceil(list.length / 4));
+  assignmentPage = Math.min(assignmentPage, pageCount);
+  const visibleProjects = list.slice((assignmentPage - 1) * 4, assignmentPage * 4);
 
-  const lateCount = assignments.filter((item) => assignmentCategory(item) === "late").length;
   const activeCount = assignments.filter((item) => assignmentCategory(item) === "active").length;
-  document.getElementById("assignmentTotal").textContent = assignments.length + " OPDRACHTEN";
+  document.getElementById("assignmentTotal").textContent = assignments.length + " PROJECTEN";
   document.getElementById("assignmentActiveCount").textContent = activeCount;
-  document.getElementById("assignmentReviewCount").textContent = assignments.filter((item) => item.status === "review").length;
+  document.getElementById('projectSummaryActive').textContent = activeCount;
+  document.getElementById('projectSummaryCompleted').textContent = assignments.filter((item) => item.status === 'completed').length;
+  const nearest = assignments.filter((item) => assignmentCategory(item) === 'active' && item.dueDateIso).sort((a,b) => assignmentDeadlineValue(a)-assignmentDeadlineValue(b))[0];
+  document.getElementById('projectNearestDeadline').textContent = nearest?.dueDate || 'Geen deadline';
   document.getElementById("assignmentCompletedCount").textContent = assignments.filter((item) => item.status === "completed").length;
-  document.getElementById("assignmentLateCount").textContent = lateCount;
-  document.getElementById("assignmentCount").textContent = list.length + " " + (list.length === 1 ? "opdracht" : "opdrachten") + " gevonden";
+  document.getElementById("assignmentCount").textContent = list.length + " " + (list.length === 1 ? "project" : "projecten") + " gevonden";
   renderCurrentAssignment(selectedStatus);
 
   document.querySelectorAll("[data-assignment-status]").forEach((tab) => {
@@ -29,32 +39,36 @@ function renderAssignments() {
   });
 
   const sectionCopy = {
-    active: ["Actieve opdrachten", "Dit zijn je opdrachten die nog openstaan. Lever ze op tijd in."],
-    review: ["Wacht op beoordeling", "Deze opdrachten zijn ingeleverd en worden beoordeeld."],
-    completed: ["Afgeronde opdrachten", "Deze opdrachten heb je succesvol voltooid."],
-    late: ["Te late opdrachten", "De deadline van deze opdrachten is verstreken. Rond ze zo snel mogelijk af."],
+    active: ["Actieve projecten", "Dit zijn je projecten die nog openstaan. Lever ze op tijd in."],
+    completed: ["Afgeronde projecten", "Deze projecten heb je succesvol voltooid."],
   }[selectedStatus];
   document.getElementById("assignmentSectionTitle").textContent = sectionCopy[0];
   document.getElementById("assignmentSectionDescription").textContent = sectionCopy[1];
 
   document.getElementById("assignmentList").innerHTML = list.length
-    ? list
+    ? visibleProjects
         .map((assignment) => {
-          const outcomeCount = assignment.outcomeCodes.length;
           const icon = assignmentIcon(assignment);
-          const displayStatus = isAssignmentLate(assignment) ? "late" : assignment.status;
+          const displayStatus = assignmentCategory(assignment);
           const phaseBadges = assignmentPhaseCodes(assignment).map((code) => '<span>' + esc(code) + '</span>').join("");
           return '<article class="assignment-row ' + displayStatus + '">' +
             '<button class="assignment-row-open" type="button" onclick="openAssignment(' + assignment.id + ')" aria-label="Bekijk ' + esc(assignment.title) + '">' +
             '<span class="assignment-row-icon" aria-hidden="true">' + icon + '</span>' +
             '<span class="assignment-row-copy"><strong>' + esc(assignment.title) + '</strong><small>' + esc(assignment.description) + '</small><span class="assignment-phase-badges" aria-label="Fases">' + phaseBadges + '</span></span>' +
-            '<span class="assignment-row-meta assignment-outcome-meta">' + assignmentListIcon("book") + '<span><b>' + outcomeCount + ' gekoppelde</b><small>leeruitkomst' + (outcomeCount === 1 ? '' : 'en') + '</small></span></span>' +
+            '<span class="assignment-row-meta assignment-outcome-meta">' + assignmentListIcon("book") + '<span><b>' + esc(assignmentPhaseNames(assignment)[0]) + '</b><small>' + (assignment.status === 'completed' ? Number(assignment.hours || 0).toLocaleString('nl-NL') + ' punten toegekend' : 'Nog geen punten toegekend') + '</small></span></span>' +
             '<span class="assignment-row-meta">' + assignmentListIcon("calendar") + '<b>' + esc(assignment.dueDate || "Geen deadline") + '</b></span>' +
             '<span class="assignment-row-status ' + displayStatus + '"><i></i>' + assignmentDisplayStatus(assignment) + '</span>' +
             '<span class="assignment-row-chevron" aria-hidden="true">›</span></button></article>';
         })
         .join("")
-    : '<div class="empty-state"><span class="empty-icon">⌕</span><h2>Geen opdrachten gevonden</h2><p>Pas de zoekterm of filters aan.</p></div>';
+    : '<div class="empty-state"><span class="empty-icon">⌕</span><h2>Geen projecten gevonden</h2><p>Pas de zoekterm of filters aan.</p></div>';
+  document.getElementById('assignmentPagination').innerHTML = pageButtons(assignmentPage, pageCount, 'goToAssignmentPage');
+  keepPaginationPosition('assignmentList', filterKey);
+}
+
+function goToAssignmentPage(page) {
+  assignmentPage = page;
+  renderAssignments();
 }
 
 function selectAssignmentStatus(status) {
@@ -78,12 +92,12 @@ function isAssignmentLate(assignment) {
 }
 
 function assignmentCategory(assignment) {
-  return isAssignmentLate(assignment) ? "late" : String(assignment.status || "").trim();
+  return assignment.status === "completed" ? "completed" : "active";
 }
 
 function assignmentPhaseCodes(assignment) {
   const codes = Array.isArray(assignment.phases) && assignment.phases.length ? assignment.phases : [assignment.phase];
-  return [...new Set(codes.filter(Boolean))];
+  return codes.filter(Boolean).slice(0, 1);
 }
 
 function assignmentPhaseNames(assignment) {
@@ -91,8 +105,7 @@ function assignmentPhaseNames(assignment) {
 }
 
 function assignmentDisplayStatus(assignment) {
-  if (isAssignmentLate(assignment)) return "Te laat";
-  return assignment.status === "active" ? "Te doen" : assignmentStatuses[assignment.status];
+  return assignment.status === "completed" ? "Afgerond" : "Actief";
 }
 
 function renderCurrentAssignment(selectedStatus) {
@@ -102,6 +115,7 @@ function renderCurrentAssignment(selectedStatus) {
     || assignments.find((assignment) => assignment.status === "active");
   const card = document.getElementById("currentAssignmentCard");
   card.classList.toggle("hidden", !current || selectedStatus !== "active");
+  document.getElementById('projectSpotlight').classList.toggle('hidden', !current || selectedStatus !== 'active');
   if (!current || selectedStatus !== "active") return;
 
   document.getElementById("currentAssignmentIcon").innerHTML = assignmentIcon(current);
@@ -109,7 +123,7 @@ function renderCurrentAssignment(selectedStatus) {
   document.getElementById("currentAssignmentDescription").textContent = current.description;
   document.getElementById("currentAssignmentPhases").textContent = assignmentPhaseNames(current).join(" · ");
   document.getElementById("currentAssignmentDueDate").textContent = current.dueDate || "Geen deadline";
-  document.getElementById("currentAssignmentOutcomes").textContent = current.outcomeCodes.length + " gekoppeld";
+  document.getElementById("currentAssignmentOutcomes").textContent = 'Max. ' + current.maxPoints + ' punten';
   document.getElementById("currentAssignmentButton").onclick = () => openAssignment(current.id);
 }
 
@@ -129,7 +143,7 @@ function assignmentListIcon(type) {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
 }
 
-// Vult de detailpagina van de gekozen opdracht en toont daar de koppelingen.
+// Vult de detailpagina van de gekozen project en toont daar de koppelingen.
 function openAssignment(id) {
   const assignment = assignments.find((item) => item.id === id);
   if (!assignment) return;
@@ -146,7 +160,7 @@ function openAssignment(id) {
   document.getElementById("assignmentDetailDescription").textContent = assignment.description;
   document.getElementById("assignmentDetailPhase").textContent = phaseName;
   document.getElementById("assignmentDetailDueDate").textContent = assignment.dueDate;
-  document.getElementById("assignmentDetailHours").textContent = assignment.hours + " uur";
+  document.getElementById("assignmentDetailHours").textContent = assignment.hours + ' / ' + assignment.maxPoints + " punten";
   document.getElementById("assignmentDetailOutcomeCount").textContent = linkedOutcomes.length;
   renderAssignmentFiles(assignment);
 
@@ -161,10 +175,10 @@ function openAssignment(id) {
   reopenButton.classList.toggle("hidden", assignment.status !== "review");
   submissionNote.textContent =
     assignment.status === "active"
-      ? "Lever je opdracht in wanneer alle onderdelen klaar zijn."
+      ? "Lever je project in wanneer alle onderdelen klaar zijn."
       : assignment.status === "review"
-        ? "Deze opdracht is ingeleverd en wacht op beoordeling door de docent."
-        : "Deze opdracht is beoordeeld en afgerond.";
+        ? "Deze project is ingeleverd en wacht op beoordeling door de docent."
+        : "Deze project is beoordeeld en afgerond.";
 
   document.getElementById("assignmentDetailOutcomeList").innerHTML = linkedOutcomes
     .map(
@@ -189,8 +203,8 @@ function renderAssignmentFiles(assignment) {
   document.getElementById("assignmentFileHelp").textContent = editable
     ? "Maximaal 10 MB per bestand. PDF, Office, afbeeldingen en ZIP zijn toegestaan."
     : assignment.status === "review"
-      ? "Zet de opdracht terug naar Opdrachten om bestanden toe te voegen of te verwijderen."
-      : "Bij een afgeronde opdracht kunnen bestanden alleen worden bekeken.";
+      ? "Zet de project terug naar Projecten om bestanden toe te voegen of te verwijderen."
+      : "Bij een afgeronde project kunnen bestanden alleen worden bekeken.";
 
   document.getElementById("assignmentFileList").innerHTML = files.length
     ? files.map((file) =>
@@ -232,7 +246,7 @@ async function uploadAssignmentFile(input) {
     });
     assignment.files = [savedFile, ...(assignment.files || [])];
     renderAssignmentFiles(assignment);
-    hint("Het bestand is aan je opdracht toegevoegd.");
+    hint("Het bestand is aan je project toegevoegd.");
   } catch (error) {
     hint(error.message);
   } finally {
@@ -270,7 +284,7 @@ async function submitAssignment() {
     document.getElementById("assignmentStatus").value = "review";
     renderAssignments();
     openAssignment(assignment.id);
-    hint("Je opdracht is ingeleverd en staat nu bij Beoordeling.");
+    hint("Je project is ingeleverd en staat nu bij Beoordeling.");
   } catch (error) {
     hint(error.message);
   }
@@ -289,7 +303,7 @@ async function reopenAssignment() {
     document.getElementById("assignmentStatus").value = isAssignmentLate(assignment) ? "late" : "active";
     renderAssignments();
     openAssignment(assignment.id);
-    hint("De opdracht staat weer bij Opdrachten. Je kunt de bestanden en inhoud verder aanpassen.");
+    hint("De project staat weer bij Projecten. Je kunt de bestanden en inhoud verder aanpassen.");
   } catch (error) {
     hint(error.message);
   }

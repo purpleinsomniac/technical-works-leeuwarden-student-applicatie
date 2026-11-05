@@ -37,9 +37,11 @@ function renderOutcomeFeedback() {
     : '<div class="outcome-reflection-empty compact"><strong>Nog geen feedback</strong><p>Voeg feedback bij deze leeruitkomst toe.</p></div>';
 }
 
-function openOutcomeFeedbackDetail(id) {
-  const item = getFeedback().find((feedback) => feedback.id === id);
+let feedbackDetailTrigger = null;
+function openOutcomeFeedbackDetail(id, fromList = false) {
+  const item = getFeedback().find((feedback) => String(feedback.id) === String(id));
   if (!item) return;
+  feedbackDetailTrigger = document.activeElement;
   const type = document.getElementById("feedbackDetailType");
   type.textContent = item.type === "given" ? "Gegeven" : "Ontvangen";
   type.className = "feedback-type " + item.type;
@@ -55,14 +57,39 @@ function openOutcomeFeedbackDetail(id) {
     "</p></div></section><section><span>→</span><div><h3>Vervolgafspraak</h3><p>" +
     esc(item.action) +
     "</p></div></section>";
-  document.getElementById("outcomeFeedbackDetailModal").classList.remove("hidden");
+  const modal = document.getElementById('outcomeFeedbackDetailModal');
+  if (!modal.querySelector('.feedback-detail-art')) {
+    const art = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    art.setAttribute('class', 'feedback-detail-art');
+    art.setAttribute('viewBox', '0 0 200 140');
+    art.setAttribute('fill', 'none');
+    art.setAttribute('aria-hidden', 'true');
+    art.innerHTML = '<path d="M0 139q25-42 62-29 27-61 67-40 46-25 71 11v58Z" fill="#e1f6ef"/><path d="m64 32 98 7q6 1 5 7l-10 64-103-9 8-64q0-5 2-5Z" fill="#c5efdf" stroke="#1ca987" stroke-width="4"/><path d="m68 38 93 7-8 56-93-7Z" fill="#f5fffb"/><path d="m54 101 103 9-15 14-107-10v-5Z" fill="#008b72"/><path d="m54 101 103 9-11 9-108-10Z" fill="#c1eadf"/><path d="M81 66v17m13-27v28m13-21v22" stroke="#159b7b" stroke-width="7"/><path d="m121 58 26 2m-27 7 22 2m-23 8 16 1" stroke="#7acbb6" stroke-width="3"/><path d="m47 29-11-6m18-5-6-11m21 9-1-11" stroke="#008e75" stroke-width="3" stroke-linecap="round"/>';
+    modal.querySelector('.reflection-detail-modal-head').appendChild(art);
+  }
+  document.body.appendChild(modal);
+  modal.querySelector('.reflection-modal-actions')?.remove();
+  modal.querySelector('.reflection-detail-footer .dark').classList.toggle('hidden', fromList);
+  if (fromList) {
+    const actions = document.createElement('div');
+    actions.className = 'reflection-modal-actions';
+    const button = document.createElement('button');
+    button.className = 'button';
+    button.type = 'button';
+    button.textContent = 'Feedback verwijderen';
+    button.onclick = () => deleteFeedback(item.id);
+    actions.appendChild(button);
+    modal.querySelector('.reflection-detail-footer').prepend(actions);
+  }
+  modal.classList.remove("hidden");
   document.body.classList.add("modal-open");
-  requestAnimationFrame(() => document.querySelector("#outcomeFeedbackDetailModal .modal-close").focus());
+  requestAnimationFrame(() => modal.querySelector('.modal-close').focus({preventScroll:true}));
 }
 
 function closeOutcomeFeedbackDetail() {
   document.getElementById("outcomeFeedbackDetailModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
+  feedbackDetailTrigger?.focus({preventScroll:true});
 }
 
 function openFeedbackForCurrentOutcome() {
@@ -90,67 +117,38 @@ function filterFeedbackByPhase(phaseCode) {
   renderFeedback();
 }
 
+function selectFeedbackOutcomeFilter(kind) {
+  document.getElementById(kind === 'Softskills' ? 'feedbackHardOutcome' : 'feedbackSoftOutcome').value = 'all';
+  renderFeedback();
+}
+function openLatestFeedback() {
+  const item = getFeedback().find((item) => outcomes.find((o) => o.code === item.code)?.phase === feedbackPhaseFilter);
+  if (item) openOutcomeFeedbackDetail(item.id, true);
+}
 function renderFeedback() {
-  const all = getFeedback(),
-    typeFilter = document.getElementById("feedbackTypeFilter").value,
-    list = all.filter((item) => {
-      const outcome = outcomes.find((o) => o.code === item.code),
-        phaseMatch = feedbackPhaseFilter === "all" || (outcome && outcome.phase === feedbackPhaseFilter),
-        typeMatch = typeFilter === "all" || item.type === typeFilter;
-      return phaseMatch && typeMatch;
-    });
-  document.getElementById("feedbackCount").textContent = all.length + " " + (all.length === 1 ? "FEEDBACKMOMENT" : "FEEDBACKMOMENTEN");
-  document.getElementById("feedbackPhaseFilter").innerHTML = [["all", "Alle fases"], ...phases.map(([code, name]) => [code, name])]
-    .map(
-      ([code, name]) =>
-        '<button type="button" class="reflection-filter-button ' +
-        (feedbackPhaseFilter === code ? "active" : "") +
-        '" onclick="filterFeedbackByPhase(\'' +
-        code +
-        "')\">" +
-        name +
-        "<span>" +
-        feedbackCountForPhase(all, code) +
-        "</span></button>",
-    )
-    .join("");
-  document.getElementById("feedbackList").innerHTML = list.length
-    ? list
-        .map((item) => {
-          const outcome = outcomes.find((o) => o.code === item.code),
-            phaseName = outcome ? (phases.find((p) => p[0] === outcome.phase) || [])[1] : "Onbekende fase",
-            typeLabel = item.type === "given" ? "Gegeven" : "Ontvangen";
-          return (
-            '<details class="feedback-accordion"><summary><div class="feedback-summary"><div class="feedback-summary-top"><span class="feedback-type ' +
-            item.type +
-            '">' +
-            typeLabel +
-            '</span><span class="reflection-phase">' +
-            esc(phaseName) +
-            '</span><span class="reflection-date">' +
-            esc(item.date) +
-            "</span></div><h2>" +
-            esc(item.title) +
-            "</h2><p>" +
-            esc(item.type === "given" ? "Aan: " : "Van: ") +
-            esc(item.person) +
-            "</p><strong>" +
-            esc(outcome ? outcome.short : "Leeruitkomst") +
-            '</strong><span class="code">' +
-            esc(item.code) +
-            '</span></div><span class="accordion-toggle" aria-hidden="true">⌄</span></summary><div class="feedback-body"><div class="feedback-points"><div class="feedback-point positive"><span>✓</span><div><b>Wat gaat goed?</b><p>' +
-            esc(item.positive) +
-            '</p></div></div><div class="feedback-point improve"><span>↗</span><div><b>Wat kan beter?</b><p>' +
-            esc(item.improve) +
-            '</p></div></div><div class="feedback-point action"><span>→</span><div><b>Vervolgafspraak</b><p>' +
-            esc(item.action) +
-            '</p></div></div></div><div class="feedback-actions"><button class="icon-button" type="button" onclick="deleteFeedback(\'' +
-            esc(item.id) +
-            "')\">Feedback verwijderen</button></div></div></details>"
-          );
-        })
-        .join("")
-    : '<div class="empty-state"><span class="empty-icon">↗</span><h2>Geen feedback gevonden</h2><p>Pas je filters aan of voeg een nieuw feedbackmoment toe.</p></div>';
+  if (feedbackPhaseFilter === 'all') feedbackPhaseFilter = 'OF';
+  const all = getFeedback();
+  const current = all.filter((item) => outcomes.find((o) => o.code === item.code)?.phase === feedbackPhaseFilter);
+  for (const [kind,id] of [['Softskills','feedbackSoftOutcome'],['Hardskills','feedbackHardOutcome']]) {
+    const select = document.getElementById(id), previous = select.value;
+    const available = outcomes.filter((o) => o.phase === feedbackPhaseFilter && o.kind === kind);
+    select.innerHTML = '<option value="all">Alle ' + (kind === 'Softskills' ? 'soft' : 'hard') + ' skills</option>' + available.map((o) => '<option value="' + esc(o.code) + '">' + esc(o.short) + '</option>').join('');
+    select.value = available.some((o) => o.code === previous) ? previous : 'all';
+  }
+  const search = document.getElementById('feedbackSearch').value.trim().toLowerCase();
+  const type = document.getElementById('feedbackTypeFilter').value;
+  const skill = ['feedbackSoftOutcome','feedbackHardOutcome'].map((id) => document.getElementById(id).value).find((v) => v !== 'all');
+  const list = current.filter((item) => (type === 'all' || item.type === type) && (!skill || skill === item.code) && [item.title,item.person,item.code,outcomes.find((o) => o.code === item.code)?.short,item.positive,item.improve,item.action].join(' ').toLowerCase().includes(search));
+  document.getElementById('feedbackCount').textContent = all.length + ' ' + (all.length === 1 ? 'feedbackmoment' : 'feedbackmomenten');
+  document.getElementById('feedbackPhaseFilter').innerHTML = phases.map(([code,name]) => '<button type="button" aria-pressed="' + (code === feedbackPhaseFilter) + '" class="reflection-filter-button ' + (code === feedbackPhaseFilter ? 'active' : '') + '" data-feedback-phase="' + code + '"><i class="reflection-phase-icon" aria-hidden="true">' + (code === 'OF' ? '✓' : code === 'VF' ? '◇' : '⚑') + '</i><span class="reflection-phase-copy"><strong>' + esc(name) + '</strong><small>' + feedbackCountForPhase(all,code) + ' feedbackmomenten</small></span><i class="reflection-phase-indicator" aria-hidden="true"></i></button>').join('');
+  document.getElementById('feedbackLatestTitle').textContent = current[0]?.title || 'Nog geen feedback';
+  document.getElementById('feedbackLatestDate').textContent = current[0] ? current[0].date + ' · ' + current[0].person : 'Voeg je eerste feedbackmoment toe.';
+  document.getElementById('feedbackLatestButton').disabled = !current.length;
+  document.getElementById('feedbackNextCopy').textContent = 'Vraag of geef feedback in de ' + (phases.find(([code]) => code === feedbackPhaseFilter)?.[1] || 'gekozen fase') + ' en maak een vervolgafspraak.';
+  document.getElementById('feedbackList').innerHTML = list.map((item) => {
+    const outcome = outcomes.find((o) => o.code === item.code);
+    return '<button type="button" class="feedback-table-row" data-feedback-id="' + esc(item.id) + '"><span class="reflection-row-title"><i aria-hidden="true">↗</i><span><strong>' + esc(item.title) + '</strong><small>' + esc(outcome?.short || '') + '</small></span></span><span class="reflection-row-label">' + (item.type === 'given' ? 'Gegeven' : 'Ontvangen') + '</span><span class="reflection-row-code">' + esc(outcome?.short || item.code) + '</span><span class="reflection-row-person">' + esc(item.person) + '</span><span class="reflection-row-date">' + esc(item.date) + '</span><span aria-hidden="true">›</span></button>';
+  }).join('') || '<div class="empty-state"><h2>Geen feedback gevonden</h2><p>Pas je filters aan of voeg feedback toe.</p></div>';
 }
 
 function updateFeedbackOutcomeOptions() {
@@ -188,6 +186,10 @@ function showFeedbackOutcomePreview() {
 
 function openFeedbackForm(returnToOutcome = false) {
   feedbackReturnToOutcome = returnToOutcome;
+  if (!returnToOutcome) {
+    document.getElementById('feedbackPhase').value = feedbackPhaseFilter === 'all' ? 'OF' : feedbackPhaseFilter;
+    updateFeedbackOutcomeOptions();
+  }
   document.getElementById("feedbackForm").classList.remove("hidden");
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => document.getElementById("feedbackPerson").focus());
@@ -238,6 +240,7 @@ async function saveFeedback(event) {
 async function deleteFeedback(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.feedbackDelete, id), { method: "DELETE" });
+    closeOutcomeFeedbackDetail();
     feedbackItems = feedbackItems.filter((item) => item.id !== id);
     renderFeedback();
     renderOutcomeFeedback();
@@ -248,5 +251,12 @@ async function deleteFeedback(id) {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !document.getElementById("feedbackForm").classList.contains("hidden")) closeFeedbackForm();
+  if (event.key === 'Escape' && !document.getElementById('outcomeFeedbackDetailModal').classList.contains('hidden')) closeOutcomeFeedbackDetail();
+});
+document.addEventListener('click', (event) => {
+  const row = event.target.closest('[data-feedback-id]');
+  if (row) openOutcomeFeedbackDetail(row.dataset.feedbackId, true);
+  const phase = event.target.closest('[data-feedback-phase]');
+  if (phase) filterFeedbackByPhase(phase.dataset.feedbackPhase);
 });
 

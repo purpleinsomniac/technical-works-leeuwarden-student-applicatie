@@ -5,12 +5,6 @@ function choose(p) {
   renderDashboard();
 }
 
-function openCurrentWorkOutcome() {
-  const code = currentWorkByPhase[phase]?.code;
-  if (code) openOutcome(code);
-  else hint("Er is voor deze fase nog geen leeruitkomst gekoppeld.");
-}
-
 function renderDashboard() {
   const current = phases.find((item) => item[0] === phase) || phases[0];
   if (!current) return;
@@ -21,6 +15,7 @@ function renderDashboard() {
     .join("");
 
   document.getElementById("phasePercent").textContent = current[2] + "%";
+  document.getElementById('dashboardPhaseTitle').textContent = 'Voortgang in de ' + current[1].toLowerCase();
   document.getElementById("phaseProgressLabel").textContent = "van de " + current[1].toLowerCase() + " behaald";
 
   document.getElementById("phaseBar").innerHTML = '<span style="width:' + current[2] + '%"></span>';
@@ -31,10 +26,9 @@ function renderDashboard() {
   };
   document.getElementById("currentWorkTitle").textContent = work.title;
   document.getElementById("currentWorkMeta").textContent = work.type + " · " + current[1];
-  const attentionCount = (attentionOutcomesByPhase[phase] || []).length;
-  document.getElementById("attentionCount").textContent = attentionCount;
-  document.getElementById("attentionText").textContent =
-    attentionCount === 1 ? "leeruitkomst om verder aan te werken" : "leeruitkomsten om verder aan te werken";
+  const currentProject = assignments.find((item) => item.phase === phase && item.status !== 'completed');
+  document.getElementById('dashboardCurrentProjectButton').onclick = () => currentProject ? openAssignment(currentProject.id) : show('assignments');
+  renderWeekPlanSummary();
 
   const phaseOutcomes = outcomes
     .filter((outcome) => outcome.phase === phase && Number.isFinite(outcome.pct))
@@ -55,27 +49,25 @@ function renderDashboard() {
     )
     .join("");
 
-  const phaseAssignments = assignments.filter((assignment) => assignment.phase === phase).slice(0, 3);
-  document.getElementById("dashboardActionList").innerHTML = phaseAssignments.length
-    ? phaseAssignments
+  const allActiveGoals = (window.LARAVEL_DATA?.goals || []).filter((goal) => goal.status === 'actief' && goalPhaseCode(goal) === phase);
+  const activeGoals = allActiveGoals.slice(0, 2);
+  document.getElementById('dashboardActiveGoalCount').textContent = '(' + allActiveGoals.length + ' actief)';
+  document.getElementById('dashboardGoalsCaption').textContent = current[1] + ' · ' + allActiveGoals.length + ' actieve leerdoelen';
+  document.getElementById("dashboardActionList").innerHTML = activeGoals.length
+    ? activeGoals
         .map(
-          (assignment) =>
-            '<button class="dashboard-action-row" type="button" onclick="openAssignment(' +
-            assignment.id +
-            ')"><span class="action-status ' +
-            assignment.status +
-            '">' +
-            (assignment.status === "completed" ? "✓" : "") +
-            '</span><span><strong>' +
-            esc(assignment.title) +
+          (goal) =>
+            '<button class="dashboard-action-row" type="button" onclick="show(\'goals\');openGoalDetail(' +
+            Number(goal.id) +
+            ')"><span class="action-status active">◎' +
+            '</span><span class="dashboard-goal-copy"><strong>' +
+            esc(goal.title) +
             "</strong><small>" +
-            esc(assignment.type) +
-            "</small></span><em>" +
-            assignmentStatuses[assignment.status] +
-            '</em><span aria-hidden="true">›</span></button>',
+            'Leeruitkomst: ' + esc(goal.outcome || 'Nog niet gekoppeld') +
+            '</small></span><span aria-hidden="true">›</span></button>',
         )
         .join("")
-    : '<p class="dashboard-empty">Voor deze fase zijn geen openstaande acties.</p>';
+    : '<p class="dashboard-empty">Nog geen actieve leerdoelen in deze fase. Maak een leerdoel aan via Alle leerdoelen.</p>';
 
   document.getElementById("dashboardDeadlineList").innerHTML = assignments
     .filter((assignment) => assignment.status !== "completed")
@@ -114,6 +106,7 @@ const defaultDashboardPreferences = Object.freeze({
   compact: false,
   darkMode: false,
   outcomes: true,
+  goals: true,
   actions: true,
   feedback: true,
   deadlines: true,
@@ -146,7 +139,7 @@ function applyDashboardPreferences() {
   const preferences = getDashboardPreferences();
   document.documentElement.classList.toggle("theme-dark", preferences.darkMode);
   dashboard.classList.toggle("dashboard-compact", preferences.compact);
-  for (const key of ["outcomes", "actions", "feedback", "deadlines"]) {
+  for (const key of ["outcomes", "goals", "actions", "feedback", "deadlines"]) {
     dashboard.querySelector('[data-dashboard-widget="' + key + '"]')?.classList.toggle("hidden", !preferences[key]);
   }
 }
@@ -157,6 +150,7 @@ function renderDashboardSettings() {
     compact: "settingCompact",
     darkMode: "settingDarkMode",
     outcomes: "settingOutcomes",
+    goals: "settingGoals",
     actions: "settingActions",
     feedback: "settingFeedback",
     deadlines: "settingDeadlines",
@@ -177,5 +171,17 @@ function resetDashboardPreferences() {
   renderDashboardSettings();
   applyDashboardPreferences();
   hint("De standaardweergave is hersteld.");
+}
+
+async function saveDashboardSettings() {
+  const button = document.getElementById('saveDashboardSettingsButton');
+  const message = document.getElementById('dashboardSettingsSaved');
+  button.disabled = true;
+  try {
+    await apiRequest(window.LARAVEL_SAVE_URL, {method:'PUT',body:JSON.stringify({data:{[dashboardSettingsKey]:getDashboardPreferences()}})});
+    message.textContent = 'Laatst opgeslagen: zojuist';
+    hint('Je dashboardinstellingen zijn opgeslagen.');
+  } catch (error) { message.textContent = error.message; }
+  finally { button.disabled = false; }
 }
 

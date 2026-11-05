@@ -7,8 +7,8 @@ const routes = {
   student: [
     ["Dashboard", "studentDashboard", "dashboard"],
     ["Leeruitkomsten", "learningOutcomes", "outcomes"],
-    ["Opdrachten", "assignments", "assignment"],
-    ["Uren", "hours", "clock"],
+    ["Projecten", "assignments", "assignment"],
+    ["Punten", "hours", "clock"],
     ["Leerdoelen", "goals", "target"],
     ["Reflecties", "reflections", "reflection"],
     ["Feedback", "feedback", "feedback"],
@@ -37,15 +37,12 @@ const names = {
 
 let role = window.LARAVEL_USER?.role || "student",
   phase = "OF",
-  emptyHours = false,
   reflectionPhaseFilter = "all",
   feedbackPhaseFilter = "all",
   currentOutcomeCode = null,
   reflectionReturnToOutcome = false,
   feedbackReturnToOutcome = false,
-  catalogAttentionOnly = false,
   catalogPage = 1,
-  selectedRegistrationCode = null,
   selectedAssignmentId = null,
   outcomeReturnPage = "learningOutcomes";
 const archivedOutcomesKey = "archived-learning-outcomes";

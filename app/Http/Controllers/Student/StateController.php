@@ -19,11 +19,21 @@ class StateController extends Controller
         ]);
 
         $allowedKeys = [
+            'weekly-plan',
             'archived-learning-outcomes',
             'hours-processing-latest-read',
             'ontwikkeling-dashboard-instellingen',
         ];
         $data = array_intersect_key($payload['data'], array_flip($allowedKeys));
+        if (isset($data['weekly-plan'])) {
+            validator(['tasks'=>$data['weekly-plan']], [
+                'tasks'=>['array','max:250'],
+                'tasks.*.id'=>['required','string','max:80','distinct'],
+                'tasks.*.week'=>['required','date_format:Y-m-d'],
+                'tasks.*.text'=>['required','string','max:200'],
+                'tasks.*.done'=>['required','boolean'],
+            ])->validate();
+        }
 
         $collectionKeys = ['archived-learning-outcomes'];
 
@@ -37,7 +47,7 @@ class StateController extends Controller
 
         if (isset($data['ontwikkeling-dashboard-instellingen'])) {
             $instellingen = $data['ontwikkeling-dashboard-instellingen'];
-            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'actions', 'feedback', 'deadlines'];
+            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines'];
 
             if (! is_array($instellingen) || array_diff(array_keys($instellingen), $toegestaneInstellingen)) {
                 throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstellingen.']);

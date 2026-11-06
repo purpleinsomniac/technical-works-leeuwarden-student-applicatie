@@ -1,8 +1,6 @@
 (() => {
   const key = "ontwikkeling-dashboard-instellingen";
   const storageKey = "laravel-" + window.LARAVEL_USER.id + "-" + key;
-  const sectionInputs = [...document.querySelectorAll("[data-role-section-setting]")];
-  const sectionKeys = [...new Set(sectionInputs.map((input) => input.dataset.roleSectionSetting))];
   const statuses = [...document.querySelectorAll("[data-role-settings-status], .role-dashboard-settings .settings-saved")];
   const retryButtons = [...document.querySelectorAll("[data-role-settings-retry]")];
   const defaultNotificationPreferences = {
@@ -55,10 +53,6 @@
       console.error("Could not read dashboard settings from local storage.", error);
     }
 
-    const selectedSections = Array.isArray(saved?.sections)
-      ? saved.sections.filter((section) => sectionKeys.includes(section))
-      : [...sectionKeys];
-
     return {
       compact: saved?.compact === true,
       darkMode: saved?.darkMode === true,
@@ -69,7 +63,6 @@
         ? saved.density
         : saved?.compact === true ? "compact" : "standard",
       accent: Object.prototype.hasOwnProperty.call(accentColors, saved?.accent) ? saved.accent : "teal",
-      sections: selectedSections.length > 0 ? selectedSections : [...sectionKeys],
     };
   }
 
@@ -110,17 +103,8 @@
     root.style.setProperty("--student-accent", accentColors[preferences.accent]);
     document.getElementById("app")?.classList.toggle("dashboard-compact", preferences.density === "compact");
 
-    for (const section of document.querySelectorAll("[data-role-section]")) {
-      const visible = preferences.sections.includes(section.dataset.roleSection);
-      section.classList.toggle("hidden", !visible);
-      document.querySelectorAll("[data-route]").forEach((button) => {
-        if (button.dataset.route === section.id) button.classList.toggle("hidden", !visible);
-      });
-    }
-
     document.querySelectorAll('[data-role-setting="compact"]').forEach((input) => { input.checked = preferences.density === "compact"; });
     document.querySelectorAll('[data-role-setting="darkMode"]').forEach((input) => { input.checked = preferences.theme === "dark"; });
-    sectionInputs.forEach((input) => { input.checked = preferences.sections.includes(input.dataset.roleSectionSetting); });
     renderAppearance();
   }
 
@@ -277,17 +261,6 @@
       document.querySelectorAll('[data-role-setting="darkMode"]').forEach((input) => { input.checked = changedInput.checked; });
       preferences.theme = changedInput.checked ? "dark" : "light";
       preferences.darkMode = changedInput.checked;
-    } else if (changedInput.dataset.roleSectionSetting) {
-      document.querySelectorAll(`[data-role-section-setting="${changedInput.dataset.roleSectionSetting}"]`)
-        .forEach((input) => { input.checked = changedInput.checked; });
-      const sections = sectionKeys.filter((section) => [...document.querySelectorAll("[data-role-section-setting]")]
-        .some((input) => input.dataset.roleSectionSetting === section && input.checked));
-      if (sections.length === 0) {
-        setStatus("Kies ten minste één zichtbaar onderdeel.", "error");
-        apply();
-        return;
-      }
-      preferences.sections = sections;
     } else if (changedInput.dataset.roleAppearance) {
       preferences[changedInput.dataset.roleAppearance] = changedInput.value;
       if (changedInput.dataset.roleAppearance === "theme") preferences.darkMode = changedInput.value === "dark";
@@ -346,7 +319,6 @@
       theme: "light",
       density: "standard",
       accent: "teal",
-      sections: [...sectionKeys],
     };
     notificationPreferences = { ...defaultNotificationPreferences };
     settingsRevision++;
@@ -376,15 +348,12 @@
   }
 
   function isSectionVisible(page) {
-    if (!preferences) return true;
-    const section = [...document.querySelectorAll("[data-role-section]")].find((item) => item.id === page);
-    return !section || preferences.sections.includes(section.dataset.roleSection);
+    return true;
   }
 
   function showDashboard() {
-    const firstVisible = [...document.querySelectorAll("[data-role-section]")]
-      .find((section) => preferences.sections.includes(section.dataset.roleSection));
-    if (firstVisible) show(firstVisible.id);
+    const firstSection = document.querySelector("[data-role-section]");
+    if (firstSection) show(firstSection.id);
   }
 
   window.RoleSettings = { initialize, reset, isSectionVisible, showDashboard, selectTab };
@@ -395,9 +364,6 @@
     apply();
     renderNotifications();
     selectTab("appearance");
-
-    const activePage = document.querySelector(".view:not(.hidden)[data-role-section]");
-    if (activePage && !isSectionVisible(activePage.id)) showDashboard();
 
     document.addEventListener("change", update);
     document.querySelector("[data-role-deadline-days]")?.addEventListener("change", updateDeadline);

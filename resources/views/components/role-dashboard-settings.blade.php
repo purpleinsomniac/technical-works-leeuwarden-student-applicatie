@@ -54,43 +54,6 @@
   </div>
 </section>
 
-<section id="{{ $settingsPageId }}" class="view hidden dashboard-settings-page role-dashboard-settings" aria-labelledby="{{ $settingsPageId }}Title">
-  <div class="settings-page-head">
-    <button class="back-link" type="button" onclick="RoleSettings.showDashboard()">← Terug naar dashboard</button>
-    <p class="eyebrow">PERSOONLIJKE VOORKEUREN</p>
-    <h1 id="{{ $settingsPageId }}Title">Dashboard instellen</h1>
-    <p class="dim">Kies welke onderdelen zichtbaar zijn en pas de weergave van je dashboard aan.</p>
-  </div>
-
-  <div class="settings-account-banner">
-    <span class="settings-account-avatar" aria-hidden="true">{{ $frontendUser['initials'] }}</span>
-    <div><strong>{{ $user->naam }}</strong><small>◇ {{ ucfirst($frontendUser['role']) }}</small></div>
-    <span class="settings-account-email">✉ {{ $user->email }}</span>
-  </div>
-
-  <div class="settings-layout">
-    <section class="card settings-card">
-      <div class="settings-card-head"><span class="settings-card-icon" aria-hidden="true">◈</span><div><h2>Weergave</h2><p>Pas de ruimte en kleuren van je omgeving aan.</p></div></div>
-      <label class="settings-option"><span><strong>Compacte weergave</strong><small>Minder witruimte op het dashboard.</small></span><input type="checkbox" data-role-setting="compact"></label>
-      <label class="settings-option"><span><strong>Donkere modus</strong><small>Gebruik een donker kleurthema.</small></span><input type="checkbox" data-role-setting="darkMode"></label>
-    </section>
-    <section class="card settings-card">
-      <div class="settings-card-head"><span class="settings-card-icon" aria-hidden="true">☷</span><div><h2>Zichtbare onderdelen</h2><p>Kies welke onderdelen in de navigatie zichtbaar zijn.</p></div></div>
-      <div class="settings-options">
-        @foreach ($dashboardSections as $section)
-          <label class="settings-option"><span class="settings-option-icon" aria-hidden="true">◈</span><span><strong>{{ $section['label'] }}</strong><small>{{ $section['description'] }}</small></span><input type="checkbox" data-role-section-setting="{{ $section['key'] }}"></label>
-        @endforeach
-      </div>
-    </section>
-  </div>
-
-  <div class="settings-footer" data-save-status="saved">
-    <div class="settings-save-copy"><span class="settings-save-check" aria-hidden="true">✓</span><div><strong>Wijzigingen worden automatisch opgeslagen.</strong><small data-role-settings-status class="settings-saved" role="status">Je voorkeuren worden per account bewaard.</small></div></div>
-    <button class="button hidden" type="button" data-role-settings-retry>Opnieuw proberen</button>
-    <button class="button" type="button" data-role-settings-reset>Standaardinstellingen herstellen</button>
-  </div>
-</section>
-
 @once
   @push('styles')
     <link rel="stylesheet" href="{{ asset('assets/css/settings.css') }}">

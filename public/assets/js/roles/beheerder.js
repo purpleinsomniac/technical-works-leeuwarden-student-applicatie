@@ -6,7 +6,6 @@ window.RoleApp.initializeRole({
     ["Leeruitkomsten", "adminLearningOutcomes"],
     ["Applicatie-instellingen", "adminApplicationSettings"],
     ["Instellingen", "adminPreferencesSettings"],
-    ["Dashboard instellen", "adminDashboardSettings"],
   ],
 });
 RoleSettings.initialize();

@@ -19,6 +19,11 @@ class ProgressController extends Controller
         // Alleen coaches en beheerders mogen de voortgang van een student aanpassen.
         abort_unless(in_array($request->user()->rol, ['coach', 'beheerder'], true), 403);
         abort_unless($student->rol === 'student', 404);
+        abort_unless(
+            $student->classGroups()->where('coach_id', $request->user()->id)->exists(),
+            403,
+            'Je kunt alleen de voortgang bijwerken van studenten uit je eigen klassen.',
+        );
 
         // Controleer of uren en status binnen de toegestane waarden vallen.
         $data = $request->validate([

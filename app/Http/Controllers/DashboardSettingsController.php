@@ -12,9 +12,15 @@ class DashboardSettingsController extends Controller
     public function update(Request $request): JsonResponse
     {
         $user = $request->user();
-        $sections = match ($user->rol) {
+        $activeRole = $request->validate([
+            'role' => ['required', 'string', Rule::in(['beheerder', 'teamleider', 'coach'])],
+        ])['role'];
+        abort_unless($user->canUseRole($activeRole), 403);
+
+        $sections = match ($activeRole) {
             'beheerder' => ['overview', 'users', 'learningOutcomes', 'applicationSettings'],
             'teamleider' => ['groups', 'reports'],
+            'coach' => ['coachOverview', 'coachStudents', 'coachActivities', 'coachGoals', 'coachProjects'],
             default => abort(403),
         };
 

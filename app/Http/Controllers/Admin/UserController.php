@@ -64,6 +64,12 @@ class UserController extends Controller
 
             if ($roleChanged) {
                 $user->extraRoles()->sync([]);
+                if ($currentRole === 'student') {
+                    $user->classGroups()->detach();
+                }
+                if ($currentRole === 'coach') {
+                    $user->coachedClassGroups()->update(['coach_id' => null]);
+                }
             }
         });
 

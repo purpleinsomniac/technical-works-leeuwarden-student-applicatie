@@ -75,7 +75,7 @@
           "Content-Type": "application/json",
           "X-CSRF-TOKEN": window.LARAVEL_CSRF,
         },
-        body: JSON.stringify(preferences),
+        body: JSON.stringify({ ...preferences, role: window.LARAVEL_USER.role }),
       });
       const body = await response.json();
       if (!response.ok) {

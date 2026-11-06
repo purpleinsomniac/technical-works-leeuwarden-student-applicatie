@@ -159,6 +159,133 @@
   </section>
 </section>
 
+<section id="adminClasses" class="view hidden admin-dashboard" data-role-section="classes">
+  @php($classForm = old('_class_form'))
+  @php($selectedClassStudentIds = old('student_ids', []))
+  @php($selectedClassStudentIds = is_array($selectedClassStudentIds) ? $selectedClassStudentIds : [])
+  <header class="admin-hero">
+    <div class="admin-hero-copy">
+      <span class="admin-eyebrow">Beheeromgeving</span>
+      <h1>Klassen</h1>
+      <p>Maak klassen aan en wijs per klas een docent en studenten toe. Docenten kunnen hun eigen klassenoverzicht bekijken.</p>
+    </div>
+    <span class="admin-class-count">{{ $roleData['classGroups']->count() }} klassen</span>
+  </header>
+
+  @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
+  @if ($errors->any())
+    <div class="notice" role="alert">
+      <p>De klas is niet opgeslagen. Controleer de volgende melding(en):</p>
+      <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+    </div>
+  @endif
+
+  <details class="admin-panel admin-class-create" @if ($classForm === 'create') open @endif>
+    <summary class="admin-class-create-toggle"><span><strong>Nieuwe klas aanmaken</strong><small>Naam, schooljaar, docent en studenten instellen</small></span><span aria-hidden="true">+</span></summary>
+    <form action="{{ route('admin.classes.store', ['page' => 'klassen']) }}" method="post" class="admin-class-form">
+      @csrf
+      <input type="hidden" name="_class_form" value="create">
+      <div class="admin-class-fields">
+        <div><label for="new-class-name">Klasnaam</label><input class="input" id="new-class-name" name="naam" value="{{ $classForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
+        <div><label for="new-class-schoolyear">Schooljaar</label><input class="input" id="new-class-schoolyear" name="schooljaar" value="{{ $classForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
+        <div>
+          <label for="new-class-coach">Docent / SLB'er</label>
+          <select class="input" id="new-class-coach" name="coach_id">
+            <option value="">Nog geen docent gekoppeld</option>
+            @foreach ($roleData['coaches'] as $coach)
+              <option value="{{ $coach->id }}" @selected($classForm === 'create' && (string) old('coach_id') === (string) $coach->id)>{{ $coach->naam }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="admin-class-description-field"><label for="new-class-description">Omschrijving (optioneel)</label><textarea class="input" id="new-class-description" name="omschrijving" rows="2" maxlength="2000">{{ $classForm === 'create' ? old('omschrijving') : '' }}</textarea></div>
+      </div>
+      <fieldset class="admin-class-members">
+        <legend>Studenten in deze klas <span>({{ $roleData['students']->count() }} beschikbaar)</span></legend>
+        @if ($roleData['students']->isNotEmpty())
+          <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
+          <div class="admin-class-student-list">
+            @foreach ($roleData['students'] as $student)
+              <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email) }}">
+                <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($classForm === 'create' && in_array($student->id, $selectedClassStudentIds))>
+                <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small></span>
+              </label>
+            @endforeach
+          </div>
+        @else
+          <p class="dim">Maak eerst studentaccounts aan via Gebruikers.</p>
+        @endif
+      </fieldset>
+      <button class="button dark" type="submit">Klas aanmaken</button>
+    </form>
+  </details>
+
+  <div class="admin-class-list">
+    @forelse ($roleData['classGroups'] as $classGroup)
+      <article class="admin-panel admin-class-card">
+        <div class="admin-class-card-heading">
+          <div><span class="admin-eyebrow">{{ $classGroup->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $classGroup->naam }}</h2><p>{{ $classGroup->students->count() }} {{ $classGroup->students->count() === 1 ? 'student' : 'studenten' }} · {{ $classGroup->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
+          <div class="admin-class-actions">
+            <details class="admin-class-edit" @if ($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id) open @endif>
+              <summary class="button">Klas beheren</summary>
+              <form action="{{ route('admin.classes.update', ['classGroup' => $classGroup, 'page' => 'klassen']) }}" method="post" class="admin-class-form">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="_class_form" value="update">
+                <input type="hidden" name="_class_group_id" value="{{ $classGroup->id }}">
+                <div class="admin-class-fields">
+                  <div><label for="class-{{ $classGroup->id }}-name">Klasnaam</label><input class="input" id="class-{{ $classGroup->id }}-name" name="naam" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('naam', $classGroup->naam) : $classGroup->naam }}" maxlength="120" required></div>
+                  <div><label for="class-{{ $classGroup->id }}-schoolyear">Schooljaar</label><input class="input" id="class-{{ $classGroup->id }}-schoolyear" name="schooljaar" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('schooljaar', $classGroup->schooljaar) : $classGroup->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
+                  <div>
+                    <label for="class-{{ $classGroup->id }}-coach">Docent / SLB'er</label>
+                    <select class="input" id="class-{{ $classGroup->id }}-coach" name="coach_id">
+                      <option value="">Geen docent gekoppeld</option>
+                      @foreach ($roleData['coaches'] as $coach)
+                        <option value="{{ $coach->id }}" @selected($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? (string) old('coach_id') === (string) $coach->id : $classGroup->coach_id === $coach->id)>{{ $coach->naam }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div class="admin-class-description-field"><label for="class-{{ $classGroup->id }}-description">Omschrijving</label><textarea class="input" id="class-{{ $classGroup->id }}-description" name="omschrijving" rows="2" maxlength="2000">{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('omschrijving', $classGroup->omschrijving) : $classGroup->omschrijving }}</textarea></div>
+                </div>
+                <fieldset class="admin-class-members">
+                  <legend>Studenten in deze klas</legend>
+                  <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
+                  <div class="admin-class-student-list">
+                    @foreach ($roleData['students'] as $student)
+                      <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email) }}">
+                        <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? in_array($student->id, $selectedClassStudentIds) : $classGroup->students->contains('id', $student->id))>
+                        <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small></span>
+                      </label>
+                    @endforeach
+                  </div>
+                </fieldset>
+                <div class="admin-class-form-actions"><button class="button dark" type="submit">Klas opslaan</button></div>
+              </form>
+            </details>
+            <form action="{{ route('admin.classes.destroy', ['classGroup' => $classGroup, 'page' => 'klassen']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je deze klas wilt verwijderen? Studentaccounts en hun voortgang blijven behouden.')">
+              @csrf
+              @method('DELETE')
+              <button class="button admin-user-delete" type="submit">Verwijderen</button>
+            </form>
+          </div>
+        </div>
+        @if ($classGroup->omschrijving)
+          <p class="admin-class-description">{{ $classGroup->omschrijving }}</p>
+        @endif
+        <div class="admin-class-roster">
+          <strong>Studenten</strong>
+          @if ($classGroup->students->isNotEmpty())
+            <div>@foreach ($classGroup->students as $student)<span>{{ $student->naam }}</span>@endforeach</div>
+          @else
+            <span class="admin-class-empty">Er zijn nog geen studenten aan deze klas gekoppeld.</span>
+          @endif
+        </div>
+      </article>
+    @empty
+      <section class="admin-panel admin-class-empty-state"><h2>Nog geen klassen</h2><p>Maak een klas aan en wijs er een docent en studenten aan toe. De docent ziet daarna deze klas en de gekoppelde studenten.</p></section>
+    @endforelse
+  </div>
+</section>
+
 {{-- Shows learning outcomes as sorted tiles and keeps their create/edit controls on a dedicated page. --}}
 <section id="adminLearningOutcomes" class="view hidden admin-dashboard" data-role-section="learningOutcomes">
   <header class="admin-hero">
@@ -263,6 +390,7 @@
   'dashboardSections' => [
     ['key' => 'overview', 'label' => 'Overzicht', 'description' => 'Databasecijfers en applicatie-informatie.'],
     ['key' => 'users', 'label' => 'Gebruikers', 'description' => 'Beheer gebruikers en accountrollen.'],
+    ['key' => 'classes', 'label' => 'Klassen', 'description' => 'Maak klassen en koppel studenten en docenten.'],
     ['key' => 'learningOutcomes', 'label' => 'Leeruitkomsten', 'description' => 'Bekijk en beheer leeruitkomsten.'],
     ['key' => 'applicationSettings', 'label' => 'Applicatie-instellingen', 'description' => 'Beheer uploads en onderhoudsmodus.'],
   ],

@@ -1210,3 +1210,25 @@
 @media (prefers-reduced-motion: reduce) {
   .app.role-coach .coach-phase-group { transition: none; }
 }
+
+.app.role-coach .coach-roster-tools { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(150px, 1fr)); }
+.app.role-coach .coach-class-filter { display: grid; min-width: 0; gap: 4px; }
+.app.role-coach .coach-class-filter select { width: 100%; min-height: 42px; padding: 0 12px; border: 1px solid #d8e4e9; border-radius: 9px; background: #fbfcfd; color: #17364b; font: inherit; }
+.app.role-coach .coach-class-filter select:focus { border-color: #168b7d; outline: 3px solid rgba(22, 139, 125, 0.15); }
+.app.role-coach .coach-class-membership { color: #168b7d; font-size: 10px; font-weight: 650; }
+.app.role-coach .coach-class-group-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.app.role-coach .coach-class-group { align-items: flex-start; }
+.app.role-coach .coach-class-group-copy { display: grid; min-width: 0; gap: 5px; }
+.app.role-coach .coach-class-group-copy > strong { color: #244b5b; font-size: 14px; }
+.app.role-coach .coach-class-group-copy > small { color: #718695; font-size: 10px; }
+.app.role-coach .coach-class-group-roster { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+.app.role-coach .coach-class-group-roster > span { padding: 4px 7px; border: 1px solid #e4ecef; border-radius: 999px; background: #fff; color: #567184; font-size: 9px; }
+
+@media (max-width: 1100px) {
+  .app.role-coach .coach-roster-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .app.role-coach .coach-roster-tools { grid-template-columns: 1fr; }
+  .app.role-coach .coach-class-group-list { grid-template-columns: 1fr; }
+}

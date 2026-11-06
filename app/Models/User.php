@@ -102,4 +102,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(Progress::class, 'gebruiker_id');
     }
+
+    public function classGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(ClassGroup::class, 'class_group_student', 'student_id', 'class_group_id')
+            ->withTimestamps();
+    }
+
+    public function coachedClassGroups(): HasMany
+    {
+        return $this->hasMany(ClassGroup::class, 'coach_id');
+    }
 }

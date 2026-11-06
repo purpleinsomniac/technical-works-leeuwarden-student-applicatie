@@ -3,6 +3,7 @@ window.RoleApp.initializeRole({
   routes: [
     ["Overzicht", "adminProcessing"],
     ["Gebruikers", "adminUsers"],
+    ["Klassen", "adminClasses"],
     ["Leeruitkomsten", "adminLearningOutcomes"],
     ["Applicatie-instellingen", "adminApplicationSettings"],
     ["Dashboard instellen", "adminDashboardSettings"],
@@ -35,6 +36,10 @@ if (new URLSearchParams(window.location.search).get("page") === "gebruikers") {
   show("adminUsers");
 }
 
+if (new URLSearchParams(window.location.search).get("page") === "klassen") {
+  show("adminClasses");
+}
+
 if (new URLSearchParams(window.location.search).get("page") === "applicatie-instellingen") {
   show("adminApplicationSettings");
 }
@@ -59,3 +64,15 @@ if (adminUserRoleFilter) {
     if (userCount) userCount.textContent = `${matchingRows.length} van ${userRows.length} gebruikers`;
   });
 }
+
+document.querySelectorAll("[data-class-student-search]").forEach((search) => {
+  const form = search.closest(".admin-class-form");
+  const options = [...form.querySelectorAll("[data-class-student-option]")];
+
+  search.addEventListener("input", () => {
+    const term = search.value.trim().toLocaleLowerCase("nl");
+    options.forEach((option) => {
+      option.hidden = !option.dataset.classStudentOption.includes(term);
+    });
+  });
+});

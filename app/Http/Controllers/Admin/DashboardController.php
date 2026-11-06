@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\RoleDashboardController;
 use App\Models\Assignment;
 use App\Models\ApplicationSetting;
+use App\Models\ClassGroup;
 use App\Models\LearningOutcome;
 use App\Models\Progress;
 use App\Models\Role;
@@ -37,6 +38,12 @@ class DashboardController extends RoleDashboardController
         return [
             'userCount' => User::count(),
             'studentCount' => User::where('rol', 'student')->count(),
+            'classGroups' => ClassGroup::with(['coach', 'students'])
+                ->orderBy('naam')
+                ->orderBy('schooljaar')
+                ->get(),
+            'coaches' => User::where('rol', 'coach')->orderBy('naam')->get(['id', 'naam']),
+            'students' => User::where('rol', 'student')->orderBy('naam')->get(['id', 'naam', 'email']),
             'progressCount' => Progress::count(),
             'assignmentCount' => Assignment::count(),
             'outcomeCount' => LearningOutcome::count(),

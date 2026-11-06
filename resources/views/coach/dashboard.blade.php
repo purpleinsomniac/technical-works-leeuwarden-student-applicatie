@@ -3,7 +3,7 @@
 @section('role-content')
 @php($displayedStudentCount = count($roleData))
 @php($totalStudentXp = collect($roleData)->sum('xp'))
-<section id="coachOverview" class="view hidden coach-page coach-overview-page" aria-labelledby="coachOverviewTitle">
+<section id="coachOverview" class="view hidden coach-page coach-overview-page" data-role-section="coachOverview" aria-labelledby="coachOverviewTitle">
   <header class="coach-page-hero">
     <div>
       <span class="coach-eyebrow">Jouw werkoverzicht</span>
@@ -85,23 +85,34 @@
 
   <section class="coach-phase-groups" aria-labelledby="coachPhaseGroupsTitle">
     <div class="coach-section-heading">
-      <div><span class="coach-eyebrow">Studiefase-indeling</span><h2 id="coachPhaseGroupsTitle">Studenten per studiefase</h2><p>De beschikbare indeling is gebaseerd op de studiefase in het studentprofiel.</p></div>
+      <div><span class="coach-eyebrow">Klassen van de beheerder</span><h2 id="coachPhaseGroupsTitle">Mijn klassen</h2><p>Je ziet alleen de klassen die door de beheerder aan jou zijn toegewezen.</p></div>
       <button class="coach-text-link" type="button" onclick="show('coachStudents')">Studentenlijst openen <span aria-hidden="true">→</span></button>
     </div>
     <div class="coach-phase-group-list">
-      @forelse (collect($roleData)->groupBy(fn (array $student): string => $student['phase'] ?? 'Geen studiefase ingesteld') as $phase => $phaseStudents)
-        <button class="coach-phase-group" type="button" onclick="openCoachPhase(@js(mb_strtolower($phase)))">
-          <span><strong>{{ $phase }}</strong><small>{{ $phaseStudents->count() === 1 ? '1 student' : $phaseStudents->count().' studenten' }}</small></span>
+      @forelse ($frontendData['classGroups'] as $classGroup)
+        <button class="coach-phase-group coach-class-group" type="button" onclick="openCoachClass({{ $classGroup['id'] }})">
+          <span class="coach-class-group-copy">
+            <strong>{{ $classGroup['name'] }}</strong>
+            <small>{{ $classGroup['schoolYear'] ?: 'Schooljaar niet ingesteld' }} · {{ count($classGroup['students']) }} {{ count($classGroup['students']) === 1 ? 'student' : 'studenten' }}</small>
+            @if ($classGroup['description'])<small>{{ $classGroup['description'] }}</small>@endif
+            <span class="coach-class-group-roster">
+              @forelse ($classGroup['students'] as $student)
+                <span>{{ $student['name'] }}{{ $student['phase'] ? ' · '.$student['phase'] : '' }}</span>
+              @empty
+                <span>Nog geen studenten gekoppeld</span>
+              @endforelse
+            </span>
+          </span>
           <span aria-hidden="true">→</span>
         </button>
       @empty
-        <div class="coach-worklist-empty"><strong>Er zijn nog geen studenten</strong><span>Studenten verschijnen hier zodra ze in de leeromgeving zijn aangemaakt.</span></div>
+        <div class="coach-worklist-empty"><strong>Er zijn nog geen klassen aan jou toegewezen</strong><span>Neem contact op met de beheerder om een klas met studenten aan je account te koppelen.</span></div>
       @endforelse
     </div>
   </section>
 </section>
 
-<section id="coachStudents" class="view hidden coach-page" aria-labelledby="coachStudentsTitle">
+<section id="coachStudents" class="view hidden coach-page" data-role-section="coachStudents" aria-labelledby="coachStudentsTitle">
   <header class="coach-page-hero">
     <div>
       <span class="coach-eyebrow">Jouw begeleiding</span>
@@ -121,7 +132,6 @@
     </div>
 
     @if ($displayedStudentCount)
-      {{-- De keuzelijst toont de drie studiefases die in de applicatie worden gebruikt. --}}
       <div class="coach-roster-tools">
         <label class="coach-search">
           <span class="coach-control-label">Student zoeken</span>
@@ -129,6 +139,15 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
             <input id="coachStudentSearch" type="search" autocomplete="off" placeholder="Zoek op naam">
           </span>
+        </label>
+        <label class="coach-class-filter">
+          <span class="coach-control-label">Klas</span>
+          <select id="coachClassFilter">
+            <option value="">Alle klassen</option>
+            @foreach ($frontendData['classGroups'] as $classGroup)
+              <option value="{{ $classGroup['id'] }}">{{ $classGroup['name'] }}{{ $classGroup['schoolYear'] ? ' · '.$classGroup['schoolYear'] : '' }}</option>
+            @endforeach
+          </select>
         </label>
         <label class="coach-phase-filter">
           <span class="coach-control-label">Studiefasegroep</span>
@@ -164,6 +183,7 @@
             data-coach-target-hours="{{ $studentTargetHours }}"
             data-student-progress="{{ $studentProgress }}"
             data-student-xp="{{ $student['xp'] }}"
+            data-student-class-ids=",{{ implode(',', $student['classIds']) }},"
             data-student-name="{{ mb_strtolower($student['name']) }}"
             data-student-phase="{{ mb_strtolower($student['phase'] ?? 'Geen studiefase ingesteld') }}"
             onclick="show('coachStudent-{{ $student['id'] }}')"
@@ -173,6 +193,7 @@
             <span class="coach-student-info">
               <strong>{{ $student['name'] }}</strong>
               <span class="coach-phase-badge">{{ $student['phase'] ?? 'Geen studiefase ingesteld' }}</span>
+              <span class="coach-class-membership">{{ implode(', ', $student['classNames']) }}</span>
             </span>
             <span class="coach-student-meta">
               <span><strong data-coach-student-hours>{{ $student['hours'] }}</strong> gevalideerde uren</span>
@@ -209,7 +230,7 @@
 </section>
 
 {{-- Leeractiviteiten, leerdoelen en projecten zijn alleen-lezenoverzichten voor de coach. --}}
-<section id="coachActivities" class="view hidden coach-page coach-directory-page" aria-labelledby="coachActivitiesTitle">
+<section id="coachActivities" class="view hidden coach-page coach-directory-page" data-role-section="coachActivities" aria-labelledby="coachActivitiesTitle">
   <header class="coach-page-hero">
     <div>
       <span class="coach-eyebrow">Onderwijsinhoud</span>
@@ -249,7 +270,7 @@
   @endif
 </section>
 
-<section id="coachGoals" class="view hidden coach-page coach-directory-page" aria-labelledby="coachGoalsTitle">
+<section id="coachGoals" class="view hidden coach-page coach-directory-page" data-role-section="coachGoals" aria-labelledby="coachGoalsTitle">
   <header class="coach-page-hero">
     <div>
       <span class="coach-eyebrow">Persoonlijke ontwikkeling</span>
@@ -289,7 +310,7 @@
   @endif
 </section>
 
-<section id="coachProjects" class="view hidden coach-page coach-directory-page" aria-labelledby="coachProjectsTitle">
+<section id="coachProjects" class="view hidden coach-page coach-directory-page" data-role-section="coachProjects" aria-labelledby="coachProjectsTitle">
   <header class="coach-page-hero">
     <div>
       <span class="coach-eyebrow">Werk van studenten</span>
@@ -368,7 +389,7 @@
 @foreach ($roleData as $student)
   @php($studentTargetHours = collect($student['outcomes'])->sum(fn (array $outcome): int => (int) $outcome['target']))
   @php($studentProgress = $studentTargetHours > 0 ? min(100, (int) round(($student['hours'] / $studentTargetHours) * 100)) : 0)
-  <section id="coachStudent-{{ $student['id'] }}" class="view hidden coach-page coach-student-detail" data-student-id="{{ $student['id'] }}" aria-labelledby="coachStudentTitle-{{ $student['id'] }}">
+  <section id="coachStudent-{{ $student['id'] }}" class="view hidden coach-page coach-student-detail" data-role-section="coachStudents" data-student-id="{{ $student['id'] }}" aria-labelledby="coachStudentTitle-{{ $student['id'] }}">
     <div class="coach-detail-top">
       <button class="button coach-back-button" type="button" onclick="show('coachStudents')">
         <span aria-hidden="true">←</span> Alle studenten

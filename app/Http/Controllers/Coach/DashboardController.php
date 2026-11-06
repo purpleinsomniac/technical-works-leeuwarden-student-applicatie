@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Coach;
 
 use App\Http\Controllers\RoleDashboardController;
 use App\Models\Assignment;
+use App\Models\ClassGroup;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -19,27 +21,36 @@ class DashboardController extends RoleDashboardController
     {
         /** @var User $user */
         $user = $request->user();
+        $classGroups = $user->coachedClassGroups()
+            ->with(['students' => fn ($query) => $query
+                ->where('rol', 'student')
+                ->with(['studyPhase', 'progress.learningOutcome'])])
+            ->orderBy('naam')
+            ->orderBy('schooljaar')
+            ->get();
+        $students = $classGroups
+            ->flatMap(fn (ClassGroup $classGroup) => $classGroup->students)
+            ->unique('id')
+            ->sortBy('naam')
+            ->values();
 
         return $this->dashboardView(
             user: $user,
             activeRole: 'coach',
             view: 'coach.dashboard',
-            frontendData: $this->overviewData($user),
-            roleData: $this->students(),
+            frontendData: $this->overviewData($user, $students, $classGroups),
+            roleData: $this->students($students, $classGroups),
             style: 'css/roles/coach.css',
-            scripts: ['js/common.js', 'js/roles/coach.js'],
+            scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/coach.js'],
         );
     }
 
     /**
      * Verzamel de leeractiviteiten, doelen en projecten voor docentoverzichten.
      */
-    private function overviewData(User $coach): array
+    private function overviewData(User $coach, Collection $students, Collection $classGroups): array
     {
-        $studentUsers = User::query()
-            ->where('rol', 'student')
-            ->get(['id', 'naam']);
-        $studentIds = $studentUsers->pluck('id');
+        $studentIds = $students->pluck('id');
 
         // Vul de drie overzichten met gegevens die bij studenten horen.
         $activities = LearningOutcome::query()
@@ -135,21 +146,35 @@ class DashboardController extends RoleDashboardController
             'projects' => $projects,
             'pendingProjects' => $pendingProjects,
             'pendingFeedback' => $pendingFeedback,
-            'studentCount' => $studentUsers->count(),
+            'classGroups' => $classGroups->map(fn (ClassGroup $classGroup): array => [
+                'id' => $classGroup->id,
+                'name' => $classGroup->naam,
+                'schoolYear' => $classGroup->schooljaar,
+                'description' => $classGroup->omschrijving,
+                'students' => $classGroup->students
+                    ->map(fn (User $student): array => [
+                        'id' => $student->id,
+                        'name' => $student->naam,
+                        'phase' => $student->studyPhase?->naam,
+                    ])->all(),
+            ])->all(),
+            'studentCount' => $students->count(),
         ];
     }
 
     /**
      * Geef de coach alleen gegevens die nodig zijn om studenten te begeleiden.
      */
-    private function students(): array
+    private function students(Collection $students, Collection $classGroups): array
     {
-        $students = User::query()
-            ->where('rol', 'student')
-            ->with(['studyPhase', 'progress.learningOutcome'])
-            ->orderBy('naam')
-            ->get();
         $studentIds = $students->pluck('id');
+        $classMemberships = $classGroups
+            ->flatMap(fn (ClassGroup $classGroup) => $classGroup->students->map(fn (User $student): array => [
+                'studentId' => $student->id,
+                'classId' => $classGroup->id,
+                'className' => $classGroup->naam,
+            ]))
+            ->groupBy('studentId');
         $activityXp = DB::table('activity_xp')
             ->whereIn('user_id', $studentIds)
             ->select('user_id')
@@ -176,10 +201,11 @@ class DashboardController extends RoleDashboardController
         ];
 
         return $students
-            ->map(function (User $student) use ($activityXp, $challengeXp, $levelNames): array {
+            ->map(function (User $student) use ($activityXp, $challengeXp, $levelNames, $classMemberships): array {
                 $xp = (int) ($activityXp[$student->id] ?? 0) + (int) ($challengeXp[$student->id] ?? 0);
                 $level = intdiv($xp, 1000) + 1;
                 $levelProgress = $xp % 1000;
+                $memberships = $classMemberships->get($student->id, collect());
 
                 return [
                     'id' => $student->id,
@@ -191,6 +217,8 @@ class DashboardController extends RoleDashboardController
                     'levelName' => $levelNames[$level - 1] ?? 'Meester · rang '.($level - 9),
                     'levelProgress' => $levelProgress,
                     'levelProgressPercent' => $levelProgress / 10,
+                    'classIds' => $memberships->pluck('classId')->all(),
+                    'classNames' => $memberships->pluck('className')->all(),
                     // Zet actieve leeruitkomsten bovenaan, zodat lopend werk snel zichtbaar is.
                     'outcomes' => $student->progress
                         ->sortBy(fn ($progress): int => in_array($progress->status, ['gestart', 'in_ontwikkeling'], true) ? 0 : 1)

@@ -49,7 +49,7 @@
 
 <div id="sidebarAccountDetails" class="account-modal hidden" aria-hidden="true">
   <button class="account-modal-backdrop" type="button" tabindex="-1" data-account-close aria-label="Profielvenster sluiten"></button>
-  <section class="account-modal-dialog profile-redesign {{ in_array($frontendUser['role'], ['beheerder', 'teamleider'], true) ? 'account-modal-dialog--settings' : '' }}" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+  <section class="account-modal-dialog profile-redesign {{ in_array($frontendUser['role'], ['beheerder', 'teamleider', 'coach'], true) ? 'account-modal-dialog--settings' : '' }}" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
     <header class="account-modal-header">
       <div>
         <span class="account-modal-eyebrow">Mijn gegevens</span>
@@ -79,7 +79,7 @@
       </div>
     </dl>
     </section>
-    @if (in_array($frontendUser['role'], ['beheerder', 'teamleider'], true))
+    @if (in_array($frontendUser['role'], ['beheerder', 'teamleider', 'coach'], true))
       <section class="profile-card profile-dashboard-settings">
         @include('components.account-dashboard-settings')
       </section>

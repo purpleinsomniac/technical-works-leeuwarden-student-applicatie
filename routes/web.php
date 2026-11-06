@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ClassGroupController;
 use App\Http\Controllers\Admin\ApplicationSettingsController;
 use App\Http\Controllers\Admin\LeeruitkomstController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -58,6 +59,12 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::middleware('role:beheerder')->prefix('beheer/klassen')->name('admin.classes.')->group(function (): void {
+        Route::post('/', [ClassGroupController::class, 'store'])->name('store');
+        Route::put('/{classGroup}', [ClassGroupController::class, 'update'])->name('update');
+        Route::delete('/{classGroup}', [ClassGroupController::class, 'destroy'])->name('destroy');
     });
 
     Route::middleware('role:student')->group(function (): void {

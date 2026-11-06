@@ -40,6 +40,19 @@
           <input type="checkbox" data-role-section-setting="{{ $key }}">
         </label>
       @endforeach
+    @elseif ($frontendUser['role'] === 'coach')
+      @foreach ([
+        'coachOverview' => 'Overzicht',
+        'coachStudents' => 'Studenten',
+        'coachActivities' => 'Leeractiviteiten',
+        'coachGoals' => 'Leerdoelen',
+        'coachProjects' => 'Projecten',
+      ] as $key => $label)
+        <label class="account-dashboard-setting">
+          <span>{{ $label }}</span>
+          <input type="checkbox" data-role-section-setting="{{ $key }}">
+        </label>
+      @endforeach
     @endif
   </div>
 

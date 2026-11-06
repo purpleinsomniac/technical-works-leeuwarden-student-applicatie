@@ -8,6 +8,7 @@ window.RoleApp.initializeRole({
     ["Projecten", "coachProjects"],
   ],
 });
+RoleSettings.initialize();
 
 // Gebruik het zichtbare label als toegankelijke naam voor elke navigatieknop.
 document.querySelectorAll("#nav [data-route]").forEach((button) => {
@@ -70,6 +71,7 @@ function createPager(allItems, pageSize, anchor, label) {
 /* Pas de naam- en fasefilters toe voordat de gevonden studenten worden gepagineerd. */
 const coachStudentSearch = document.getElementById("coachStudentSearch");
 const coachPhaseFilter = document.getElementById("coachPhaseFilter");
+const coachClassFilter = document.getElementById("coachClassFilter");
 const coachStudentSort = document.getElementById("coachStudentSort");
 const coachStudentCards = [...document.querySelectorAll(".coach-student-card[data-student-name]")];
 const coachNoResults = document.getElementById("coachNoResults");
@@ -81,11 +83,13 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
   function filterCoachStudents() {
     const searchTerm = coachStudentSearch.value.trim().toLocaleLowerCase("nl");
     const selectedPhase = coachPhaseFilter.value;
+    const selectedClass = coachClassFilter?.value ?? "";
 
     const matches = coachStudentCards.filter((card) => {
       const matchesName = card.dataset.studentName.includes(searchTerm);
       const matchesPhase = !selectedPhase || card.dataset.studentPhase === selectedPhase;
-      return matchesName && matchesPhase;
+      const matchesClass = !selectedClass || card.dataset.studentClassIds.includes(`,${selectedClass},`);
+      return matchesName && matchesPhase && matchesClass;
     });
 
     const sort = coachStudentSort?.value ?? "name";
@@ -105,15 +109,24 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
 
   coachStudentSearch.addEventListener("input", filterCoachStudents);
   coachPhaseFilter.addEventListener("change", filterCoachStudents);
+  coachClassFilter?.addEventListener("change", filterCoachStudents);
   coachStudentSort?.addEventListener("change", filterCoachStudents);
   filterCoachStudents();
 }
 
 window.openCoachPhase = function (phase) {
   show("coachStudents");
+  if (coachClassFilter) coachClassFilter.value = "";
   if (!coachPhaseFilter) return;
   coachPhaseFilter.value = [...coachPhaseFilter.options].some((option) => option.value === phase) ? phase : "";
   coachPhaseFilter.dispatchEvent(new Event("change"));
+};
+
+window.openCoachClass = function (classId) {
+  show("coachStudents");
+  if (coachPhaseFilter) coachPhaseFilter.value = "";
+  if (coachClassFilter) coachClassFilter.value = String(classId);
+  coachClassFilter?.dispatchEvent(new Event("change"));
 };
 
 window.openCoachProjectQueue = function () {

@@ -117,7 +117,7 @@ function initializeSidebarAccount() {
       setSidebarAccountOpen(false);
     }
     if (event.key === "Tab" && isOpen) {
-      const focusable = [...modal.querySelectorAll('a[href], button:not([disabled])')];
+      const focusable = [...modal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), summary, select:not([disabled]), textarea:not([disabled])')].filter((element) => element.getClientRects().length);
       const first = focusable[0];
       const last = focusable.at(-1);
       if (event.shiftKey && document.activeElement === first) {

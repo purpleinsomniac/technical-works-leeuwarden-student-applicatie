@@ -31,6 +31,8 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::patch('/mijn-profiel', [\App\Http\Controllers\ProfileController::class, 'update'])->middleware('throttle:10,1')->name('profile.update');
+    Route::patch('/mijn-meldingsvoorkeuren', [\App\Http\Controllers\ProfileController::class, 'notifications'])->middleware('throttle:20,1')->name('profile.notifications');
     Route::get('/student', StudentDashboardController::class)->middleware('role:student')->name('student.dashboard');
     Route::get('/coach', CoachDashboardController::class)->middleware('role:coach')->name('coach.dashboard');
     Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');

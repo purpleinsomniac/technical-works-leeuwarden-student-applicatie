@@ -259,6 +259,7 @@
 </section>
 
 @include('components.role-dashboard-settings', [
+  'preferencesPageId' => 'adminPreferencesSettings',
   'settingsPageId' => 'adminDashboardSettings',
   'dashboardSections' => [
     ['key' => 'overview', 'label' => 'Overzicht', 'description' => 'Databasecijfers en applicatie-informatie.'],

@@ -47,6 +47,7 @@
 </section>
 
 @include('components.role-dashboard-settings', [
+  'preferencesPageId' => 'managerPreferencesSettings',
   'settingsPageId' => 'managerDashboardSettings',
   'dashboardSections' => [
     ['key' => 'groups', 'label' => 'Groepsoverzicht', 'description' => 'Bekijk de voortgang van de studentengroep.'],

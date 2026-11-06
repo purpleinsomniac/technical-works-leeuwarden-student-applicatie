@@ -21,6 +21,9 @@ class DashboardSettingsController extends Controller
         $preferences = $request->validate([
             'compact' => ['required', 'boolean'],
             'darkMode' => ['required', 'boolean'],
+            'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
+            'density' => ['required', Rule::in(['compact', 'standard', 'spacious'])],
+            'accent' => ['required', Rule::in(['teal', 'blue', 'purple', 'pink', 'orange', 'amber', 'green'])],
             'sections' => ['required', 'array', 'min:1'],
             'sections.*' => ['required', 'string', 'distinct', Rule::in($sections)],
         ]);

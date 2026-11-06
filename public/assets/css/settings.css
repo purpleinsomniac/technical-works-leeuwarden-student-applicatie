@@ -1,4 +1,12 @@
 #dashboardSettings .settings-page-head { position:relative; margin-bottom:22px; }
+.role-dashboard-settings .settings-page-head { max-width:none; }
+.role-dashboard-settings .settings-page-head .eyebrow { margin:0 0 6px; font-size:12px; color:#008c7c; letter-spacing:1.5px; }
+.role-dashboard-settings .settings-page-head h1 { margin:0 0 5px; font-size:31px; }
+.role-dashboard-settings .settings-page-head .dim { margin:0; font-size:14px; }
+.role-dashboard-settings .settings-content .settings-layout { display:block; }
+.role-dashboard-settings .settings-content .settings-layout > .settings-card:first-child { display:none; }
+.role-dashboard-settings .settings-content .settings-card { margin:0; min-height:460px; }
+.role-dashboard-settings .settings-footer { box-shadow:none; }
 .settings-account-banner { display:flex; align-items:center; gap:14px; padding:14px 18px; margin-bottom:20px; border:1px solid #d2e8ed; border-radius:13px; background:linear-gradient(115deg,#f7fcff,#e7f8f6); color:#183a50; }
 .settings-account-avatar { display:grid; place-items:center; flex:none; width:46px; height:46px; border-radius:50%; color:white; background:linear-gradient(135deg,#10aebb,#007b8b); font-weight:850; font-size:17px; }
 .settings-account-banner > div { display:flex; flex-direction:column; gap:4px; }

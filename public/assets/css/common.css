@@ -208,6 +208,12 @@ textarea:focus-visible,
 .nav { min-height: 38px; border: 0; background: transparent; color: #e8f0f4; border-radius: 9px; padding: 8px 15px; font-size: 15px; font-weight: 650; }
 .nav:hover { background: rgba(16, 95, 119, 0.5); color: #fff; }
 .nav.active { background: linear-gradient(90deg, #08768f, #08a8b2); color: #fff; box-shadow: none; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"],
+.role-teamleider .side #nav [data-route="managerPreferencesSettings"] { position: relative; margin-top: auto; border-radius: 0; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"]::before,
+.role-teamleider .side #nav [data-route="managerPreferencesSettings"]::before { position: absolute; top: -3px; right: 7px; left: 7px; height: 1px; background: rgba(177, 220, 229, 0.22); content: ""; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"]:is(:hover, .active),
+.role-teamleider .side #nav [data-route="managerPreferencesSettings"]:is(:hover, .active) { border-radius: 9px; }
 .side .foot { flex: none; margin-top: 9px; border-top: 1px solid rgba(177, 220, 229, 0.22); padding: 13px 0 0; }
 .side .foot > .small { margin-bottom: 5px; }
 .side .foot form .nav { padding-top: 8px; padding-bottom: 8px; }

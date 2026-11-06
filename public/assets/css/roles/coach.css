@@ -469,3 +469,744 @@
 }
 
 .app.role-coach .coach-phase-badge { border-color: var(--line); background: #f3f4f6; color: var(--muted) !important; }
+
+/* Coachschermen delen de ruime kaarten en zachte kleuren van het studentdashboard. */
+.app.role-coach {
+  --ink: #17364b;
+  --text: #405d70;
+  --muted: #6f8797;
+  --line: #dfe9ed;
+  --bg: #f3f6f9;
+  --surface: #fff;
+  --accent: #168b7d;
+  --accent-dark: #116f68;
+  --accent-soft: #eaf7f3;
+  --radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.app.role-coach > .main {
+  max-width: 1420px;
+  padding: 0 40px 40px;
+  background: var(--bg);
+}
+
+.app.role-coach .topbar {
+  width: min(100%, 1180px);
+  min-height: 72px;
+  margin: 0 auto 22px;
+  border-color: #e3ebef;
+}
+
+.app.role-coach .topbar-mark {
+  border: 0;
+  border-radius: 10px;
+  background: #e2f4ef;
+  color: #168b7d;
+}
+
+.app.role-coach .coach-page { max-width: 1180px; }
+
+.app.role-coach .coach-page-hero {
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding: 0;
+  border: 0;
+}
+
+.app.role-coach .coach-page-hero h1 {
+  margin-bottom: 5px;
+  color: #17364b;
+  font-size: 30px;
+  letter-spacing: -0.5px;
+}
+
+.app.role-coach .coach-page-hero p { color: #697e90; font-size: 14px; }
+.app.role-coach .coach-eyebrow { margin-bottom: 6px; color: #168b7d; font-weight: 750; }
+.app.role-coach .coach-wave { display: inline-block; font-size: 0.85em; }
+
+.app.role-coach .coach-success {
+  border-color: #c5e7db;
+  border-radius: 11px;
+  background: #edf8f3;
+  color: #236657;
+}
+
+.app.role-coach .coach-feedback-confirmation {
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border: 1px solid #d5e9e3;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #eff9f5, #fff);
+}
+
+.app.role-coach .coach-feedback-confirmation-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.app.role-coach .coach-feedback-confirmation-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border-radius: 11px;
+  background: #d9f1e7;
+  color: #168b7d;
+  font-weight: 800;
+}
+
+.app.role-coach .coach-feedback-confirmation h2 { margin: 0 0 2px; color: #244b40; font-size: 15px; }
+.app.role-coach .coach-feedback-confirmation p { margin: 0; color: #748b80; font-size: 12px; }
+.app.role-coach .coach-feedback-confirmation-list { display: grid; gap: 8px; }
+
+.app.role-coach .coach-feedback-confirmation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #deece5;
+  border-radius: 10px;
+  background: #ffffffd9;
+}
+
+.app.role-coach .coach-feedback-confirmation-item > span { display: grid; gap: 2px; color: #6f8797; font-size: 12px; }
+.app.role-coach .coach-feedback-confirmation-item strong { color: #244b40; font-size: 13px; }
+.app.role-coach .coach-feedback-confirmation-item .button { border-color: #168b7d; background: #168b7d; color: #fff; }
+
+.app.role-coach .coach-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app.role-coach .coach-summary-card {
+  display: flex;
+  min-height: 100px;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #dcebe6;
+  border-radius: 14px;
+  background: linear-gradient(130deg, #eaf7f3, #fff);
+  box-shadow: 0 5px 18px rgba(22, 51, 74, 0.035);
+}
+
+.app.role-coach .coach-summary-card:nth-child(2) { border-color: #e3e1f1; background: linear-gradient(130deg, #f1effb, #fff); }
+.app.role-coach .coach-summary-card:nth-child(3) { border-color: #f0e5d0; background: linear-gradient(130deg, #fff7e9, #fff); }
+.app.role-coach .coach-summary-card:first-child { border-left: 1px solid #dcebe6; }
+.app.role-coach .coach-summary-icon { display: grid; width: 42px; height: 42px; flex: none; place-items: center; border-radius: 12px; background: #d8f0e8; color: #168b7d; font-size: 15px; font-weight: 800; }
+.app.role-coach .coach-summary-card:nth-child(2) .coach-summary-icon { background: #e5e0f8; color: #7162b2; }
+.app.role-coach .coach-summary-card:nth-child(3) .coach-summary-icon { background: #ffedce; color: #b27820; }
+.app.role-coach .coach-summary-card div { display: flex; flex-direction: column; gap: 1px; }
+.app.role-coach .coach-summary-value { color: #17364b !important; font-size: 27px !important; line-height: 1.2 !important; }
+.app.role-coach .coach-summary-card div span { color: #6f8797; font-size: 12px; }
+
+.app.role-coach .coach-section-heading { margin-bottom: 15px; }
+.app.role-coach .coach-section-heading h2 { color: #17364b; font-size: 20px; font-weight: 750; }
+.app.role-coach .coach-section-heading p { color: #6f8797; font-size: 13px; }
+.app.role-coach .coach-section-count { padding: 6px 11px; border: 1px solid #dfe9ed; border-radius: 99px; background: #fff; color: #567184; font-size: 12px; }
+
+.app.role-coach .coach-roster-tools {
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #dfe9ed;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.app.role-coach .coach-control-label { color: #536f81; font-weight: 700; }
+.app.role-coach .coach-search-field,
+.app.role-coach .coach-phase-filter select {
+  min-height: 42px;
+  border-color: #d8e4e9;
+  border-radius: 9px;
+  background: #fbfcfd;
+}
+
+.app.role-coach .coach-student-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app.role-coach .coach-student-card {
+  display: grid;
+  min-height: 208px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr auto;
+  align-items: start;
+  gap: 11px 12px;
+  padding: 17px;
+  overflow: hidden;
+  border: 1px solid #dfe9ed;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(22, 51, 74, 0.035);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.app.role-coach .coach-student-card::before { display: none; }
+.app.role-coach button.coach-student-card:hover { border-color: #a9d8cd; background: #fff; box-shadow: 0 10px 24px rgba(22, 83, 73, 0.09); transform: translateY(-2px); }
+.app.role-coach .coach-student-card:focus-visible { outline: 3px solid rgba(22, 139, 125, 0.28); outline-offset: 2px; }
+.app.role-coach .coach-student-avatar { width: 44px; height: 44px; border-radius: 12px; background: #dff4ed; color: #168b7d; }
+.app.role-coach .coach-student-info { align-self: center; gap: 4px; }
+.app.role-coach .coach-student-info strong { color: #17364b; font-size: 14px; font-weight: 750; }
+.app.role-coach .coach-phase-badge { padding: 4px 8px; border: 0; border-radius: 99px; background: #edf5f5; color: #567184 !important; font-size: 10px !important; }
+.app.role-coach .coach-student-meta { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+.app.role-coach .coach-student-meta span { padding: 6px 9px; border: 1px solid #e6edf0; border-radius: 8px; background: #f8fafb; font-size: 11px; }
+.app.role-coach .coach-student-meta strong { color: #31586a; font-size: 12px; }
+.app.role-coach .coach-student-progress { grid-column: 1 / -1; align-self: end; gap: 8px; }
+.app.role-coach .coach-progress-label { display: block; min-width: 62px; color: #6f8797; font-size: 11px; }
+.app.role-coach .coach-progress-track { height: 8px; background: #e7eff0; }
+.app.role-coach .coach-progress-track > span { background: linear-gradient(90deg, #24a58f, #6ccbb0); }
+.app.role-coach .coach-progress-value { min-width: 36px; color: #31586a; font-size: 11px; }
+.app.role-coach .coach-student-action { grid-column: 1 / -1; width: auto; height: auto; justify-content: space-between; padding-top: 9px; border-top: 1px solid #edf1f3; border-radius: 0; color: #168b7d; font-size: 11px; font-weight: 750; }
+.app.role-coach .coach-student-action > span { font-size: 16px; }
+.app.role-coach button.coach-student-card:hover .coach-student-action { background: transparent; color: #116f68; }
+
+.app.role-coach .coach-empty-state {
+  min-height: 220px;
+  border: 1px dashed #cbdde1;
+  border-radius: 15px;
+  background: linear-gradient(130deg, #f7fbfa, #fff);
+}
+
+.app.role-coach .coach-empty-icon { display: block; margin-bottom: 6px; color: #168b7d; font-size: 26px; }
+.app.role-coach .coach-empty-state h3 { color: #244b5a; }
+.app.role-coach .coach-empty-state p { color: #6f8797; }
+.app.role-coach .coach-directory-grid { gap: 15px; }
+.app.role-coach .coach-directory-card { padding: 18px; border-color: #dfe9ed; border-radius: 14px; box-shadow: 0 5px 18px rgba(22, 51, 74, 0.035); }
+.app.role-coach .coach-directory-card h2 { color: #17364b; font-weight: 700; }
+.app.role-coach .coach-directory-card > p { color: #6f8797; }
+.app.role-coach .coach-directory-code { color: #168b7d; }
+.app.role-coach .coach-student-stats { gap: 10px; overflow: visible; border: 0; background: transparent; }
+.app.role-coach .coach-detail-stat { border: 1px solid #dfe9ed; border-radius: 12px; background: #fff; box-shadow: 0 5px 18px rgba(22, 51, 74, 0.035); }
+
+@media (max-width: 1100px) {
+  .app.role-coach .coach-student-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .app.role-coach > .main { padding: 0 18px 28px; }
+  .app.role-coach .topbar { min-height: 62px; margin-bottom: 18px; }
+  .app.role-coach > .side::before,
+  .app.role-coach > .side::after { display: none; }
+  .app.role-coach .coach-page-hero h1 { font-size: 26px; }
+  .app.role-coach .coach-summary { grid-template-columns: 1fr; gap: 9px; margin-bottom: 20px; }
+  .app.role-coach .coach-summary-card { min-height: 82px; padding: 13px 15px; }
+  .app.role-coach .coach-summary-card:first-child { border-left: 1px solid #dcebe6; }
+  .app.role-coach .coach-roster-tools { grid-template-columns: 1fr; }
+  .app.role-coach .coach-student-grid { grid-template-columns: 1fr; }
+  .app.role-coach .coach-student-card { min-height: 190px; }
+  .app.role-coach .coach-feedback-confirmation-item { align-items: stretch; flex-direction: column; }
+  .app.role-coach .coach-feedback-confirmation-item form,
+  .app.role-coach .coach-feedback-confirmation-item .button { width: 100%; }
+}
+
+@media (min-width: 761px) {
+  .app.role-coach > .side {
+    background: #123746;
+    color: #eff8ff;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .app.role-coach .side #nav { display: flex; flex-direction: column; gap: 5px; }
+  .app.role-coach .side #nav .nav.active { background: #24515e; color: #b5ffff; box-shadow: inset 3px 0 #67dbc2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app.role-coach .coach-student-card { transition: none; }
+}
+
+/* Leeractiviteiten, leerdoelen en projecten als afzonderlijke docentoverzichten. */
+.app.role-coach .coach-directory-page .coach-page-hero {
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.app.role-coach .coach-directory-page .coach-page-hero h1 { margin-bottom: 6px; }
+.app.role-coach .coach-directory-page .coach-section-count { display: none; }
+
+.app.role-coach .coach-directory-count {
+  display: flex;
+  min-width: 104px;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: 1px solid #dfe9ed;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(22, 51, 74, 0.035);
+}
+
+.app.role-coach .coach-directory-count strong { color: #17364b; font-size: 24px; line-height: 1.15; }
+.app.role-coach .coach-directory-count > span { color: #718695; font-size: 11px; }
+.app.role-coach .coach-directory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+
+.app.role-coach .coach-directory-card {
+  position: relative;
+  min-height: 240px;
+  gap: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.app.role-coach .coach-directory-card::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #21a58f, #8bd6bf);
+  content: "";
+}
+
+.app.role-coach .coach-directory-card:hover {
+  border-color: #b7d9d2;
+  box-shadow: 0 12px 28px rgba(22, 83, 73, 0.08);
+  transform: translateY(-2px);
+}
+
+.app.role-coach .coach-directory-card-head {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.app.role-coach .coach-directory-card-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border-radius: 11px;
+  background: #dff4ed;
+  color: #168b7d;
+  font-size: 20px;
+}
+
+.app.role-coach .coach-directory-meta { flex: 1; align-items: flex-end; }
+.app.role-coach .coach-directory-code { font-size: 11px; }
+.app.role-coach .coach-directory-card .coach-phase-badge { padding: 5px 9px; background: #edf5f5; font-size: 10px !important; }
+.app.role-coach .coach-directory-card h2 { font-size: 16px; line-height: 1.4; }
+.app.role-coach .coach-directory-description { min-height: 58px; color: #6f8797 !important; font-size: 12px !important; line-height: 1.6 !important; }
+.app.role-coach .coach-directory-footer { align-items: center; gap: 8px; padding-top: 12px; }
+.app.role-coach .coach-directory-activity-count strong { color: #31586a; font-size: 16px; }
+.app.role-coach .coach-directory-activity-count { display: block; color: #6f8797; font-size: 11px; }
+.app.role-coach .coach-directory-mini-progress { display: block; width: 100%; height: 6px; overflow: hidden; border-radius: 99px; background: #e7eff0; }
+.app.role-coach .coach-directory-mini-progress > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #24a58f, #6ccbb0); }
+
+.app.role-coach .coach-goal-card::before { background: linear-gradient(90deg, #7866bb, #b9a9ed); }
+.app.role-coach .coach-goal-card .coach-directory-card-icon { background: #eeeafb; color: #7162b2; }
+.app.role-coach .coach-goal-card .coach-status-badge { border-color: #e6e1f4; background: #f3f0fb; color: #7162a1; }
+.app.role-coach .coach-directory-person { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.app.role-coach .coach-directory-person-avatar { display: grid; width: 32px; height: 32px; flex: none; place-items: center; border-radius: 10px; background: #e2f4ef; color: #168b7d; font-size: 11px; font-weight: 800; }
+.app.role-coach .coach-directory-owner { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.app.role-coach .coach-goal-card:nth-child(3n+2) .coach-directory-person-avatar,
+.app.role-coach .coach-project-card:nth-child(3n+2) .coach-directory-person-avatar { background: #f0edfb; color: #7162b2; }
+.app.role-coach .coach-goal-card:nth-child(3n) .coach-directory-person-avatar,
+.app.role-coach .coach-project-card:nth-child(3n) .coach-directory-person-avatar { background: #fff1dc; color: #a76e20; }
+
+.app.role-coach .coach-directory-link {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  margin-top: auto;
+  padding: 10px;
+  border: 1px solid #e8e4f4;
+  border-radius: 10px;
+  background: #faf9fd;
+  color: #7669a7;
+}
+
+.app.role-coach .coach-directory-link > span:first-child { display: grid; width: 28px; height: 28px; flex: none; place-items: center; border-radius: 8px; background: #eeeafb; font-size: 15px; }
+.app.role-coach .coach-directory-link > span:last-child { display: grid; min-width: 0; gap: 2px; }
+.app.role-coach .coach-directory-link small { color: #8b83a6; font-size: 9px; }
+.app.role-coach .coach-directory-link strong { overflow: hidden; color: #554b7d; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.app.role-coach .coach-directory-link-muted { border-color: #e6edf0; background: #f8fafb; color: #8093a0; }
+.app.role-coach .coach-directory-link-muted > span:first-child { background: #edf2f4; }
+.app.role-coach .coach-directory-link-muted small,
+.app.role-coach .coach-directory-link-muted strong { color: #8093a0; }
+
+.app.role-coach .coach-project-card::before { background: linear-gradient(90deg, #dc9a3a, #f3cc7d); }
+.app.role-coach .coach-project-card .coach-directory-card-icon { background: #fff0d9; color: #bd802b; }
+.app.role-coach .coach-project-card .coach-status-badge { border-color: #e6edf0; background: #f2f6f7; color: #587084; }
+.app.role-coach .coach-project-card .coach-status-active { border-color: #cce9df; background: #e9f7f1; color: #16816e; }
+.app.role-coach .coach-project-card .coach-status-completed { border-color: #d8e6f4; background: #edf4fb; color: #4774a0; }
+.app.role-coach .coach-project-card .coach-directory-footer { flex-wrap: wrap; }
+.app.role-coach .coach-project-type,
+.app.role-coach .coach-project-deadline { display: inline-flex; align-items: center; gap: 5px; }
+.app.role-coach .coach-project-type { color: #566f80; font-weight: 650; }
+.app.role-coach .coach-project-type > span { color: #b47a2c; font-size: 15px; }
+.app.role-coach .coach-project-deadline { border-radius: 99px; background: #fff5e5; color: #9a6b27; padding: 5px 8px; font-size: 10px; }
+.app.role-coach .coach-project-outcomes { display: grid; gap: 6px; margin-top: auto; padding-top: 9px; border-top: 1px solid #edf1f3; }
+.app.role-coach .coach-project-outcomes > span { color: #8293a0; font-size: 9px; font-weight: 750; letter-spacing: 0.45px; text-transform: uppercase; }
+.app.role-coach .coach-project-outcomes > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.app.role-coach .coach-project-outcomes > div > span { max-width: 100%; overflow: hidden; border: 1px solid #e4ebee; border-radius: 99px; background: #f8fafb; color: #5b7788; padding: 4px 8px; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 1100px) {
+  .app.role-coach .coach-directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .app.role-coach .coach-directory-page .coach-page-hero { flex-direction: row; align-items: center; }
+  .app.role-coach .coach-directory-grid { grid-template-columns: 1fr; }
+  .app.role-coach .coach-directory-count { min-width: 80px; padding: 8px 11px; }
+  .app.role-coach .coach-directory-count strong { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .app.role-coach .coach-directory-page .coach-page-hero { align-items: flex-start; }
+  .app.role-coach .coach-directory-page .coach-page-hero h1 { font-size: 23px; }
+  .app.role-coach .coach-directory-count { min-width: 68px; padding: 7px 8px; }
+  .app.role-coach .coach-directory-count > span { font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app.role-coach .coach-directory-card { transition: none; }
+}
+
+.app.role-coach .coach-student-card {
+  min-height: 250px;
+  grid-template-rows: auto auto auto auto auto;
+}
+
+.app.role-coach .coach-student-level {
+  display: flex;
+  grid-column: 1 / -1;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e7eee9;
+  border-radius: 11px;
+  background: #f8fbf9;
+}
+
+.app.role-coach .coach-student-level-badge,
+.app.role-coach .coach-xp-level-badge {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: 11px;
+  background: #e2f4ef;
+  color: #168b7d;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.app.role-coach .coach-student-level-copy {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 3px;
+}
+
+.app.role-coach .coach-student-level-copy strong {
+  overflow: hidden;
+  color: #31586a;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app.role-coach .coach-student-level-copy small {
+  color: #718996;
+  font-size: 10px;
+}
+
+.app.role-coach .coach-student-level-track,
+.app.role-coach .coach-xp-overview-track {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #e5eeeb;
+}
+
+.app.role-coach .coach-student-level-track > span,
+.app.role-coach .coach-xp-overview-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #24a58f, #6ccbb0);
+}
+
+.app.role-coach .coach-student-action {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+
+.app.role-coach .coach-xp-overview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 22px;
+  padding: 18px 20px;
+  border: 1px solid #dcebe6;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #eaf7f3, #fff 75%);
+}
+
+.app.role-coach .coach-xp-level-badge {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  font-size: 20px;
+}
+
+.app.role-coach .coach-xp-overview-copy { display: grid; min-width: 0; gap: 5px; }
+.app.role-coach .coach-xp-overview-copy .coach-eyebrow { margin: 0; font-size: 10px; }
+.app.role-coach .coach-xp-overview-copy h2 { margin: 0; color: #17364b; font-size: 16px; }
+.app.role-coach .coach-xp-overview-copy p { margin: 0 0 3px; color: #6f8797; font-size: 12px; }
+.app.role-coach .coach-xp-overview-track { width: 100%; }
+.app.role-coach .coach-xp-level-caption { color: #567184; font-size: 11px; font-weight: 650; text-align: right; }
+
+@media (max-width: 760px) {
+  .app.role-coach .coach-xp-overview { grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 15px; }
+  .app.role-coach .coach-xp-level-caption { grid-column: 2; text-align: left; }
+}
+
+@media (max-width: 480px) {
+  .app.role-coach .coach-student-card { min-height: 0; }
+  .app.role-coach .coach-xp-overview { grid-template-columns: auto minmax(0, 1fr); }
+}
+
+.app.role-coach .coach-overview-page .coach-page-hero {
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.app.role-coach .coach-overview-action {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.app.role-coach .coach-overview-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 20px;
+}
+
+.app.role-coach .coach-summary-icon-xp { background: #e2f4ef; color: #168b7d; }
+
+.app.role-coach .coach-worklist-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: start;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.app.role-coach .coach-worklist-panel,
+.app.role-coach .coach-phase-groups {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #dfe9ed;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(22, 51, 74, 0.035);
+}
+
+.app.role-coach .coach-worklist-panel .coach-section-heading,
+.app.role-coach .coach-phase-groups .coach-section-heading {
+  align-items: flex-start;
+  margin-bottom: 13px;
+}
+
+.app.role-coach .coach-worklist-panel .coach-section-heading h2,
+.app.role-coach .coach-phase-groups .coach-section-heading h2 {
+  margin: 0 0 3px;
+  color: #17364b;
+  font-size: 17px;
+}
+
+.app.role-coach .coach-worklist-panel .coach-section-heading .coach-eyebrow,
+.app.role-coach .coach-phase-groups .coach-section-heading .coach-eyebrow { display: block; }
+
+.app.role-coach .coach-text-link {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  color: #168b7d;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app.role-coach .coach-text-link:hover { color: #116f68; text-decoration: underline; }
+.app.role-coach .coach-text-link:focus-visible { outline: 2px solid #168b7d; outline-offset: 3px; }
+
+.app.role-coach .coach-worklist { display: grid; }
+
+.app.role-coach .coach-worklist-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-top: 1px solid #edf1f3;
+}
+
+.app.role-coach .coach-worklist-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  background: #fff3df;
+  color: #b27820;
+  font-weight: 800;
+}
+
+.app.role-coach .coach-worklist-copy { display: grid; min-width: 0; gap: 2px; }
+.app.role-coach .coach-worklist-copy strong { overflow: hidden; color: #244b5b; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.app.role-coach .coach-worklist-copy span,
+.app.role-coach .coach-worklist-copy small { color: #718695; font-size: 10px; }
+.app.role-coach .coach-worklist-button { flex: none; padding: 7px 10px; font-size: 10px; }
+
+.app.role-coach .coach-worklist-panel .coach-feedback-confirmation-list { gap: 0; }
+.app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item {
+  align-items: center;
+  padding: 11px 0;
+  border: 0;
+  border-top: 1px solid #edf1f3;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item > span { gap: 3px; }
+.app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item > span > span { color: #718695; font-size: 10px; }
+.app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item form { flex: none; }
+.app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item .button { padding: 7px 10px; font-size: 10px; }
+
+.app.role-coach .coach-worklist-empty {
+  display: grid;
+  gap: 3px;
+  padding: 18px 12px;
+  border: 1px dashed #dfe9ed;
+  border-radius: 11px;
+  background: #fbfcfd;
+  text-align: center;
+}
+
+.app.role-coach .coach-worklist-empty strong { color: #31586a; font-size: 12px; }
+.app.role-coach .coach-worklist-empty span { color: #718695; font-size: 11px; }
+
+.app.role-coach .coach-phase-groups { margin-bottom: 22px; }
+.app.role-coach .coach-phase-group-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.app.role-coach .coach-phase-group {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e4ecef;
+  border-radius: 11px;
+  background: #fbfcfd;
+  color: #168b7d;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.app.role-coach .coach-phase-group:hover { border-color: #a9d8cd; background: #f2faf7; }
+.app.role-coach .coach-phase-group:focus-visible { outline: 3px solid rgba(22, 139, 125, 0.28); outline-offset: 2px; }
+.app.role-coach .coach-phase-group > span:first-child { display: grid; min-width: 0; gap: 2px; }
+.app.role-coach .coach-phase-group strong { overflow: hidden; color: #31586a; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.app.role-coach .coach-phase-group small { color: #718695; font-size: 10px; }
+
+.app.role-coach .coach-directory-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid #dfe9ed;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.app.role-coach .coach-directory-tools .coach-search,
+.app.role-coach .coach-project-status-filter { display: grid; min-width: 0; gap: 4px; }
+
+.app.role-coach .coach-project-status-filter select,
+.app.role-coach .coach-sort-filter select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d8e4e9;
+  border-radius: 9px;
+  background: #fbfcfd;
+  color: #17364b;
+  font: inherit;
+}
+
+.app.role-coach .coach-project-status-filter select:focus,
+.app.role-coach .coach-sort-filter select:focus { border-color: #168b7d; outline: 3px solid rgba(22, 139, 125, 0.15); }
+
+.app.role-coach .coach-roster-tools {
+  grid-template-columns: minmax(0, 1fr) 220px 200px;
+  align-items: end;
+}
+
+.app.role-coach .coach-sort-filter { display: grid; min-width: 0; gap: 4px; }
+.app.role-coach .coach-status-review { border-color: #f0dfbd !important; background: #fff5e5 !important; color: #96651e !important; }
+
+@media (max-width: 1100px) {
+  .app.role-coach .coach-overview-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app.role-coach .coach-worklist-grid { grid-template-columns: 1fr; }
+  .app.role-coach .coach-roster-tools { grid-template-columns: minmax(0, 1fr) minmax(180px, 0.7fr); }
+}
+
+@media (max-width: 760px) {
+  .app.role-coach .coach-overview-page .coach-page-hero { align-items: flex-start; flex-direction: column; }
+  .app.role-coach .coach-overview-summary { grid-template-columns: 1fr; }
+  .app.role-coach .coach-directory-tools { grid-template-columns: 1fr; }
+  .app.role-coach .coach-roster-tools { grid-template-columns: 1fr; }
+  .app.role-coach .coach-phase-group-list { grid-template-columns: 1fr; }
+  .app.role-coach .coach-worklist-item { grid-template-columns: 34px minmax(0, 1fr); }
+  .app.role-coach .coach-worklist-button { grid-column: 2; justify-self: start; }
+  .app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item { align-items: stretch; flex-direction: column; }
+  .app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item form,
+  .app.role-coach .coach-worklist-panel .coach-feedback-confirmation-item .button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app.role-coach .coach-phase-group { transition: none; }
+}

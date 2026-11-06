@@ -1,6 +1,7 @@
 window.RoleApp.initializeRole({
   label: "Docent",
   routes: [
+    ["Overzicht", "coachOverview"],
     ["Studenten", "coachStudents"],
     ["Leeractiviteiten", "coachActivities"],
     ["Leerdoelen", "coachGoals"],
@@ -59,6 +60,7 @@ function createPager(allItems, pageSize, anchor, label) {
   return {
     show(items) {
       matches = items;
+      items.forEach((item) => anchor.append(item));
       page = 1;
       render();
     },
@@ -68,6 +70,7 @@ function createPager(allItems, pageSize, anchor, label) {
 /* Pas de naam- en fasefilters toe voordat de gevonden studenten worden gepagineerd. */
 const coachStudentSearch = document.getElementById("coachStudentSearch");
 const coachPhaseFilter = document.getElementById("coachPhaseFilter");
+const coachStudentSort = document.getElementById("coachStudentSort");
 const coachStudentCards = [...document.querySelectorAll(".coach-student-card[data-student-name]")];
 const coachNoResults = document.getElementById("coachNoResults");
 const coachStudentGrid = document.querySelector(".coach-student-grid");
@@ -85,19 +88,90 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
       return matchesName && matchesPhase;
     });
 
+    const sort = coachStudentSort?.value ?? "name";
+    matches.sort((a, b) => {
+      if (sort === "progress-asc") {
+        return Number(a.dataset.studentProgress) - Number(b.dataset.studentProgress);
+      }
+      if (sort === "xp-asc") {
+        return Number(a.dataset.studentXp) - Number(b.dataset.studentXp);
+      }
+      return a.dataset.studentName.localeCompare(b.dataset.studentName, "nl");
+    });
+
     studentPager.show(matches);
     coachNoResults.classList.toggle("hidden", matches.length > 0);
   }
 
   coachStudentSearch.addEventListener("input", filterCoachStudents);
   coachPhaseFilter.addEventListener("change", filterCoachStudents);
+  coachStudentSort?.addEventListener("change", filterCoachStudents);
   filterCoachStudents();
 }
 
-/* Activiteiten, leerdoelen en projecten: 6 kaarten per pagina */
+window.openCoachPhase = function (phase) {
+  show("coachStudents");
+  if (!coachPhaseFilter) return;
+  coachPhaseFilter.value = [...coachPhaseFilter.options].some((option) => option.value === phase) ? phase : "";
+  coachPhaseFilter.dispatchEvent(new Event("change"));
+};
+
+window.openCoachProjectQueue = function () {
+  show("coachProjects");
+  const statusFilter = document.getElementById("coachProjectStatusFilter");
+  const search = document.getElementById("coachProjectSearch");
+  if (statusFilter) statusFilter.value = "review";
+  if (search) search.value = "";
+  statusFilter?.dispatchEvent(new Event("change"));
+};
+
+window.openCoachProjects = function () {
+  show("coachProjects");
+  const statusFilter = document.getElementById("coachProjectStatusFilter");
+  const search = document.getElementById("coachProjectSearch");
+  if (statusFilter) statusFilter.value = "";
+  if (search) search.value = "";
+  statusFilter?.dispatchEvent(new Event("change"));
+};
+
+/* Filter, sort, and paginate the project list without leaving the dashboard. */
+const coachProjectGrid = document.querySelector("#coachProjects .coach-directory-grid");
+const coachProjectCards = coachProjectGrid ? [...coachProjectGrid.children] : [];
+const coachProjectSearch = document.getElementById("coachProjectSearch");
+const coachProjectStatusFilter = document.getElementById("coachProjectStatusFilter");
+const coachProjectNoResults = document.getElementById("coachProjectNoResults");
+
+if (coachProjectGrid && coachProjectSearch && coachProjectStatusFilter && coachProjectNoResults) {
+  const projectPager = createPager(coachProjectCards, 6, coachProjectGrid, "Pagina's met projecten");
+
+  function filterCoachProjects() {
+    const searchTerm = coachProjectSearch.value.trim().toLocaleLowerCase("nl");
+    const selectedStatus = coachProjectStatusFilter.value;
+    const matches = coachProjectCards.filter((card) =>
+      card.dataset.projectSearch.includes(searchTerm) &&
+      (!selectedStatus || card.dataset.projectStatus === selectedStatus),
+    );
+
+    projectPager.show(matches);
+    coachProjectNoResults.classList.toggle("hidden", matches.length > 0);
+  }
+
+  coachProjectSearch.addEventListener("input", filterCoachProjects);
+  coachProjectStatusFilter.addEventListener("change", filterCoachProjects);
+  filterCoachProjects();
+}
+
+/* Keep the remaining read-only directories compact. */
 document.querySelectorAll(".coach-directory-grid").forEach((grid) => {
+  if (grid === coachProjectGrid) return;
   const cards = [...grid.children];
   createPager(cards, 6, grid, "Pagina's").show(cards);
+});
+
+/* Paginate long work queues while keeping all open actions available. */
+document.querySelectorAll("#coachPendingProjects, .coach-feedback-confirmation-list").forEach((list) => {
+  const items = [...list.children];
+  if (items.length > 5) createPager(items, 5, list, "Pagina's met open acties").show(items);
 });
 
 /* De filters en paginering van leeruitkomsten werken per student afzonderlijk. */
@@ -209,6 +283,7 @@ document.querySelectorAll(".coach-student-detail").forEach((detail) => {
         if (studentCard) {
           const targetHours = Number(studentCard.dataset.coachTargetHours);
           const percentage = targetHours > 0 ? Math.min(100, Math.round((totalHours / targetHours) * 100)) : 0;
+          studentCard.dataset.studentProgress = String(percentage);
           studentCard.querySelector("[data-coach-student-hours]").textContent = totalHours.toLocaleString("nl");
           studentCard.querySelector("[data-coach-student-progress]").setAttribute("aria-valuenow", percentage);
           studentCard.querySelector("[data-coach-student-progress] > span").style.width = `${percentage}%`;

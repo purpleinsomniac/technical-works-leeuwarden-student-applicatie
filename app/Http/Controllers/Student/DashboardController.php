@@ -28,6 +28,7 @@ class DashboardController extends RoleDashboardController
             roleData: ['applicationSettings' => ApplicationSetting::current()],
             style: 'css/roles/student.css',
             scripts: [
+                'js/common.js',
                 'js/roles/student/core.js',
                 'js/roles/student/data.js',
                 'js/roles/student/app.js',

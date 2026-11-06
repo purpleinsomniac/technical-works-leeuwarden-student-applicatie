@@ -19,12 +19,16 @@ class StateController extends Controller
         ]);
 
         $allowedKeys = [
+            'notification-settings',
             'weekly-plan',
             'archived-learning-outcomes',
             'hours-processing-latest-read',
             'ontwikkeling-dashboard-instellingen',
         ];
         $data = array_intersect_key($payload['data'], array_flip($allowedKeys));
+        if (isset($data['notification-settings'])) {
+            $data['notification-settings'] = validator($data['notification-settings'], \App\Http\Controllers\ProfileController::notificationRules())->validate();
+        }
         if (isset($data['weekly-plan'])) {
             validator(['tasks'=>$data['weekly-plan']], [
                 'tasks'=>['array','max:250'],
@@ -47,14 +51,15 @@ class StateController extends Controller
 
         if (isset($data['ontwikkeling-dashboard-instellingen'])) {
             $instellingen = $data['ontwikkeling-dashboard-instellingen'];
-            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines'];
+            $choices = ['theme'=>['light','dark','system'], 'accent'=>['teal','blue','purple','pink','orange','amber','green'], 'density'=>['compact','standard','spacious']];
+            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines', ...array_keys($choices)];
 
             if (! is_array($instellingen) || array_diff(array_keys($instellingen), $toegestaneInstellingen)) {
                 throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstellingen.']);
             }
 
-            foreach ($instellingen as $waarde) {
-                if (! is_bool($waarde)) {
+            foreach ($instellingen as $key => $waarde) {
+                if (isset($choices[$key]) ? !in_array($waarde, $choices[$key], true) : !is_bool($waarde)) {
                     throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstelling.']);
                 }
             }
@@ -73,6 +78,10 @@ class StateController extends Controller
 
         // Alleen de gewijzigde onderdelen vervangen. Andere voorkeuren blijven bewaard.
         $state->gegevens = array_replace($state->gegevens ?? [], $data);
+        if (isset($data['notification-settings'])) {
+            $profile = array_replace($state->gegevens['profile-settings'] ?? [], array_intersect_key($data['notification-settings'], array_flip(['email_notifications','platform_notifications'])));
+            $state->gegevens = array_replace($state->gegevens, ['profile-settings'=>$profile]);
+        }
         $state->save();
 
         return response()->json(['saved' => true]);

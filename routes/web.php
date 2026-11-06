@@ -36,6 +36,8 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): void {
+    Route::patch('/mijn-profiel', [\App\Http\Controllers\ProfileController::class, 'update'])->middleware('throttle:10,1')->name('profile.update');
+    Route::patch('/mijn-meldingsvoorkeuren', [\App\Http\Controllers\ProfileController::class, 'notifications'])->middleware('throttle:20,1')->name('profile.notifications');
     Route::put('/mijn-dashboardinstellingen', [DashboardSettingsController::class, 'update'])
         ->name('dashboard-settings.update');
 

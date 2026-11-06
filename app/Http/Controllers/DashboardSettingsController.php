@@ -17,18 +17,18 @@ class DashboardSettingsController extends Controller
         ])['role'];
         abort_unless($user->canUseRole($activeRole), 403);
 
-        $sections = match ($activeRole) {
-            'beheerder' => ['overview', 'users', 'learningOutcomes', 'applicationSettings'],
-            'teamleider' => ['groups', 'reports'],
-            'coach' => ['coachOverview', 'coachStudents', 'coachActivities', 'coachGoals', 'coachProjects'],
-            default => abort(403),
-        };
-
         $preferences = $request->validate([
             'compact' => ['required', 'boolean'],
             'darkMode' => ['required', 'boolean'],
-            'sections' => ['required', 'array', 'min:1'],
-            'sections.*' => ['required', 'string', 'distinct', Rule::in($sections)],
+            'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
+            'density' => ['required', Rule::in(['compact', 'standard', 'spacious'])],
+            'accent' => ['required', Rule::in(['teal', 'blue', 'purple', 'pink', 'orange', 'amber', 'green'])],
+            'sections' => ['sometimes', 'array', 'min:1'],
+            'sections.*' => ['required', 'string', 'distinct', Rule::in(match ($activeRole) {
+                'beheerder' => ['overview', 'users', 'classes', 'learningOutcomes', 'applicationSettings'],
+                'teamleider' => ['groups', 'reports'],
+                'coach' => ['coachOverview', 'coachStudents', 'coachActivities', 'coachGoals', 'coachProjects'],
+            })],
         ]);
 
         $state = UserState::firstOrNew(['gebruiker_id' => $user->id]);

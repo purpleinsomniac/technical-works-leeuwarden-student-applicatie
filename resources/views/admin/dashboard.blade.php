@@ -9,7 +9,6 @@
       <h1>Alles op één plek</h1>
       <p>Houd overzicht over studenten, begeleiding en de gegevens in de leeromgeving.</p>
     </div>
-    <button class="dashboard-settings-shortcut admin-hero-action" type="button" onclick="show('adminDashboardSettings')">Dashboard instellen <span aria-hidden="true">⚙</span></button>
   </header>
   {{-- Shows the database totals supplied by the administrator dashboard controller. --}}
   <section class="admin-stats" aria-label="Databaseoverzicht">
@@ -386,14 +385,7 @@
 </section>
 
 @include('components.role-dashboard-settings', [
-  'settingsPageId' => 'adminDashboardSettings',
-  'dashboardSections' => [
-    ['key' => 'overview', 'label' => 'Overzicht', 'description' => 'Databasecijfers en applicatie-informatie.'],
-    ['key' => 'users', 'label' => 'Gebruikers', 'description' => 'Beheer gebruikers en accountrollen.'],
-    ['key' => 'classes', 'label' => 'Klassen', 'description' => 'Maak klassen en koppel studenten en docenten.'],
-    ['key' => 'learningOutcomes', 'label' => 'Leeruitkomsten', 'description' => 'Bekijk en beheer leeruitkomsten.'],
-    ['key' => 'applicationSettings', 'label' => 'Applicatie-instellingen', 'description' => 'Beheer uploads en onderhoudsmodus.'],
-  ],
+  'preferencesPageId' => 'adminPreferencesSettings',
 ])
 
 @endsection

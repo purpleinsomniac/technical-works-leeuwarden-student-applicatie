@@ -3,7 +3,6 @@ body.account-modal-open { overflow:hidden; }
 #sidebarAccountDetails.hidden { display:none; }
 #sidebarAccountDetails .account-modal-backdrop { position:absolute; inset:0; width:100%; height:100%; border:0; background:#09263885; backdrop-filter:blur(4px); }
 #sidebarAccountDetails .profile-redesign { position:relative; width:min(850px,100%); max-height:calc(100dvh - 40px); overflow-y:auto; border:1px solid #dfebef; border-radius:19px; background:linear-gradient(130deg,#fff,#fbfdfd); box-shadow:0 24px 80px #09263835; padding:0 20px; color:#18354b; }
-#sidebarAccountDetails .profile-redesign.account-modal-dialog--settings { width:min(1100px,100%); }
 .profile-redesign .account-modal-header { display:flex; justify-content:space-between; align-items:flex-start; padding:18px 8px 14px; border:0; }
 .profile-redesign .account-modal-eyebrow { display:block; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#008d7d; font-weight:800; }
 .profile-redesign .account-modal-header h2 { font-size:28px; margin:5px 0 0; color:#15384f; }

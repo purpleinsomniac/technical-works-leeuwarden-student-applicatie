@@ -8,7 +8,6 @@
       <h1>Groepsoverzicht</h1>
       <p class="dim">Actuele totalen op basis van de studentvoortgang in MySQL.</p>
     </div>
-    <button class="dashboard-settings-shortcut teamleader-account-shortcut" type="button" onclick="show('managerDashboardSettings')">Dashboard instellen</button>
   </div>
   {{-- Summary values are calculated from the latest student progress data by the controller. --}}
   <div class="grid3">
@@ -47,11 +46,7 @@
 </section>
 
 @include('components.role-dashboard-settings', [
-  'settingsPageId' => 'managerDashboardSettings',
-  'dashboardSections' => [
-    ['key' => 'groups', 'label' => 'Groepsoverzicht', 'description' => 'Bekijk de voortgang van de studentengroep.'],
-    ['key' => 'reports', 'label' => 'Rapportages', 'description' => 'Bekijk de samenvatting en rapportages.'],
-  ],
+  'preferencesPageId' => 'managerPreferencesSettings',
 ])
 
 @endsection

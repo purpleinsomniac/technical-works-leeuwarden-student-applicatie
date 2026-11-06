@@ -6,13 +6,10 @@ window.RoleApp.initializeRole({
     ["Klassen", "adminClasses"],
     ["Leeruitkomsten", "adminLearningOutcomes"],
     ["Applicatie-instellingen", "adminApplicationSettings"],
-    ["Dashboard instellen", "adminDashboardSettings"],
+    ["Instellingen", "adminPreferencesSettings"],
   ],
 });
-RoleSettings.initialize({
-  settingsPageId: "adminDashboardSettings",
-  dashboardPageId: "adminProcessing",
-});
+RoleSettings.initialize();
 
 function toggleAdminUserForm() {
   const form = document.getElementById("createAdminUser");

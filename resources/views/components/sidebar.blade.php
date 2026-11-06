@@ -79,7 +79,7 @@
       </div>
     </dl>
     </section>
-    @if (in_array($frontendUser['role'], ['beheerder', 'teamleider', 'coach'], true))
+    @if ($frontendUser['role'] === 'coach')
       <section class="profile-card profile-dashboard-settings">
         @include('components.account-dashboard-settings')
       </section>

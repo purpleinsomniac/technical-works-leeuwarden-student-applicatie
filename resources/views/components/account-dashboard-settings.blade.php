@@ -59,6 +59,5 @@
   <div class="account-dashboard-settings-footer">
     <small data-role-settings-status role="status">Wijzigingen worden automatisch opgeslagen.</small>
     <button class="button" type="button" data-role-settings-reset>Standaard herstellen</button>
-    <button class="button dark" type="button" data-role-settings-save>Opslaan</button>
   </div>
 </section>

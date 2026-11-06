@@ -208,6 +208,12 @@ textarea:focus-visible,
 .nav { min-height: 38px; border: 0; background: transparent; color: #e8f0f4; border-radius: 9px; padding: 8px 15px; font-size: 15px; font-weight: 650; }
 .nav:hover { background: rgba(16, 95, 119, 0.5); color: #fff; }
 .nav.active { background: linear-gradient(90deg, #08768f, #08a8b2); color: #fff; box-shadow: none; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"],
+.role-teamleider .side #nav [data-route="managerPreferencesSettings"] { position: relative; margin-top: auto; border-radius: 0; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"]::before,
+.role-teamleider .side #nav [data-route="managerPreferencesSettings"]::before { position: absolute; top: -3px; right: 7px; left: 7px; height: 1px; background: rgba(177, 220, 229, 0.22); content: ""; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"]:is(:hover, .active),
+.role-teamleider .side #nav [data-route="managerPreferencesSettings"]:is(:hover, .active) { border-radius: 9px; }
 .side .foot { flex: none; margin-top: 9px; border-top: 1px solid rgba(177, 220, 229, 0.22); padding: 13px 0 0; }
 .side .foot > .small { margin-bottom: 5px; }
 .side .foot form .nav { padding-top: 8px; padding-bottom: 8px; }
@@ -222,29 +228,8 @@ body.account-modal-open { overflow: hidden; }
 .account-modal { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 22px; }
 .account-modal-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(9, 29, 42, 0.58); backdrop-filter: blur(4px); cursor: default; }
 .account-modal-dialog { position: relative; z-index: 1; width: min(100%, 460px); overflow: hidden; border: 1px solid #d5e6e8; border-radius: 18px; background: #fff; box-shadow: 0 28px 80px rgba(9, 37, 52, 0.28); animation: account-modal-in 0.2s ease-out; }
-.account-modal-dialog--settings { width: min(100%, 960px); max-height: min(90vh, 820px); overflow-y: auto; }
 .account-modal-content { display: block; }
-.account-modal-dialog--settings .account-modal-content { display: grid; grid-template-columns: minmax(240px, .75fr) minmax(0, 1.25fr); }
 .account-modal-profile { min-width: 0; }
-.account-modal-dialog--settings .account-modal-profile { border-right: 1px solid #e0eaed; }
-.account-modal-dialog--settings .account-modal-person { margin-top: 20px; }
-.account-dashboard-settings { min-width: 0; padding: 22px 24px; }
-.account-dashboard-settings-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-.account-dashboard-settings-heading .settings-card-icon { display: grid; width: 36px; height: 36px; flex: none; place-items: center; border-radius: 10px; background: #e3f5ed; color: #118e73; }
-.account-dashboard-settings-heading h3 { margin: 0; color: #16394d; font-size: 16px; }
-.account-dashboard-settings-heading p { margin: 2px 0 0; color: #748797; font-size: 11px; }
-.account-dashboard-setting-group { margin-top: 14px; }
-.account-dashboard-setting-group h4 { margin: 0; border-bottom: 1px solid #e8eef1; padding-bottom: 6px; color: #61798b; font-size: 10px; letter-spacing: .5px; text-transform: uppercase; }
-.account-dashboard-setting { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf1f3; color: #284657; padding: 6px 0; font-size: 11px; cursor: pointer; }
-.account-dashboard-setting input { appearance: none; position: relative; width: 36px; height: 21px; flex: none; margin: 0; border: 0; border-radius: 99px; background: #cbd5df; cursor: pointer; transition: background .18s; }
-.account-dashboard-setting input::after { position: absolute; top: 3px; left: 3px; width: 15px; height: 15px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px #173f4d33; content: ""; transition: transform .18s; }
-.account-dashboard-setting input:checked { background: #098d77; }
-.account-dashboard-setting input:checked::after { transform: translateX(15px); }
-.account-dashboard-setting input:focus-visible { outline: 3px solid #80cbbb; outline-offset: 2px; }
-.account-dashboard-settings-footer { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-.account-dashboard-settings-footer small { flex: 1 1 100%; color: #708795; font-size: 10px; }
-.account-dashboard-settings-footer small.role-settings-error { color: #a23d3d; }
-.account-dashboard-settings-footer .button { padding: 7px 10px; font-size: 10px; }
 @keyframes account-modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .account-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 1px solid #e0eaed; padding: 22px 24px 18px; }
 .account-modal-eyebrow { display: block; margin-bottom: 3px; color: #159687; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: 1.1px; }
@@ -264,7 +249,6 @@ body.account-modal-open { overflow: hidden; }
 .account-modal-data a:hover { text-decoration: underline; }
 .theme-dark .account-modal-dialog { border-color: #2a4855; background: #132833; }
 .theme-dark .account-modal-header,
-.theme-dark .account-modal-dialog--settings .account-modal-profile,
 .theme-dark .account-modal-data > div { border-color: #29434f; }
 .theme-dark .account-modal-header h2,
 .theme-dark .account-modal-person strong,
@@ -273,14 +257,6 @@ body.account-modal-open { overflow: hidden; }
 .theme-dark .account-modal-person { background: linear-gradient(110deg, #153b39, #162f38); }
 .theme-dark .account-modal-person small,
 .theme-dark .account-modal-data dt { color: #9eb1ba; }
-.theme-dark .account-dashboard-settings-heading h3,
-.theme-dark .account-dashboard-setting { color: #eef7f9; }
-.theme-dark .account-dashboard-settings-heading p,
-.theme-dark .account-dashboard-settings-footer small { color: #9eb1ba; }
-.theme-dark .account-dashboard-setting-group h4,
-.theme-dark .account-dashboard-setting-group h4 { border-color: #29434f; }
-.theme-dark .account-dashboard-setting { border-color: #29434f; }
-.theme-dark .account-dashboard-settings-heading .settings-card-icon { background: #153b39; color: #7cdfcf; }
 .product-credit { display: flex; flex-direction: column; gap: 1px; margin: 8px 6px 0; padding: 10px 3px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 7px; line-height: 1.35; letter-spacing: 0.1px; }
 .product-credit strong { color: #d2e1e9; font-size: 8px; font-weight: 650; }
 .main { display: flex; min-width: 0; min-height: 100vh; flex-direction: column; padding: 0 42px 36px; margin: 0 auto; }
@@ -303,11 +279,6 @@ body.account-modal-open { overflow: hidden; }
   .account-modal-person { margin: 18px 19px 13px; }
   .account-modal-data { padding: 0 19px 18px; }
   .account-modal-data > div { grid-template-columns: 1fr; gap: 3px; }
-  .account-modal-dialog--settings { max-height: 92vh; }
-  .account-modal-dialog--settings .account-modal-content { grid-template-columns: 1fr; }
-  .account-modal-dialog--settings .account-modal-profile { border-right: 0; border-bottom: 1px solid #e0eaed; }
-  .account-dashboard-settings { padding: 18px 19px; }
-  .account-dashboard-settings-footer .button { flex: 1; }
 }
 html.theme-dark { color: #e7f0f3; background: #0f202a; }
 html.theme-dark .main { background: #0f202a; }

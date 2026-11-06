@@ -27,7 +27,7 @@ class DashboardController extends RoleDashboardController
             view: 'admin.dashboard',
             roleData: $this->overview(),
             style: 'css/roles/beheerder.css',
-            scripts: ['js/common.js', 'js/roles/beheerder.js'],
+            scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/beheerder.js'],
         );
     }
 

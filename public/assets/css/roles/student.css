@@ -1253,48 +1253,6 @@ body { background: #f3f6f9; }
 .side .foot .sidebar-logout { gap: 13px; min-height: 39px; margin-top: 5px; padding-left: 15px; color: #e6f0f3; }
 .side .foot .sidebar-logout:hover { background: rgba(18, 82, 104, 0.55); color: #fff; }
 
-/* Het profiel opent centraal, zodat de gegevens niet in de smalle navigatie staan. */
-body.account-modal-open { overflow: hidden; }
-.account-modal { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 22px; }
-.account-modal-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(9, 29, 42, 0.58); backdrop-filter: blur(4px); cursor: default; }
-.account-modal-dialog { position: relative; z-index: 1; width: min(100%, 460px); overflow: hidden; border: 1px solid #d5e6e8; border-radius: 18px; background: #fff; box-shadow: 0 28px 80px rgba(9, 37, 52, 0.28); animation: account-modal-in 0.2s ease-out; }
-@keyframes account-modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-.account-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 1px solid #e0eaed; padding: 22px 24px 18px; }
-.account-modal-eyebrow { display: block; margin-bottom: 3px; color: #159687; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: 1.1px; }
-.account-modal-header h2 { margin: 0; color: #16364a; font-size: 23px; }
-.account-modal-close { display: grid; width: 38px; height: 38px; flex: none; place-items: center; border: 1px solid #dce7ea; border-radius: 10px; background: #f5f8f9; color: #476273; padding: 0 0 3px; font-size: 27px; line-height: 1; }
-.account-modal-close:hover { border-color: #bcdad5; background: #eaf6f3; color: #147b70; }
-.account-modal-person { display: flex; align-items: center; gap: 14px; margin: 22px 24px 16px; border-radius: 13px; background: linear-gradient(110deg, #e9f8f4, #f6fbfa); padding: 16px; }
-.account-modal-avatar { display: grid; width: 54px; height: 54px; flex: none; place-items: center; border-radius: 50%; background: linear-gradient(145deg, #1599a9, #08738b); color: #fff; box-shadow: 0 7px 18px rgba(15, 128, 143, 0.2); font-size: 14px; font-weight: 850; }
-.account-modal-person > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.account-modal-person strong { overflow: hidden; color: #16394d; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
-.account-modal-person small { color: #62808e; font-size: 11px; }
-.account-modal-data { display: grid; margin: 0; padding: 0 24px 22px; }
-.account-modal-data > div { display: grid; grid-template-columns: 115px minmax(0, 1fr); gap: 14px; border-top: 1px solid #e8eef1; padding: 13px 2px; }
-.account-modal-data dt { color: #788b98; font-size: 10px; }
-.account-modal-data dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #294a5d; font-size: 11px; font-weight: 750; }
-.account-modal-data a { color: #167f74; text-decoration: none; }
-.account-modal-data a:hover { text-decoration: underline; }
-.theme-dark .account-modal-dialog { border-color: #2a4855; background: #132833; }
-.theme-dark .account-modal-header,
-.theme-dark .account-modal-data > div { border-color: #29434f; }
-.theme-dark .account-modal-header h2,
-.theme-dark .account-modal-person strong,
-.theme-dark .account-modal-data dd { color: #eef7f9; }
-.theme-dark .account-modal-close { border-color: #34505c; background: #1b3541; color: #c5d5dc; }
-.theme-dark .account-modal-person { background: linear-gradient(110deg, #153b39, #162f38); }
-.theme-dark .account-modal-person small,
-.theme-dark .account-modal-data dt { color: #9eb1ba; }
-
-@media (max-width: 520px) {
-  .account-modal { align-items: end; padding: 12px; }
-  .account-modal-dialog { border-radius: 17px; }
-  .account-modal-header { padding: 19px 19px 16px; }
-  .account-modal-person { margin: 18px 19px 13px; }
-  .account-modal-data { padding: 0 19px 18px; }
-  .account-modal-data > div { grid-template-columns: 1fr; gap: 3px; }
-}
-
 @media (max-width: 1050px) {
   .hours-summary-card { grid-template-columns: 88px 175px 1fr; }
   .hours-summary-card .hours-legend { grid-template-columns: repeat(2, 1fr); }
@@ -1402,9 +1360,6 @@ body.account-modal-open { overflow: hidden; }
 .dashboard-welcome { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 12px; }
 .dashboard-welcome h1 { margin-bottom: 5px; }
 .dashboard-welcome p { margin: 0; color: #697e90; font-size: 14px; }
-.dashboard-settings-shortcut { display: inline-flex; align-items: center; gap: 8px; flex: none; border: 1px solid #d9e5e9; border-radius: 9px; background: #fff; color: #436170; padding: 9px 12px; font-size: 10px; font-weight: 700; }
-.dashboard-settings-shortcut:hover { border-color: #9bcfc4; background: #eef8f5; color: #16786e; }
-.dashboard-settings-shortcut .ui-icon { width: 16px; height: 16px; }
 .dashboard-phase-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 48px; width: min(100%, 620px); margin: 18px 0 20px; }
 .dashboard-phase-tabs .tab { display: flex; width: 100%; height: 48px; min-height: 48px; align-items: center; justify-content: center; padding-right: 12px; padding-left: 12px; text-align: center; }
 

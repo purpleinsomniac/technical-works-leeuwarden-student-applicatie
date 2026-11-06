@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\LeeruitkomstController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Coach\DashboardController as CoachDashboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardSettingsController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Coach\ProgressController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
@@ -35,6 +36,9 @@ Route::middleware('guest')->group(function (): void {
 });
 
 Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): void {
+    Route::put('/mijn-dashboardinstellingen', [DashboardSettingsController::class, 'update'])
+        ->name('dashboard-settings.update');
+
     Route::get('/student', StudentDashboardController::class)->middleware('role:student')->name('student.dashboard');
     Route::get('/coach', CoachDashboardController::class)->middleware('role:coach')->name('coach.dashboard');
     Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');

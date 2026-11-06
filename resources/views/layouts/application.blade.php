@@ -29,6 +29,7 @@
     window.LARAVEL_STATE = {{ Illuminate\Support\Js::from($frontendState) }};
     window.LARAVEL_DATA = {{ Illuminate\Support\Js::from($frontendData) }};
     window.LARAVEL_SAVE_URL = {{ Illuminate\Support\Js::from(route('state.save')) }};
+    window.LARAVEL_ROLE_SETTINGS_URL = {{ Illuminate\Support\Js::from(route('dashboard-settings.update')) }};
     window.LARAVEL_API = {{ Illuminate\Support\Js::from([
         'challengeSync' => route('challenges.sync'),
         'reflectionStore' => route('reflections.store'),

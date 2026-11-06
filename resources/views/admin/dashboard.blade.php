@@ -2,14 +2,14 @@
 
 @section('role-content')
 {{-- Each section is a separate dashboard view; the role navigation shows one at a time. --}}
-<section id="adminProcessing" class="view hidden admin-dashboard">
+<section id="adminProcessing" class="view hidden admin-dashboard" data-role-section="overview">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
       <h1>Alles op één plek</h1>
       <p>Houd overzicht over studenten, begeleiding en de gegevens in de leeromgeving.</p>
     </div>
-    <button class="button admin-hero-action" type="button" onclick="show('adminApplicationSettings')">Applicatie-instellingen <span aria-hidden="true">⚙</span></button>
+    <button class="dashboard-settings-shortcut admin-hero-action" type="button" onclick="show('adminDashboardSettings')">Dashboard instellen <span aria-hidden="true">⚙</span></button>
   </header>
   {{-- Shows the database totals supplied by the administrator dashboard controller. --}}
   <section class="admin-stats" aria-label="Databaseoverzicht">
@@ -48,7 +48,7 @@
 </section>
 
 {{-- Account management: create accounts, filter the list, and edit or delete existing users. --}}
-<section id="adminUsers" class="view hidden admin-dashboard">
+<section id="adminUsers" class="view hidden admin-dashboard" data-role-section="users">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
@@ -160,7 +160,7 @@
 </section>
 
 {{-- Shows learning outcomes as sorted tiles and keeps their create/edit controls on a dedicated page. --}}
-<section id="adminLearningOutcomes" class="view hidden admin-dashboard">
+<section id="adminLearningOutcomes" class="view hidden admin-dashboard" data-role-section="learningOutcomes">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
@@ -207,7 +207,7 @@
   </div>
 </section>
 
-<section id="adminApplicationSettings" class="view hidden admin-dashboard">
+<section id="adminApplicationSettings" class="view hidden admin-dashboard" data-role-section="applicationSettings">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
@@ -257,6 +257,16 @@
     <div><strong>Notificaties zijn nog niet ingericht</strong><p>De applicatie verstuurt momenteel geen automatische meldingen bij nieuwe feedback. Daarom is deze instelling nog niet beschikbaar.</p></div>
   </section>
 </section>
+
+@include('components.role-dashboard-settings', [
+  'settingsPageId' => 'adminDashboardSettings',
+  'dashboardSections' => [
+    ['key' => 'overview', 'label' => 'Overzicht', 'description' => 'Databasecijfers en applicatie-informatie.'],
+    ['key' => 'users', 'label' => 'Gebruikers', 'description' => 'Beheer gebruikers en accountrollen.'],
+    ['key' => 'learningOutcomes', 'label' => 'Leeruitkomsten', 'description' => 'Bekijk en beheer leeruitkomsten.'],
+    ['key' => 'applicationSettings', 'label' => 'Applicatie-instellingen', 'description' => 'Beheer uploads en onderhoudsmodus.'],
+  ],
+])
 
 @endsection
 {{-- this is the blade template for the admin dashboard --}}

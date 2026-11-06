@@ -2,13 +2,13 @@
 
 @section('role-content')
 {{-- Compact overview of current student progress across the team. --}}
-<section id="managerGroups" class="view hidden">
+<section id="managerGroups" class="view hidden" data-role-section="groups">
   <div class="head">
     <div>
       <h1>Groepsoverzicht</h1>
       <p class="dim">Actuele totalen op basis van de studentvoortgang in MySQL.</p>
     </div>
-    <button class="button" type="button" onclick="RoleApp.openSidebarAccount()">Mijn account</button>
+    <button class="dashboard-settings-shortcut teamleader-account-shortcut" type="button" onclick="show('managerDashboardSettings')">Dashboard instellen</button>
   </div>
   {{-- Summary values are calculated from the latest student progress data by the controller. --}}
   <div class="grid3">
@@ -31,7 +31,7 @@
 </section>
 
 {{-- Report view reuses the same totals and explains why export is not yet available. --}}
-<section id="managerReports" class="view hidden">
+<section id="managerReports" class="view hidden" data-role-section="reports">
   <h1>Rapportages</h1>
   <p class="dim">Dezelfde actuele databasecijfers in een compact overzicht.</p>
   <div class="grid2">
@@ -45,5 +45,13 @@
     </div>
   </div>
 </section>
+
+@include('components.role-dashboard-settings', [
+  'settingsPageId' => 'managerDashboardSettings',
+  'dashboardSections' => [
+    ['key' => 'groups', 'label' => 'Groepsoverzicht', 'description' => 'Bekijk de voortgang van de studentengroep.'],
+    ['key' => 'reports', 'label' => 'Rapportages', 'description' => 'Bekijk de samenvatting en rapportages.'],
+  ],
+])
 
 @endsection

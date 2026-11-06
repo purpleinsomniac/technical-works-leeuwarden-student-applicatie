@@ -2,14 +2,14 @@
 
 @section('role-content')
 {{-- Each section is a separate dashboard view; the role navigation shows one at a time. --}}
-<section id="adminProcessing" class="view hidden admin-dashboard">
+<section id="adminProcessing" class="view hidden admin-dashboard" data-role-section="overview">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
       <h1>Alles op één plek</h1>
       <p>Houd overzicht over studenten, begeleiding en de gegevens in de leeromgeving.</p>
     </div>
-    <button class="button admin-hero-action" type="button" onclick="show('adminLog')">Bekijk het logboek <span aria-hidden="true">→</span></button>
+    <button class="dashboard-settings-shortcut admin-hero-action" type="button" onclick="show('adminDashboardSettings')">Dashboard instellen <span aria-hidden="true">⚙</span></button>
   </header>
   {{-- Shows the database totals supplied by the administrator dashboard controller. --}}
   <section class="admin-stats" aria-label="Databaseoverzicht">
@@ -48,7 +48,7 @@
 </section>
 
 {{-- Account management: create accounts, filter the list, and edit or delete existing users. --}}
-<section id="adminUsers" class="view hidden admin-dashboard">
+<section id="adminUsers" class="view hidden admin-dashboard" data-role-section="users">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
@@ -160,7 +160,7 @@
 </section>
 
 {{-- Shows learning outcomes as sorted tiles and keeps their create/edit controls on a dedicated page. --}}
-<section id="adminLearningOutcomes" class="view hidden admin-dashboard">
+<section id="adminLearningOutcomes" class="view hidden admin-dashboard" data-role-section="learningOutcomes">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
@@ -207,34 +207,66 @@
   </div>
 </section>
 
-{{-- Placeholder for the learning-activities page until its contents are defined. --}}
-<section id="adminLearningActivities" class="view hidden admin-dashboard">
+<section id="adminApplicationSettings" class="view hidden admin-dashboard" data-role-section="applicationSettings">
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
-      <h1>Leeractiviteiten</h1>
-      <p>De inhoud van deze pagina wordt later bepaald.</p>
+      <h1>Applicatie-instellingen</h1>
+      <p>Beheer hier de algemene instellingen van de leeromgeving.</p>
     </div>
   </header>
-  <section class="admin-empty-state">
-    <span class="admin-empty-icon" aria-hidden="true">▤</span>
-    <span class="admin-eyebrow">Binnenkort beschikbaar</span>
-    <h2>Leeractiviteiten</h2>
-    <p>Deze pagina is alvast toegevoegd. De inhoud volgt zodra die is afgestemd.</p>
+  @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
+  @if ($errors->any())
+    <div class="notice" role="alert">
+      <p>De instellingen zijn niet opgeslagen. Controleer de volgende melding(en):</p>
+      <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+    </div>
+  @endif
+  <form action="{{ route('admin.application-settings.update') }}" method="post">
+    @csrf
+    @method('PUT')
+    <div class="admin-content-grid">
+      <section class="admin-panel">
+        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
+        <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
+        <input class="input" id="max-upload-size" name="max_upload_size_mb" type="number" min="1" max="50" value="{{ old('max_upload_size_mb', $roleData['applicationSettings']->max_upload_size_mb) }}" required>
+        <fieldset class="admin-upload-types">
+          <legend>Toegestane bestandstypen</legend>
+          @php($allowedExtensions = session()->hasOldInput('_allowed_upload_extensions_submitted') ? old('allowed_upload_extensions', []) : $roleData['applicationSettings']->allowed_upload_extensions)
+          @php($allowedExtensions = is_array($allowedExtensions) ? $allowedExtensions : [])
+          <input type="hidden" name="_allowed_upload_extensions_submitted" value="1">
+          @foreach (['pdf' => 'PDF', 'docx' => 'Word (DOCX)', 'jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG'] as $extension => $label)
+            <label><input type="checkbox" name="allowed_upload_extensions[]" value="{{ $extension }}" @checked(in_array($extension, $allowedExtensions, true))> {{ $label }}</label>
+          @endforeach
+        </fieldset>
+        <p class="dim small">De serverconfiguratie kan een lagere maximale uploadgrootte afdwingen.</p>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">⚙</span><div><h2>Onderhoudsmodus</h2><p>Beperk tijdelijk de toegang voor studenten, docenten en teamleiders.</p></div></div>
+        <label class="admin-maintenance-option">
+          <input type="checkbox" name="maintenance_mode" value="1" @checked(old('maintenance_mode', $roleData['applicationSettings']->maintenance_mode))>
+          <span><strong>Onderhoudsmodus inschakelen</strong><small>Beheerders behouden toegang tot de applicatie en kunnen de modus weer uitschakelen.</small></span>
+        </label>
+      </section>
+    </div>
+    <button class="button dark admin-settings-save" type="submit">Instellingen opslaan</button>
+  </form>
+  <section class="admin-processing-note">
+    <span class="admin-processing-icon" aria-hidden="true">i</span>
+    <div><strong>Notificaties zijn nog niet ingericht</strong><p>De applicatie verstuurt momenteel geen automatische meldingen bij nieuwe feedback. Daarom is deze instelling nog niet beschikbaar.</p></div>
   </section>
 </section>
 
-{{-- The log page is an honest placeholder until an audit-log table is implemented. --}}
-<section id="adminLog" class="view hidden admin-dashboard">
-  <header class="admin-hero admin-log-hero">
-    <div class="admin-hero-copy"><span class="admin-eyebrow">Beheeromgeving</span><h1>Verwerkingslogboek</h1><p>Bekijk hier later welke beheerhandelingen zijn uitgevoerd.</p></div>
-    <button class="button admin-hero-action" type="button" onclick="show('adminProcessing')"><span aria-hidden="true">←</span> Terug naar overzicht</button>
-  </header>
-  <section class="admin-empty-state">
-    <span class="admin-empty-icon" aria-hidden="true">◷</span><span class="admin-eyebrow">Nog niet beschikbaar</span>
-    <h2>Er zijn nog geen logregels</h2>
-    <p>Er bestaat nog geen auditlogtabel. Daarom worden hier geen logregels getoond. Een auditlog kan later worden toegevoegd zodra de gewenste handelingen en bewaartermijnen zijn vastgesteld.</p>
-  </section>
-</section>
+@include('components.role-dashboard-settings', [
+  'settingsPageId' => 'adminDashboardSettings',
+  'dashboardSections' => [
+    ['key' => 'overview', 'label' => 'Overzicht', 'description' => 'Databasecijfers en applicatie-informatie.'],
+    ['key' => 'users', 'label' => 'Gebruikers', 'description' => 'Beheer gebruikers en accountrollen.'],
+    ['key' => 'learningOutcomes', 'label' => 'Leeruitkomsten', 'description' => 'Bekijk en beheer leeruitkomsten.'],
+    ['key' => 'applicationSettings', 'label' => 'Applicatie-instellingen', 'description' => 'Beheer uploads en onderhoudsmodus.'],
+  ],
+])
+
 @endsection
 {{-- this is the blade template for the admin dashboard --}}

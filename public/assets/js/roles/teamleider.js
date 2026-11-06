@@ -3,5 +3,10 @@ window.RoleApp.initializeRole({
   routes: [
     ["Groepsoverzicht", "managerGroups"],
     ["Rapportages", "managerReports"],
+    ["Instellingen", "managerDashboardSettings"],
   ],
+});
+RoleSettings.initialize({
+  settingsPageId: "managerDashboardSettings",
+  dashboardPageId: "managerGroups",
 });

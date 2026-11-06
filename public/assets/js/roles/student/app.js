@@ -79,58 +79,6 @@ function applyUiIcons(scope = document) {
   });
 }
 
-function setSidebarAccountOpen(open, restoreFocus = true) {
-  const button = document.getElementById("sidebarAccountButton");
-  const modal = document.getElementById("sidebarAccountDetails");
-  const closeButton = document.getElementById("accountModalClose");
-  if (!button || !modal) return;
-
-  button.setAttribute("aria-expanded", String(open));
-  modal.classList.toggle("hidden", !open);
-  modal.setAttribute("aria-hidden", String(!open));
-  document.body.classList.toggle("account-modal-open", open);
-
-  if (open) {
-    window.setTimeout(() => closeButton?.focus(), 0);
-  } else if (restoreFocus) {
-    button.focus();
-  }
-}
-
-function initializeSidebarAccount() {
-  const button = document.getElementById("sidebarAccountButton");
-  const modal = document.getElementById("sidebarAccountDetails");
-  if (!button || !modal || button.dataset.initialized === "true") return;
-
-  button.dataset.initialized = "true";
-  button.addEventListener("click", () => {
-    setSidebarAccountOpen(button.getAttribute("aria-expanded") !== "true");
-  });
-
-  modal.addEventListener("click", (event) => {
-    if (event.target.closest("[data-account-close]")) setSidebarAccountOpen(false);
-  });
-
-  document.addEventListener("keydown", (event) => {
-    const isOpen = button.getAttribute("aria-expanded") === "true";
-    if (event.key === "Escape" && isOpen) {
-      setSidebarAccountOpen(false);
-    }
-    if (event.key === "Tab" && isOpen) {
-      const focusable = [...modal.querySelectorAll('a[href], button:not([disabled])')];
-      const first = focusable[0];
-      const last = focusable.at(-1);
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    }
-  });
-}
-
 function login() {
   role = window.LARAVEL_USER?.role || "student";
 
@@ -202,4 +150,3 @@ function hint(s) {
     }, 180);
   }, 3500);
 }
-

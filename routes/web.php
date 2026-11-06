@@ -2,19 +2,24 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ApplicationSettingsController;
 use App\Http\Controllers\Admin\LeeruitkomstController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Coach\DashboardController as CoachDashboardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardSettingsController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Coach\ProgressController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\Student\DataController as StudentDataController;
 use App\Http\Controllers\Student\StateController;
 use App\Http\Controllers\Teamleader\DashboardController as TeamleaderDashboardController;
+use App\Http\Middleware\EnforceMaintenanceMode;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [DashboardController::class, 'index'])->name('home');
+Route::get('/', [DashboardController::class, 'index'])
+    ->middleware(EnforceMaintenanceMode::class)
+    ->name('home');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/inloggen', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/uitloggen', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
@@ -30,7 +35,12 @@ Route::middleware('guest')->group(function (): void {
         ->name('password.update');
 });
 
-Route::middleware('auth')->group(function (): void {
+Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): void {
+    Route::patch('/mijn-profiel', [\App\Http\Controllers\ProfileController::class, 'update'])->middleware('throttle:10,1')->name('profile.update');
+    Route::patch('/mijn-meldingsvoorkeuren', [\App\Http\Controllers\ProfileController::class, 'notifications'])->middleware('throttle:20,1')->name('profile.notifications');
+    Route::put('/mijn-dashboardinstellingen', [DashboardSettingsController::class, 'update'])
+        ->name('dashboard-settings.update');
+
     Route::get('/student', StudentDashboardController::class)->middleware('role:student')->name('student.dashboard');
     Route::get('/coach', CoachDashboardController::class)->middleware('role:coach')->name('coach.dashboard');
     Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');
@@ -39,6 +49,10 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('role:beheerder')->prefix('beheer/leeruitkomsten')->name('admin.learning-outcomes.')->group(function (): void {
         Route::put('/{learningOutcome}', [LeeruitkomstController::class, 'update'])->name('update');
     });
+
+    Route::put('/beheer/instellingen', [ApplicationSettingsController::class, 'update'])
+        ->middleware('role:beheerder')
+        ->name('admin.application-settings.update');
 
     Route::middleware('role:beheerder')->prefix('beheer/gebruikers')->name('admin.users.')->group(function (): void {
         Route::post('/', [AdminUserController::class, 'store'])->name('store');

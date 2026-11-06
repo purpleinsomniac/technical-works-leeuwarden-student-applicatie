@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\RoleDashboardController;
 use App\Models\Assignment;
+use App\Models\ApplicationSetting;
 use App\Models\LearningOutcome;
 use App\Models\Progress;
 use App\Models\Role;
@@ -26,7 +27,7 @@ class DashboardController extends RoleDashboardController
             view: 'admin.dashboard',
             roleData: $this->overview(),
             style: 'css/roles/beheerder.css',
-            scripts: ['js/common.js', 'js/roles/beheerder.js'],
+            scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/beheerder.js'],
         );
     }
 
@@ -50,6 +51,7 @@ class DashboardController extends RoleDashboardController
                 ->orderBy('leeruitkomsten.code')
                 ->get(),
             'studyPhases' => StudyPhase::orderBy('naam')->get(),
+            'applicationSettings' => ApplicationSetting::current(),
         ];
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\RoleDashboardController;
 use App\Models\Assignment;
+use App\Models\ApplicationSetting;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
@@ -24,8 +25,10 @@ class DashboardController extends RoleDashboardController
             activeRole: 'student',
             view: 'student.dashboard',
             frontendData: $this->studentData($user),
+            roleData: ['applicationSettings' => ApplicationSetting::current()],
             style: 'css/roles/student.css',
             scripts: [
+                'js/common.js',
                 'js/roles/student/core.js',
                 'js/roles/student/data.js',
                 'js/roles/student/app.js',

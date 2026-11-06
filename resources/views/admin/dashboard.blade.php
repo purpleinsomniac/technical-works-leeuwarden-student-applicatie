@@ -9,6 +9,7 @@
       <h1>Alles op één plek</h1>
       <p>Houd overzicht over studenten, begeleiding en de gegevens in de leeromgeving.</p>
     </div>
+    <button class="button admin-hero-action" type="button" onclick="show('adminApplicationSettings')">Applicatie-instellingen <span aria-hidden="true">⚙</span></button>
   </header>
   {{-- Shows the database totals supplied by the administrator dashboard controller. --}}
   <section class="admin-stats" aria-label="Databaseoverzicht">

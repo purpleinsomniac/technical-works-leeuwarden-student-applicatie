@@ -8,6 +8,7 @@
       <h1>Groepsoverzicht</h1>
       <p class="dim">Actuele totalen op basis van de studentvoortgang in MySQL.</p>
     </div>
+    <button class="button" type="button" onclick="RoleApp.openSidebarAccount()">Mijn account</button>
   </div>
   {{-- Summary values are calculated from the latest student progress data by the controller. --}}
   <div class="grid3">

@@ -446,7 +446,7 @@
                     <p>Voeg bewijsstukken, documenten of afbeeldingen toe aan je project.</p>
                   </div>
                   <label id="assignmentFileUploadLabel" class="assignment-file-upload">
-                    <input id="assignmentFileInput" type="file" accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp,.xls,.xlsx,.csv,.ppt,.pptx,.zip" onchange="uploadAssignmentFile(this)">
+                    <input id="assignmentFileInput" type="file" accept="{{ implode(',', array_map(fn (string $extension): string => '.'.$extension, $roleData['applicationSettings']->allowed_upload_extensions)) }}" onchange="uploadAssignmentFile(this)">
                     <span>+ Bestand toevoegen</span>
                   </label>
                 </div>

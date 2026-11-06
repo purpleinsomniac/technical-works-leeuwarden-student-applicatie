@@ -214,11 +214,46 @@
       <p>Beheer hier de algemene instellingen van de leeromgeving.</p>
     </div>
   </header>
-  <section class="admin-empty-state">
-    <span class="admin-empty-icon" aria-hidden="true">⚙</span>
-    <span class="admin-eyebrow">Instellingen</span>
-    <h2>Applicatie-instellingen</h2>
-    <p>Er zijn nog geen algemene instellingen beschikbaar om te wijzigen.</p>
+  @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
+  @if ($errors->any())
+    <div class="notice" role="alert">
+      <p>De instellingen zijn niet opgeslagen. Controleer de volgende melding(en):</p>
+      <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+    </div>
+  @endif
+  <form action="{{ route('admin.application-settings.update') }}" method="post">
+    @csrf
+    @method('PUT')
+    <div class="admin-content-grid">
+      <section class="admin-panel">
+        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
+        <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
+        <input class="input" id="max-upload-size" name="max_upload_size_mb" type="number" min="1" max="50" value="{{ old('max_upload_size_mb', $roleData['applicationSettings']->max_upload_size_mb) }}" required>
+        <fieldset class="admin-upload-types">
+          <legend>Toegestane bestandstypen</legend>
+          @php($allowedExtensions = session()->hasOldInput('_allowed_upload_extensions_submitted') ? old('allowed_upload_extensions', []) : $roleData['applicationSettings']->allowed_upload_extensions)
+          @php($allowedExtensions = is_array($allowedExtensions) ? $allowedExtensions : [])
+          <input type="hidden" name="_allowed_upload_extensions_submitted" value="1">
+          @foreach (['pdf' => 'PDF', 'docx' => 'Word (DOCX)', 'jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG'] as $extension => $label)
+            <label><input type="checkbox" name="allowed_upload_extensions[]" value="{{ $extension }}" @checked(in_array($extension, $allowedExtensions, true))> {{ $label }}</label>
+          @endforeach
+        </fieldset>
+        <p class="dim small">De serverconfiguratie kan een lagere maximale uploadgrootte afdwingen.</p>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">⚙</span><div><h2>Onderhoudsmodus</h2><p>Beperk tijdelijk de toegang voor studenten, docenten en teamleiders.</p></div></div>
+        <label class="admin-maintenance-option">
+          <input type="checkbox" name="maintenance_mode" value="1" @checked(old('maintenance_mode', $roleData['applicationSettings']->maintenance_mode))>
+          <span><strong>Onderhoudsmodus inschakelen</strong><small>Beheerders behouden toegang tot de applicatie en kunnen de modus weer uitschakelen.</small></span>
+        </label>
+      </section>
+    </div>
+    <button class="button dark admin-settings-save" type="submit">Instellingen opslaan</button>
+  </form>
+  <section class="admin-processing-note">
+    <span class="admin-processing-icon" aria-hidden="true">i</span>
+    <div><strong>Notificaties zijn nog niet ingericht</strong><p>De applicatie verstuurt momenteel geen automatische meldingen bij nieuwe feedback. Daarom is deze instelling nog niet beschikbaar.</p></div>
   </section>
 </section>
 

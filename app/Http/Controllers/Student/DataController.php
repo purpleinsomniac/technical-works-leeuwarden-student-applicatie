@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Assignment;
 use App\Models\AssignmentFile;
+use App\Models\ApplicationSetting;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
@@ -156,8 +157,14 @@ class DataController extends Controller
         abort_unless($assignment->gebruiker_id === $request->user()->id, 403);
         abort_unless(in_array($assignment->status, ['active', 'concept'], true), 422, 'Zet de opdracht eerst terug om bestanden toe te voegen.');
 
+        $settings = ApplicationSetting::current();
         $request->validate([
-            'file' => ['required', 'file', 'max:10240', 'mimes:pdf,doc,docx,txt,png,jpg,jpeg,gif,webp,xls,xlsx,csv,ppt,pptx,zip'],
+            'file' => [
+                'required',
+                'file',
+                'max:'.($settings->max_upload_size_mb * 1024),
+                'mimes:'.implode(',', $settings->allowed_upload_extensions),
+            ],
         ]);
 
         $upload = $request->file('file');

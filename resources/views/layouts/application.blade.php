@@ -27,11 +27,13 @@
   <script>
     window.LARAVEL_USER = {{ Illuminate\Support\Js::from($frontendUser) }};
     window.LARAVEL_STATE = {{ Illuminate\Support\Js::from($frontendState) }};
+    window.LARAVEL_NOTIFICATION_SETTINGS = {{ Illuminate\Support\Js::from(array_replace($user->appState?->gegevens['notification-settings'] ?? [], array_intersect_key($user->appState?->gegevens['profile-settings'] ?? [], array_flip(['email_notifications','platform_notifications'])))) }};
     window.LARAVEL_DATA = {{ Illuminate\Support\Js::from($frontendData) }};
     window.LARAVEL_SAVE_URL = {{ Illuminate\Support\Js::from(route('state.save')) }};
     window.LARAVEL_ROLE_SETTINGS_URL = {{ Illuminate\Support\Js::from(route('dashboard-settings.update')) }};
     window.LARAVEL_API = {{ Illuminate\Support\Js::from([
         'challengeSync' => route('challenges.sync'),
+        'notificationSettings' => route('profile.notifications'),
         'reflectionStore' => route('reflections.store'),
         'reflectionUpdate' => route('reflections.update', ['reflection' => '__ID__']),
         'reflectionRestore' => route('reflections.restore', ['id'=>'__ID__']),

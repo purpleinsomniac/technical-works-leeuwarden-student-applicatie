@@ -1,5 +1,10 @@
 @extends('layouts.application')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/settings.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/student-preferences.css') }}">
+@endpush
+
 @section('role-content')
 <section id="studentDashboard" class="view student-dashboard">
           {{-- Welkomstregel en snelle toegang tot persoonlijke dashboardinstellingen. --}}
@@ -131,12 +136,24 @@
         <section id="dashboardSettings" class="view hidden dashboard-settings-page">
           <div class="settings-page-head">
             <button class="back-link" type="button" onclick="show('studentDashboard')">← Terug naar dashboard</button>
-            <p class="eyebrow">PERSOONLIJKE VOORKEUREN</p>
-            <h1>Dashboard instellen</h1>
-            <p class="dim">Kies zelf hoeveel informatie je op het dashboard wilt zien. Deze voorkeuren worden alleen voor jouw account bewaard.</p>
+            <p class="eyebrow">INSTELLINGEN</p>
+            <h1>Instellingen</h1>
+            <p class="dim">Pas jouw omgeving aan. Kies je voorkeuren voor uiterlijk, weergave en meldingen.</p>
           </div>
 
-          <div class="settings-layout">
+          <div class="settings-account-banner"><span class="settings-account-avatar">{{ $frontendUser['initials'] }}</span><div><strong>{{ $user->naam }}</strong><small>◇ {{ ucfirst($frontendUser['role']) }}</small></div><span class="settings-account-email">✉ {{ $user->email }}</span>@if($user->getAttribute('studentnummer'))<span>Studentnummer: {{ $user->getAttribute('studentnummer') }}</span>@endif<div class="settings-account-security"><span data-icon="outcomes" aria-hidden="true"></span><div><strong>Accountbeveiliging</strong><small>2FA nog niet beschikbaar</small></div></div></div>
+          <div class="settings-workspace"><nav class="settings-menu" aria-label="Instellingsonderdelen">
+            <button type="button" data-settings-tab="appearance" onclick="selectSettingsTab('appearance')"><span data-icon="eye"></span><span><strong>Uiterlijk</strong><small>Thema, kleuren en weergave</small></span><b>›</b></button>
+            <button type="button" data-settings-tab="dashboard" onclick="selectSettingsTab('dashboard')"><span data-icon="layout"></span><span><strong>Dashboard</strong><small>Indeling en zichtbare onderdelen</small></span><b>›</b></button>
+            <button type="button" data-settings-tab="notifications" onclick="selectSettingsTab('notifications')"><span data-icon="feedback"></span><span><strong>Meldingen</strong><small>E-mails en platformmeldingen</small></span><b>›</b></button>
+            <button type="button" data-settings-tab="account" onclick="selectSettingsTab('account')"><span data-icon="settings"></span><span><strong>Account</strong><small>Profiel en beveiliging</small></span><b>›</b></button>
+          </nav><div class="settings-content">
+          <section class="settings-panel" data-settings-panel="appearance"><header><span data-icon="eye"></span><div><h2>Uiterlijk</h2><p>Pas het thema, de accentkleur en de weergave aan.</p></div></header>
+            <fieldset><legend>Thema</legend><p>Kies de algemene weergave van de omgeving.</p><div id="settingsThemeOptions" class="settings-choice-grid"></div></fieldset>
+            <fieldset><legend>Accentkleur</legend><p>Bepaal de hoofdkleur van knoppen, actieve elementen en accenten.</p><div id="settingsAccentOptions" class="settings-color-options"></div></fieldset>
+            <fieldset><legend>Weergavedichtheid</legend><p>Bepaal hoeveel ruimte er tussen onderdelen zit.</p><div id="settingsDensityOptions" class="settings-choice-grid"></div></fieldset>
+          </section>
+          <div class="settings-layout hidden" data-settings-panel="dashboard">
             <section class="card settings-card">
               <div class="settings-card-head">
                 <span class="settings-card-icon" data-icon="layout" aria-hidden="true"></span>
@@ -172,10 +189,18 @@
               </div>
             </section>
           </div>
+          <section class="settings-panel hidden" data-settings-panel="notifications"><header><span data-icon="feedback"></span><div><h2>Meldingen</h2><p>Beheer je voorkeuren voor e-mail- en platformmeldingen.</p></div></header>
+            <fieldset><legend>Meldingen per onderdeel</legend><p>Kies waarvoor je meldingen wilt ontvangen.</p><div id="notificationTopicOptions"></div></fieldset>
+            <fieldset><legend>Ontvangstmethode</legend><p>Bepaal via welke kanalen je meldingen ontvangt.</p><div id="notificationChannelOptions"></div></fieldset>
+            <fieldset><legend>Herinneringen</legend><p>Stel in hoe en wanneer je herinneringen wilt ontvangen.</p><label class="notification-setting-row"><span class="notification-setting-icon" data-icon="calendar"></span><strong>Deadlineherinnering</strong><small>Wanneer wil je een herinnering ontvangen?</small><select id="notificationDeadlineDays" class="input" onchange="updateNotificationPreference('deadline_days',Number(this.value))"><option value="0">Op de dag zelf</option><option value="1">1 dag van tevoren</option><option value="2">2 dagen van tevoren</option><option value="7">1 week van tevoren</option></select></label><div id="notificationQuietOption"></div></fieldset>
+            <p class="notification-delivery-note">E-mailoverzichten en automatische herinneringen worden pas verstuurd zodra de bijbehorende verzendservice is ingericht.</p>
+          </section>
+          <section class="settings-panel hidden" data-settings-panel="account"><header><span data-icon="settings"></span><div><h2>Account</h2><p>Je persoonlijke gegevens en accountbeveiliging.</p></div></header><p>Bekijk je profielgegevens of wijzig je wachtwoord via je profiel.</p><button class="button dark" type="button" onclick="setSidebarAccountOpen(true)">Profiel en beveiliging openen →</button></section>
+          </div></div>
 
           <div class="settings-footer">
-            <div class="settings-save-copy"><span class="settings-save-check" aria-hidden="true">✓</span><div><strong>Wijzigingen worden alleen voor jouw account bewaard.</strong><small id="dashboardSettingsSaved" class="settings-saved" role="status">Je voorkeuren worden automatisch opgeslagen.</small></div></div>
-            <button class="button" type="button" onclick="resetDashboardPreferences()">Standaardinstellingen herstellen</button><button id="saveDashboardSettingsButton" class="button dark" type="button" onclick="saveDashboardSettings()">✓ Wijzigingen opslaan</button>
+            <div class="settings-save-copy"><span class="settings-save-check" aria-hidden="true">✓</span><div><strong id="settingsSaveTitle">Wijzigingen worden automatisch opgeslagen.</strong><small id="dashboardSettingsSaved" class="settings-saved" role="status">Je voorkeuren worden per account bewaard.</small></div></div><button id="settingsRetrySave" type="button" class="button hidden" onclick="syncLocalState()">Opnieuw proberen</button>
+            <button class="button" type="button" onclick="resetDashboardPreferences()">Standaardinstellingen herstellen</button>
           </div>
         </section>
 

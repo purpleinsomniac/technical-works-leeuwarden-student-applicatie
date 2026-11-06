@@ -2,6 +2,7 @@
 
 // Laravel synchronisatie: opgeslagen gebruikersgegevens worden bij het openen ingeladen.
 const persistentKeys = [
+  'notification-settings',
   'weekly-plan',
   "archived-learning-outcomes",
   "hours-processing-latest-read",
@@ -62,7 +63,7 @@ function keepPaginationPosition(id, filterKey) {
   const list = document.getElementById(id);
   const width = Math.round(list.getBoundingClientRect().width);
   if (!width) return;
-  const key = JSON.stringify([filterKey, width]);
+  const key = JSON.stringify([filterKey, width, document.documentElement.dataset.density]);
   if (list.dataset.paginationSizeKey !== key) {
     list.dataset.paginationSizeKey = key;
     list.dataset.paginationHeight = '0';
@@ -78,6 +79,7 @@ function loadLocalState(key) {
   return localStorage.getItem("laravel-" + window.LARAVEL_USER.id + "-" + key);
 }
 let syncTimer;
+let stateSyncBusy = false;
 const pendingStateChanges = new Map();
 
 function parseStoredState(value) {
@@ -89,7 +91,8 @@ function parseStoredState(value) {
 }
 
 async function syncLocalState() {
-  if (!window.LARAVEL_SAVE_URL || pendingStateChanges.size === 0) return;
+  if (!window.LARAVEL_SAVE_URL || pendingStateChanges.size === 0 || stateSyncBusy) return;
+  stateSyncBusy = true;
 
   const changes = Object.fromEntries(pendingStateChanges);
 
@@ -121,6 +124,8 @@ async function syncLocalState() {
       new CustomEvent("student-state-save-failed", { detail: { error } }),
     );
     hint(error.message || "Opslaan op de server is mislukt. Probeer het opnieuw.");
+  } finally {
+    stateSyncBusy = false;
   }
 }
 
@@ -128,6 +133,7 @@ function saveLocalState(key, value) {
   if (!window.LARAVEL_USER) return;
   localStorage.setItem("laravel-" + window.LARAVEL_USER.id + "-" + key, value);
   pendingStateChanges.set(key, parseStoredState(value));
+  document.dispatchEvent(new CustomEvent('student-state-pending', {detail:{keys:[key]}}));
   clearTimeout(syncTimer);
   syncTimer = setTimeout(syncLocalState, 250);
 }

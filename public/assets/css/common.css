@@ -218,6 +218,37 @@ textarea:focus-visible,
 .sidebar-account-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
 .sidebar-account-copy b { overflow: hidden; color: #fff; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-account-copy small { color: #a9cbd5; font-size: 10px; }
+body.account-modal-open { overflow: hidden; }
+.account-modal { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 22px; }
+.account-modal-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(9, 29, 42, 0.58); backdrop-filter: blur(4px); cursor: default; }
+.account-modal-dialog { position: relative; z-index: 1; width: min(100%, 460px); overflow: hidden; border: 1px solid #d5e6e8; border-radius: 18px; background: #fff; box-shadow: 0 28px 80px rgba(9, 37, 52, 0.28); animation: account-modal-in 0.2s ease-out; }
+@keyframes account-modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.account-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; border-bottom: 1px solid #e0eaed; padding: 22px 24px 18px; }
+.account-modal-eyebrow { display: block; margin-bottom: 3px; color: #159687; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: 1.1px; }
+.account-modal-header h2 { margin: 0; color: #16364a; font-size: 23px; }
+.account-modal-close { display: grid; width: 38px; height: 38px; flex: none; place-items: center; border: 1px solid #dce7ea; border-radius: 10px; background: #f5f8f9; color: #476273; padding: 0 0 3px; font-size: 27px; line-height: 1; }
+.account-modal-close:hover { border-color: #bcdad5; background: #eaf6f3; color: #147b70; }
+.account-modal-person { display: flex; align-items: center; gap: 14px; margin: 22px 24px 16px; border-radius: 13px; background: linear-gradient(110deg, #e9f8f4, #f6fbfa); padding: 16px; }
+.account-modal-avatar { display: grid; width: 54px; height: 54px; flex: none; place-items: center; border-radius: 50%; background: linear-gradient(145deg, #1599a9, #08738b); color: #fff; box-shadow: 0 7px 18px rgba(15, 128, 143, 0.2); font-size: 14px; font-weight: 850; }
+.account-modal-person > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
+.account-modal-person strong { overflow: hidden; color: #16394d; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.account-modal-person small { color: #62808e; font-size: 11px; }
+.account-modal-data { display: grid; margin: 0; padding: 0 24px 22px; }
+.account-modal-data > div { display: grid; grid-template-columns: 115px minmax(0, 1fr); gap: 14px; border-top: 1px solid #e8eef1; padding: 13px 2px; }
+.account-modal-data dt { color: #788b98; font-size: 10px; }
+.account-modal-data dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #294a5d; font-size: 11px; font-weight: 750; }
+.account-modal-data a { color: #167f74; text-decoration: none; }
+.account-modal-data a:hover { text-decoration: underline; }
+.theme-dark .account-modal-dialog { border-color: #2a4855; background: #132833; }
+.theme-dark .account-modal-header,
+.theme-dark .account-modal-data > div { border-color: #29434f; }
+.theme-dark .account-modal-header h2,
+.theme-dark .account-modal-person strong,
+.theme-dark .account-modal-data dd { color: #eef7f9; }
+.theme-dark .account-modal-close { border-color: #34505c; background: #1b3541; color: #c5d5dc; }
+.theme-dark .account-modal-person { background: linear-gradient(110deg, #153b39, #162f38); }
+.theme-dark .account-modal-person small,
+.theme-dark .account-modal-data dt { color: #9eb1ba; }
 .product-credit { display: flex; flex-direction: column; gap: 1px; margin: 8px 6px 0; padding: 10px 3px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 7px; line-height: 1.35; letter-spacing: 0.1px; }
 .product-credit strong { color: #d2e1e9; font-size: 8px; font-weight: 650; }
 .main { display: flex; min-width: 0; min-height: 100vh; flex-direction: column; padding: 0 42px 36px; margin: 0 auto; }
@@ -233,6 +264,22 @@ textarea:focus-visible,
 .topbar-date { display: inline-flex; align-items: center; gap: 8px; margin: 0; border: 1px solid #dce7eb; border-radius: 11px; background: rgba(255, 255, 255, 0.62); color: #61798b; padding: 8px 11px; font-size: 10px; font-weight: 650; white-space: nowrap; }
 .topbar-date-icon { display: grid; width: 17px; height: 17px; place-items: center; color: #278477; }
 .topbar-date-icon svg { width: 16px; height: 16px; }
+@media (max-width: 520px) {
+  .account-modal { align-items: end; padding: 12px; }
+  .account-modal-dialog { border-radius: 17px; }
+  .account-modal-header { padding: 19px 19px 16px; }
+  .account-modal-person { margin: 18px 19px 13px; }
+  .account-modal-data { padding: 0 19px 18px; }
+  .account-modal-data > div { grid-template-columns: 1fr; gap: 3px; }
+}
+html.theme-dark { color: #e7f0f3; background: #0f202a; }
+html.theme-dark .main { background: #0f202a; }
+html.theme-dark .topbar { border-color: #29434f; }
+html.theme-dark .topbar-title strong { color: #eef7f9; }
+html.theme-dark .topbar-project,
+html.theme-dark .topbar-date { color: #a7bbc4; }
+html.theme-dark .topbar-date { border-color: #29434f; background: #152d38; }
+html.theme-dark .admin-processing-note { border-color: #29434f; background: #152d38; }
 .avatar { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #c8e3dc; border-radius: 10px; background: #e6f4f0; color: #176f65; font-size: 11px; font-weight: 800; }
 .profile-copy { display: flex; flex-direction: column; line-height: 1.25; }
 .profile-name { color: #294756; font-size: 11px; }
@@ -266,6 +313,80 @@ p.dim,
 .button { border-color: #d8e2e8; border-radius: 8px; color: #28675f; background: #fff; font-size: 12px; padding: 10px 16px; }
 .button:hover { background: #e9f6f1; }
 .button.dark { background: #167e72; border-color: #167e72; color: white; }
+.dashboard-settings-shortcut { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; flex: none; border: 1px solid #d9e5e9; border-radius: 9px; background: #fff; color: #436170; padding: 9px 12px; font-size: 12px; font-weight: 700; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+.dashboard-settings-shortcut:hover { border-color: #9bcfc4; background: #eef8f5; color: #16786e; }
+.dashboard-settings-shortcut:focus-visible { outline: 3px solid #80cbbb; outline-offset: 2px; }
+.dashboard-settings-shortcut .ui-icon { width: 16px; height: 16px; }
+.role-dashboard-settings { width: 100%; }
+.role-dashboard-settings .settings-page-head { max-width: 690px; margin-bottom: 24px; }
+.role-dashboard-settings .settings-page-head .back-link { margin-bottom: 25px; border: 0; background: transparent; color: #267c72; padding: 0; font-size: 12px; font-weight: 700; }
+.role-dashboard-settings .settings-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+.role-dashboard-settings .settings-card { margin: 0; border: 1px solid #e0e9ed; border-radius: 18px; padding: 25px; box-shadow: 0 8px 24px #183e5010; }
+.role-dashboard-settings .settings-card-head { display: flex; align-items: flex-start; gap: 15px; padding-bottom: 18px; margin-bottom: 0; border-bottom: 1px solid #e3ebef; }
+.role-dashboard-settings .settings-card-head h2 { margin-bottom: 4px; font-size: 21px; }
+.role-dashboard-settings .settings-card-head p { margin: 0; color: #748797; font-size: 12px; line-height: 1.5; }
+.role-dashboard-settings .settings-card-icon,
+.role-dashboard-settings .settings-option-icon { display: grid; width: 38px; height: 38px; flex: none; place-items: center; border-radius: 11px; background: #e3f5ed; color: #118e73; font-size: 18px; }
+.role-dashboard-settings .settings-option { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 0; border-top: 1px solid #e8eef1; cursor: pointer; }
+.role-dashboard-settings .settings-option > span { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
+.role-dashboard-settings .settings-option strong { color: #284657; font-size: 14px; }
+.role-dashboard-settings .settings-option small { color: #7a8d9b; font-size: 12px; line-height: 1.5; }
+.role-dashboard-settings .settings-option input { appearance: none; position: relative; width: 45px; height: 25px; flex: none; border: 0; border-radius: 99px; background: #cbd5df; cursor: pointer; transition: background .18s; }
+.role-dashboard-settings .settings-option input::after { position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px #173f4d33; content: ""; transition: transform .18s; }
+.role-dashboard-settings .settings-option input:checked { background: #098d77; }
+.role-dashboard-settings .settings-option input:checked::after { transform: translateX(20px); }
+.role-dashboard-settings .settings-option input:focus-visible { outline: 3px solid #80cbbb; outline-offset: 3px; }
+.role-dashboard-settings .settings-footer { display: flex; align-items: center; justify-content: flex-end; gap: 15px; margin-top: 18px; padding: 20px 24px; border: 1px solid #e2ebef; border-radius: 15px; background: #fff; box-shadow: 0 7px 20px #183e5008; flex-wrap: wrap; }
+.role-dashboard-settings .settings-save-copy { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+.role-dashboard-settings .settings-save-copy strong { font-size: 12px; }
+.role-dashboard-settings .settings-save-check { display: grid; width: 33px; height: 33px; flex: none; place-items: center; border-radius: 50%; background: #ddf3e9; color: #098e70; }
+.role-dashboard-settings .settings-saved { display: block; margin-top: 4px; color: #708795; font-size: 11px; }
+.role-dashboard-settings .settings-saved.role-settings-error { color: #a23d3d; }
+.role-dashboard-settings .settings-footer .button { min-height: 43px; font-size: 12px; font-weight: 750; }
+.theme-dark .role-dashboard-settings .settings-card,
+.theme-dark .role-dashboard-settings .settings-footer { border-color: #2c4755; background: #152d38; }
+.theme-dark .role-dashboard-settings .settings-card-head { border-color: #29434f; }
+.theme-dark .role-dashboard-settings .settings-card-head h2,
+.theme-dark .role-dashboard-settings .settings-option strong,
+.theme-dark .role-dashboard-settings .settings-save-copy strong { color: #eef7f9; }
+.theme-dark .role-dashboard-settings .settings-card-head p,
+.theme-dark .role-dashboard-settings .settings-option small,
+.theme-dark .role-dashboard-settings .settings-saved { color: #9eb1ba; }
+.theme-dark .role-dashboard-settings .settings-option { border-color: #29434f; }
+.theme-dark .role-dashboard-settings .settings-page-head h1,
+.theme-dark .role-dashboard-settings .settings-page-head p { color: #eef7f9; }
+.theme-dark .role-dashboard-settings .settings-page-head .back-link { color: #7cdfcf; }
+.app.dashboard-compact .admin-stat,
+.app.dashboard-compact .admin-panel,
+.app.dashboard-compact #managerGroups .card,
+.app.dashboard-compact #managerReports .card { padding: 14px; }
+.theme-dark .admin-dashboard .admin-panel,
+.theme-dark .admin-dashboard .admin-stat,
+.theme-dark #managerGroups .card,
+.theme-dark #managerReports .card { border-color: #2c4755; background: #152d38; color: #eef7f9; }
+.theme-dark .admin-dashboard .admin-stat strong,
+.theme-dark .admin-dashboard .admin-panel-heading h3,
+.theme-dark .admin-dashboard .admin-detail strong { color: #eef7f9; }
+.theme-dark .admin-dashboard .admin-detail { border-color: #29434f; color: #9eb1ba; }
+.theme-dark #managerGroups h1,
+.theme-dark #managerReports h1,
+.theme-dark #managerGroups h2,
+.theme-dark #managerReports h2 { color: #eef7f9; }
+.theme-dark .admin-dashboard .admin-hero h1,
+.theme-dark .admin-dashboard .admin-hero p,
+.theme-dark .admin-dashboard .admin-section-heading h2,
+.theme-dark #managerGroups .dim,
+.theme-dark #managerReports .dim { color: #c4d2d9; }
+@media (max-width: 900px) {
+  .role-dashboard-settings .settings-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .role-dashboard-settings .settings-footer { align-items: stretch; flex-direction: column; }
+  .role-dashboard-settings .settings-save-copy { margin-right: 0; }
+}
+@media (max-width: 680px) {
+  .teamleader-account-shortcut { width: 100%; margin-top: 12px; }
+}
 .row {
   grid-template-columns: minmax(120px, 0.9fr) minmax(190px, 1.7fr) minmax(
       70px,

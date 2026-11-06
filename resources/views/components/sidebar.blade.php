@@ -1,5 +1,21 @@
 <aside class="side">
-  <div class="brand">Ontwikkeling</div>
+  <div class="sidebar-brand-row">
+    <div class="brand">Ontwikkeling</div>
+    @if ($frontendUser['role'] === 'coach')
+      <button
+        class="coach-mobile-menu-button"
+        id="coachMobileMenuButton"
+        type="button"
+        aria-label="Menu"
+        aria-expanded="false"
+        aria-controls="nav"
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+    @endif
+  </div>
   <div class="dim small" id="roleLabel"></div>
   <hr>
   <nav id="nav" aria-label="Hoofdnavigatie"></nav>
@@ -13,7 +29,12 @@
       aria-controls="sidebarAccountDetails"
     >
       <span id="sidebarAvatar" class="sidebar-avatar" aria-hidden="true">ST</span>
-      <span class="sidebar-account-copy"><b id="actor"></b><small id="sidebarRole">Student</small></span>
+      <span class="sidebar-account-copy"><b id="actor"></b><small id="sidebarRole">{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</small></span>
+      <span class="sidebar-account-arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6"></path>
+        </svg>
+      </span>
     </button>
     <form action="{{ route('logout') }}" method="post">
       @csrf
@@ -41,7 +62,7 @@
       <span class="account-modal-avatar" aria-hidden="true">{{ $frontendUser['initials'] }}</span>
       <span>
         <strong>{{ $user->naam }}</strong>
-        <small>{{ ucfirst($frontendUser['role']) }}</small>
+        <small>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</small>
       </span>
     </div>
 
@@ -62,7 +83,7 @@
       </div>
       <div>
         <dt>Accounttype</dt>
-        <dd>{{ ucfirst($frontendUser['role']) }}</dd>
+        <dd>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</dd>
       </div>
     </dl>
     </section>

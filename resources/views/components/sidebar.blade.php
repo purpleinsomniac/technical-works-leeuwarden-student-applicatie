@@ -49,7 +49,7 @@
 
 <div id="sidebarAccountDetails" class="account-modal hidden" aria-hidden="true">
   <button class="account-modal-backdrop" type="button" tabindex="-1" data-account-close aria-label="Profielvenster sluiten"></button>
-  <section class="account-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+  <section class="account-modal-dialog {{ in_array($frontendUser['role'], ['beheerder', 'teamleider'], true) ? 'account-modal-dialog--settings' : '' }}" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
     <header class="account-modal-header">
       <div>
         <span class="account-modal-eyebrow">Mijn gegevens</span>
@@ -58,28 +58,36 @@
       <button id="accountModalClose" class="account-modal-close" type="button" data-account-close aria-label="Profielvenster sluiten">×</button>
     </header>
 
-    <div class="account-modal-person">
-      <span class="account-modal-avatar" aria-hidden="true">{{ $frontendUser['initials'] }}</span>
-      <span>
-        <strong>{{ $user->naam }}</strong>
-        <small>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</small>
-      </span>
-    </div>
+    <div class="account-modal-content">
+      <div class="account-modal-profile">
+        <div class="account-modal-person">
+          <span class="account-modal-avatar" aria-hidden="true">{{ $frontendUser['initials'] }}</span>
+          <span>
+            <strong>{{ $user->naam }}</strong>
+            <small>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</small>
+          </span>
+        </div>
 
-    <dl class="account-modal-data">
-      <div>
-        <dt>Naam</dt>
-        <dd>{{ $user->naam }}</dd>
+        <dl class="account-modal-data">
+          <div>
+            <dt>Naam</dt>
+            <dd>{{ $user->naam }}</dd>
+          </div>
+          <div>
+            <dt>E-mailadres</dt>
+            <dd><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></dd>
+          </div>
+          <div>
+            <dt>Accounttype</dt>
+            <dd>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</dd>
+          </div>
+        </dl>
       </div>
-      <div>
-        <dt>E-mailadres</dt>
-        <dd><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></dd>
-      </div>
-      <div>
-        <dt>Accounttype</dt>
-        <dd>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</dd>
-      </div>
-    </dl>
+
+      @if (in_array($frontendUser['role'], ['beheerder', 'teamleider'], true))
+        @include('components.account-dashboard-settings')
+      @endif
+    </div>
 
   </section>
 </div>

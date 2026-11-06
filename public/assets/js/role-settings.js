@@ -1,10 +1,11 @@
 (() => {
   const key = "ontwikkeling-dashboard-instellingen";
   const sectionInputs = [...document.querySelectorAll("[data-role-section-setting]")];
-  const sectionKeys = sectionInputs.map((input) => input.dataset.roleSectionSetting);
-  const settingsPageId = document.querySelector(".role-dashboard-settings")?.id;
+  const sectionKeys = [...new Set(sectionInputs.map((input) => input.dataset.roleSectionSetting))];
   const storageKey = "laravel-" + window.LARAVEL_USER.id + "-" + key;
-  const status = document.getElementById((settingsPageId || "") + "Saved");
+  const statuses = [...document.querySelectorAll("[data-role-settings-status], .role-dashboard-settings .settings-saved")];
+  const saveButtons = [...document.querySelectorAll("[data-role-settings-save]")];
+  const resetButtons = [...document.querySelectorAll("[data-role-settings-reset]")];
   let preferences;
 
   function readPreferences() {
@@ -36,9 +37,10 @@
   }
 
   function setStatus(message, failed = false) {
-    if (!status) return;
-    status.textContent = message;
-    status.classList.toggle("role-settings-error", failed);
+    statuses.forEach((status) => {
+      status.textContent = message;
+      status.classList.toggle("role-settings-error", failed);
+    });
   }
 
   function apply() {
@@ -53,16 +55,15 @@
       });
     }
 
-    document.querySelector('[data-role-setting="compact"]').checked = preferences.compact;
-    document.querySelector('[data-role-setting="darkMode"]').checked = preferences.darkMode;
+    document.querySelectorAll('[data-role-setting="compact"]').forEach((input) => { input.checked = preferences.compact; });
+    document.querySelectorAll('[data-role-setting="darkMode"]').forEach((input) => { input.checked = preferences.darkMode; });
     for (const input of sectionInputs) {
       input.checked = preferences.sections.includes(input.dataset.roleSectionSetting);
     }
   }
 
   async function save() {
-    const button = document.querySelector("[data-role-settings-save]");
-    button.disabled = true;
+    saveButtons.forEach((button) => { button.disabled = true; });
     setStatus("Wijzigingen opslaan...");
 
     try {
@@ -85,15 +86,25 @@
     } catch (error) {
       setStatus(error.message || "Instellingen opslaan is mislukt.", true);
     } finally {
-      button.disabled = false;
+      saveButtons.forEach((button) => { button.disabled = false; });
     }
   }
 
-  function update() {
+  function update(event) {
+    const changedInput = event?.currentTarget;
+    if (changedInput?.dataset.roleSetting) {
+      document.querySelectorAll(`[data-role-setting="${changedInput.dataset.roleSetting}"]`)
+        .forEach((input) => { input.checked = changedInput.checked; });
+    }
+    if (changedInput?.dataset.roleSectionSetting) {
+      document.querySelectorAll(`[data-role-section-setting="${changedInput.dataset.roleSectionSetting}"]`)
+        .forEach((input) => { input.checked = changedInput.checked; });
+    }
+
     preferences = {
-      compact: document.querySelector('[data-role-setting="compact"]').checked,
-      darkMode: document.querySelector('[data-role-setting="darkMode"]').checked,
-      sections: sectionInputs.filter((input) => input.checked).map((input) => input.dataset.roleSectionSetting),
+      compact: document.querySelector('[data-role-setting="compact"]:checked')?.checked === true,
+      darkMode: document.querySelector('[data-role-setting="darkMode"]:checked')?.checked === true,
+      sections: sectionKeys.filter((key) => sectionInputs.some((input) => input.dataset.roleSectionSetting === key && input.checked)),
     };
 
     if (preferences.sections.length === 0) {
@@ -137,8 +148,8 @@
         .find((section) => preferences.sections.includes(section.dataset.roleSection));
       if (firstVisible) show(firstVisible.id);
     }
-    document.querySelectorAll("[data-role-setting], [data-role-section-setting]")
-      .forEach((input) => input.addEventListener("change", update));
-    document.querySelector("[data-role-settings-save]").addEventListener("click", save);
+    document.querySelectorAll("[data-role-setting], [data-role-section-setting]").forEach((input) => input.addEventListener("change", update));
+    saveButtons.forEach((button) => button.addEventListener("click", save));
+    resetButtons.forEach((button) => button.addEventListener("click", reset));
   }
 })();

@@ -150,7 +150,7 @@
           </nav><div class="settings-content">
           <section class="settings-panel" data-settings-panel="appearance"><header><span data-icon="eye"></span><div><h2>Uiterlijk</h2><p>Pas het thema, de accentkleur en de weergave aan.</p></div></header>
             <fieldset><legend>Thema</legend><p>Kies de algemene weergave van de omgeving.</p><div id="settingsThemeOptions" class="settings-choice-grid"></div></fieldset>
-            <fieldset><legend>Accentkleur</legend><p>Bepaal de hoofdkleur van knoppen, actieve elementen en accenten.</p><div id="settingsAccentOptions" class="settings-color-options"></div></fieldset>
+            <fieldset><legend>Accentkleur</legend><p>Bepaal de hoofdkleur van knoppen, actieve elementen en accenten.</p><div id="settingsAccentOptions" class="settings-color-options settings-accent-picker"></div></fieldset>
             <fieldset><legend>Weergavedichtheid</legend><p>Bepaal hoeveel ruimte er tussen onderdelen zit.</p><div id="settingsDensityOptions" class="settings-choice-grid"></div></fieldset>
           </section>
           <div class="settings-layout hidden" data-settings-panel="dashboard">

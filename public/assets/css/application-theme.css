@@ -1,0 +1,45 @@
+#app .nav.active,
+#app .button.dark {
+  background: var(--application-accent);
+  border-color: var(--application-accent);
+}
+
+#app :focus-visible {
+  outline-color: var(--application-accent);
+}
+
+#app :is(.eyebrow, .admin-eyebrow, .catalog-symbol, .admin-class-create-toggle > span:last-child, .admin-stat-icon, .admin-panel-icon, .admin-empty-icon, .settings-panel > header > span, .settings-account-security > span, .notification-setting-icon) {
+  color: var(--application-accent);
+}
+
+#app :is(.admin-stat-icon, .admin-panel-icon, .settings-panel > header > span) {
+  background-color: color-mix(in srgb, var(--application-accent) 12%, white);
+}
+
+#app :is(input, select, textarea) {
+  accent-color: var(--application-accent);
+}
+
+#app .hours-progress-ring {
+  background: conic-gradient(var(--application-accent) var(--hours-progress), #deeaee 0);
+}
+
+#app .bar > span {
+  background: var(--application-accent);
+}
+
+#app[data-application-style="rounded"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile) {
+  border-radius: 18px;
+}
+
+#app[data-application-style="rounded"] :is(.button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row) {
+  border-radius: 12px;
+}
+
+#app[data-application-style="rounded"] :is(.settings-panel > header > span, .admin-panel-icon, .admin-stat-icon, .settings-account-avatar) {
+  border-radius: 14px;
+}
+
+#app[data-application-style="sharp"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile, .button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row) {
+  border-radius: 3px;
+}

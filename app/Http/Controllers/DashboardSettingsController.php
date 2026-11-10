@@ -22,7 +22,7 @@ class DashboardSettingsController extends Controller
             'darkMode' => ['required', 'boolean'],
             'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
             'density' => ['required', Rule::in(['compact', 'standard', 'spacious'])],
-            'accent' => ['required', Rule::in(['teal', 'blue', 'purple', 'pink', 'orange', 'amber', 'green'])],
+            'accent' => ['required', 'regex:/^(#[0-9A-Fa-f]{6}|teal|blue|purple|pink|orange|amber|green)$/D'],
             'sections' => ['sometimes', 'array', 'min:1'],
             'sections.*' => ['required', 'string', 'distinct', Rule::in(match ($activeRole) {
                 'beheerder' => ['overview', 'users', 'classes', 'learningOutcomes', 'applicationSettings'],

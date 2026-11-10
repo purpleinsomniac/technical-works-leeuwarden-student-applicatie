@@ -91,7 +91,10 @@
 .admin-maintenance-option { padding: 15px 0; border-top: 1px solid #edf1f4; }
 .admin-maintenance-option span { display: flex; flex-direction: column; gap: 5px; }
 .admin-maintenance-option small { color: #718492; line-height: 1.5; }
-.admin-settings-save { margin-top: 18px; }
+.admin-settings-actions { position: sticky; top: 12px; z-index: 5; display: flex; justify-content: flex-end; margin: 0 0 12px; pointer-events: none; }
+.admin-settings-save { margin: 0; pointer-events: auto; box-shadow: 0 4px 14px rgba(22, 47, 67, 0.2); }
+.admin-theme-color { display:flex; align-items:center; gap:10px; margin:7px 0 15px; color:#405b6a; font:12px monospace; }
+.admin-theme-color input[type="color"] { width:48px; height:40px; padding:3px; border:1px solid #d6e2ea; border-radius:8px; background:#fff; cursor:pointer; }
 
 @media (max-width: 980px) {
   .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -59,7 +59,11 @@ class StateController extends Controller
             }
 
             foreach ($instellingen as $key => $waarde) {
-                if (isset($choices[$key]) ? !in_array($waarde, $choices[$key], true) : !is_bool($waarde)) {
+                $isValidAccent = $key === 'accent'
+                    && is_string($waarde)
+                    && (in_array($waarde, $choices['accent'], true) || preg_match('/^#[0-9A-Fa-f]{6}$/D', $waarde) === 1);
+                $isValidChoice = isset($choices[$key]) && in_array($waarde, $choices[$key], true);
+                if (! ($isValidAccent || $isValidChoice || (! isset($choices[$key]) && is_bool($waarde)))) {
                     throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstelling.']);
                 }
             }

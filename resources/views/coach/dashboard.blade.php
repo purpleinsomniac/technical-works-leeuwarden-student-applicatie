@@ -85,7 +85,7 @@
 
   <section class="coach-phase-groups" aria-labelledby="coachPhaseGroupsTitle">
     <div class="coach-section-heading">
-      <div><span class="coach-eyebrow">Klassen van de beheerder</span><h2 id="coachPhaseGroupsTitle">Mijn klassen</h2><p>Je ziet alleen de klassen die door de beheerder aan jou zijn toegewezen.</p></div>
+      <div><span class="coach-eyebrow">Groepen van de beheerder</span><h2 id="coachPhaseGroupsTitle">Mijn groepen</h2><p>Je ziet alleen de groepen die door de beheerder aan jou zijn toegewezen.</p></div>
       <button class="coach-text-link" type="button" onclick="show('coachStudents')">Studentenlijst openen <span aria-hidden="true">→</span></button>
     </div>
     <div class="coach-phase-group-list">
@@ -106,7 +106,7 @@
           <span aria-hidden="true">→</span>
         </button>
       @empty
-        <div class="coach-worklist-empty"><strong>Er zijn nog geen klassen aan jou toegewezen</strong><span>Neem contact op met de beheerder om een klas met studenten aan je account te koppelen.</span></div>
+        <div class="coach-worklist-empty"><strong>Er zijn nog geen groepen aan jou toegewezen</strong><span>Neem contact op met de beheerder om een groep met studenten aan je account te koppelen.</span></div>
       @endforelse
     </div>
   </section>
@@ -141,9 +141,9 @@
           </span>
         </label>
         <label class="coach-class-filter">
-          <span class="coach-control-label">Klas</span>
+          <span class="coach-control-label">Groep</span>
           <select id="coachClassFilter">
-            <option value="">Alle klassen</option>
+            <option value="">Alle groepen</option>
             @foreach ($frontendData['classGroups'] as $classGroup)
               <option value="{{ $classGroup['id'] }}">{{ $classGroup['name'] }}{{ $classGroup['schoolYear'] ? ' · '.$classGroup['schoolYear'] : '' }}</option>
             @endforeach

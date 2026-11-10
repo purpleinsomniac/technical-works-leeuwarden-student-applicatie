@@ -25,7 +25,7 @@ class ClassGroupController extends Controller
             $classGroup->students()->sync($data['student_ids'] ?? []);
         });
 
-        return $this->classesPage()->with('status', 'De klas is aangemaakt.');
+        return $this->classesPage()->with('status', 'De groep is aangemaakt.');
     }
 
     public function update(Request $request, ClassGroup $classGroup): RedirectResponse
@@ -42,14 +42,14 @@ class ClassGroupController extends Controller
             $classGroup->students()->sync($data['student_ids'] ?? []);
         });
 
-        return $this->classesPage()->with('status', 'De klas en de gekoppelde studenten zijn bijgewerkt.');
+        return $this->classesPage()->with('status', 'De groep en de gekoppelde studenten zijn bijgewerkt.');
     }
 
     public function destroy(ClassGroup $classGroup): RedirectResponse
     {
         $classGroup->delete();
 
-        return $this->classesPage()->with('status', 'De klas is verwijderd. Studentaccounts blijven behouden.');
+        return $this->classesPage()->with('status', 'De groep is verwijderd. Studentaccounts blijven behouden.');
     }
 
     private function validatedClass(Request $request): array
@@ -75,6 +75,6 @@ class ClassGroupController extends Controller
 
     private function classesPage(): RedirectResponse
     {
-        return redirect()->route('admin.dashboard', ['page' => 'klassen']);
+        return redirect()->route('admin.dashboard', ['page' => 'groepen']);
     }
 }

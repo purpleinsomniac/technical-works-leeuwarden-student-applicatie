@@ -165,27 +165,27 @@
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
-      <h1>Klassen</h1>
-      <p>Maak klassen aan en wijs per klas een docent en studenten toe. Docenten kunnen hun eigen klassenoverzicht bekijken.</p>
+      <h1>Groepen</h1>
+      <p>Maak groepen aan en wijs per groep een docent en studenten toe. Docenten kunnen hun eigen groepsoverzicht bekijken.</p>
     </div>
-    <span class="admin-class-count">{{ $roleData['classGroups']->count() }} klassen</span>
+    <span class="admin-class-count">{{ $roleData['classGroups']->count() }} groepen</span>
   </header>
 
   @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
   @if ($errors->any())
     <div class="notice" role="alert">
-      <p>De klas is niet opgeslagen. Controleer de volgende melding(en):</p>
+      <p>De groep is niet opgeslagen. Controleer de volgende melding(en):</p>
       <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
   @endif
 
   <details class="admin-panel admin-class-create" @if ($classForm === 'create') open @endif>
-    <summary class="admin-class-create-toggle"><span><strong>Nieuwe klas aanmaken</strong><small>Naam, schooljaar, docent en studenten instellen</small></span><span aria-hidden="true">+</span></summary>
-    <form action="{{ route('admin.classes.store', ['page' => 'klassen']) }}" method="post" class="admin-class-form">
+    <summary class="admin-class-create-toggle"><span><strong>Nieuwe groep aanmaken</strong><small>Naam, schooljaar, docent en studenten instellen</small></span><span aria-hidden="true">+</span></summary>
+    <form action="{{ route('admin.classes.store', ['page' => 'groepen']) }}" method="post" class="admin-class-form">
       @csrf
       <input type="hidden" name="_class_form" value="create">
       <div class="admin-class-fields">
-        <div><label for="new-class-name">Klasnaam</label><input class="input" id="new-class-name" name="naam" value="{{ $classForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
+        <div><label for="new-class-name">Groepsnaam</label><input class="input" id="new-class-name" name="naam" value="{{ $classForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
         <div><label for="new-class-schoolyear">Schooljaar</label><input class="input" id="new-class-schoolyear" name="schooljaar" value="{{ $classForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
         <div>
           <label for="new-class-coach">Docent / SLB'er</label>
@@ -199,7 +199,7 @@
         <div class="admin-class-description-field"><label for="new-class-description">Omschrijving (optioneel)</label><textarea class="input" id="new-class-description" name="omschrijving" rows="2" maxlength="2000">{{ $classForm === 'create' ? old('omschrijving') : '' }}</textarea></div>
       </div>
       <fieldset class="admin-class-members">
-        <legend>Studenten in deze klas <span>({{ $roleData['students']->count() }} beschikbaar)</span></legend>
+        <legend>Studenten in deze groep <span>({{ $roleData['students']->count() }} beschikbaar)</span></legend>
         @if ($roleData['students']->isNotEmpty())
           <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
           <div class="admin-class-student-list">
@@ -214,7 +214,7 @@
           <p class="dim">Maak eerst studentaccounts aan via Gebruikers.</p>
         @endif
       </fieldset>
-      <button class="button dark" type="submit">Klas aanmaken</button>
+      <button class="button dark" type="submit">Groep aanmaken</button>
     </form>
   </details>
 
@@ -225,14 +225,14 @@
           <div><span class="admin-eyebrow">{{ $classGroup->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $classGroup->naam }}</h2><p>{{ $classGroup->students->count() }} {{ $classGroup->students->count() === 1 ? 'student' : 'studenten' }} · {{ $classGroup->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
           <div class="admin-class-actions">
             <details class="admin-class-edit" @if ($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id) open @endif>
-              <summary class="button">Klas beheren</summary>
-              <form action="{{ route('admin.classes.update', ['classGroup' => $classGroup, 'page' => 'klassen']) }}" method="post" class="admin-class-form">
+              <summary class="button">Groep beheren</summary>
+              <form action="{{ route('admin.classes.update', ['classGroup' => $classGroup, 'page' => 'groepen']) }}" method="post" class="admin-class-form">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="_class_form" value="update">
                 <input type="hidden" name="_class_group_id" value="{{ $classGroup->id }}">
                 <div class="admin-class-fields">
-                  <div><label for="class-{{ $classGroup->id }}-name">Klasnaam</label><input class="input" id="class-{{ $classGroup->id }}-name" name="naam" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('naam', $classGroup->naam) : $classGroup->naam }}" maxlength="120" required></div>
+                  <div><label for="class-{{ $classGroup->id }}-name">Groepsnaam</label><input class="input" id="class-{{ $classGroup->id }}-name" name="naam" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('naam', $classGroup->naam) : $classGroup->naam }}" maxlength="120" required></div>
                   <div><label for="class-{{ $classGroup->id }}-schoolyear">Schooljaar</label><input class="input" id="class-{{ $classGroup->id }}-schoolyear" name="schooljaar" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('schooljaar', $classGroup->schooljaar) : $classGroup->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
                   <div>
                     <label for="class-{{ $classGroup->id }}-coach">Docent / SLB'er</label>
@@ -246,7 +246,7 @@
                   <div class="admin-class-description-field"><label for="class-{{ $classGroup->id }}-description">Omschrijving</label><textarea class="input" id="class-{{ $classGroup->id }}-description" name="omschrijving" rows="2" maxlength="2000">{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('omschrijving', $classGroup->omschrijving) : $classGroup->omschrijving }}</textarea></div>
                 </div>
                 <fieldset class="admin-class-members">
-                  <legend>Studenten in deze klas</legend>
+                  <legend>Studenten in deze groep</legend>
                   <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
                   <div class="admin-class-student-list">
                     @foreach ($roleData['students'] as $student)
@@ -257,10 +257,10 @@
                     @endforeach
                   </div>
                 </fieldset>
-                <div class="admin-class-form-actions"><button class="button dark" type="submit">Klas opslaan</button></div>
+                <div class="admin-class-form-actions"><button class="button dark" type="submit">Groep opslaan</button></div>
               </form>
             </details>
-            <form action="{{ route('admin.classes.destroy', ['classGroup' => $classGroup, 'page' => 'klassen']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je deze klas wilt verwijderen? Studentaccounts en hun voortgang blijven behouden.')">
+            <form action="{{ route('admin.classes.destroy', ['classGroup' => $classGroup, 'page' => 'groepen']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je deze groep wilt verwijderen? Studentaccounts en hun voortgang blijven behouden.')">
               @csrf
               @method('DELETE')
               <button class="button admin-user-delete" type="submit">Verwijderen</button>
@@ -275,12 +275,12 @@
           @if ($classGroup->students->isNotEmpty())
             <div>@foreach ($classGroup->students as $student)<span>{{ $student->naam }}</span>@endforeach</div>
           @else
-            <span class="admin-class-empty">Er zijn nog geen studenten aan deze klas gekoppeld.</span>
+            <span class="admin-class-empty">Er zijn nog geen studenten aan deze groep gekoppeld.</span>
           @endif
         </div>
       </article>
     @empty
-      <section class="admin-panel admin-class-empty-state"><h2>Nog geen klassen</h2><p>Maak een klas aan en wijs er een docent en studenten aan toe. De docent ziet daarna deze klas en de gekoppelde studenten.</p></section>
+      <section class="admin-panel admin-class-empty-state"><h2>Nog geen groepen</h2><p>Maak een groep aan en wijs er een docent en studenten aan toe. De docent ziet daarna deze groep en de gekoppelde studenten.</p></section>
     @endforelse
   </div>
 </section>

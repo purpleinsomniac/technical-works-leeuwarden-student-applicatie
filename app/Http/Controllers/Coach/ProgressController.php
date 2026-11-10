@@ -22,7 +22,7 @@ class ProgressController extends Controller
         abort_unless(
             $student->classGroups()->where('coach_id', $request->user()->id)->exists(),
             403,
-            'Je kunt alleen de voortgang bijwerken van studenten uit je eigen klassen.',
+            'Je kunt alleen de voortgang bijwerken van studenten uit je eigen groepen.',
         );
 
         // Controleer of uren en status binnen de toegestane waarden vallen.

@@ -18,6 +18,8 @@ use Illuminate\Notifications\Notifiable;
  * @property string $email
  * @property string $password
  * @property string $rol
+ * @property string|null $studentnummer
+ * @property int|null $leerjaar
  * @property int|null $hoofdrol_id
  * @property int|null $studiefase_id
  * @property \Illuminate\Support\Carbon|null $email_verified_at
@@ -33,7 +35,7 @@ class User extends Authenticatable
 
     protected $table = 'gebruikers';
 
-    protected $fillable = ['naam', 'email', 'password', 'rol', 'hoofdrol_id', 'studiefase_id'];
+    protected $fillable = ['naam', 'email', 'password', 'rol', 'hoofdrol_id', 'studiefase_id', 'leerjaar'];
 
     protected $hidden = ['password', 'remember_token'];
 

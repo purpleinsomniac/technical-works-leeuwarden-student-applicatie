@@ -82,9 +82,17 @@
         <div>
           <label for="new-user-role">Accounttype</label>
           {{-- Role options come from the roles supplied by the administrator controller. --}}
-          <select class="input" id="new-user-role" name="rol" required>
+          <select class="input" id="new-user-role" name="rol" data-admin-user-role-selector required>
             @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(old('rol', 'student') === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
           </select>
+        </div>
+        <div data-admin-student-fields @if (old('rol', 'student') !== 'student') hidden @endif>
+          <label for="new-user-year">Leerjaar</label>
+          <select class="input" id="new-user-year" name="leerjaar" @disabled(old('rol', 'student') !== 'student')>
+            <option value="">Nog niet ingesteld</option>
+            @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) old('leerjaar') === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
+          </select>
+          <small>Het studentnummer wordt automatisch aangemaakt en kan daarna niet worden gewijzigd.</small>
         </div>
         <div><label for="new-user-password">Tijdelijk wachtwoord</label><input class="input" id="new-user-password" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
         <div><label for="new-user-password-confirmation">Herhaal wachtwoord</label><input class="input" id="new-user-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" required></div>
@@ -108,7 +116,7 @@
     </div>
     <div class="admin-users-table-wrap">
       <table class="admin-users-table">
-        <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Beheren</th></tr></thead>
+        <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Studentgegevens</th><th>Beheren</th></tr></thead>
         <tbody>
           {{-- Show a data-driven row for each account so its existing role is available to the filter. --}}
           @forelse ($roleData['users'] as $managedUser)
@@ -116,6 +124,13 @@
               <td>{{ $managedUser->naam }}</td>
               <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
               <td>{{ ucfirst($managedUser->primaryRole?->naam ?? $managedUser->rol) }}</td>
+              <td>
+                @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) === 'student')
+                  <strong>{{ $managedUser->studentnummer ?: 'Niet ingesteld' }}</strong><br><small>{{ $managedUser->leerjaar ? 'Leerjaar '.$managedUser->leerjaar : 'Leerjaar niet ingesteld' }}</small>
+                @else
+                  —
+                @endif
+              </td>
               <td>
                 {{-- Keep each edit form beside its user to avoid mixing account identifiers. --}}
                 <details class="admin-user-edit">
@@ -129,8 +144,16 @@
                       <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
                       <div>
                         <label for="user-{{ $managedUser->id }}-role">Accounttype</label>
-                        <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" required>
+                        <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" data-admin-user-role-selector required>
                           @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(($managedUser->primaryRole?->naam ?? $managedUser->rol) === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
+                        </select>
+                      </div>
+                      <div data-admin-student-fields @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student') hidden @endif>
+                        <p>Studentnummer: <strong>{{ $managedUser->studentnummer ?: 'Wordt aangemaakt bij de eerste opslag als student' }}</strong></p>
+                        <label for="user-{{ $managedUser->id }}-year">Leerjaar</label>
+                        <select class="input" id="user-{{ $managedUser->id }}-year" name="leerjaar" @disabled(($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student')>
+                          <option value="">Niet ingesteld</option>
+                          @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) $managedUser->leerjaar === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
                         </select>
                       </div>
                       <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
@@ -148,10 +171,10 @@
               </td>
             </tr>
           @empty
-            <tr data-user-empty><td colspan="4">Er zijn nog geen accounts.</td></tr>
+            <tr data-user-empty><td colspan="5">Er zijn nog geen accounts.</td></tr>
           @endforelse
           {{-- The filter reveals this row when accounts exist but none match the chosen role. --}}
-          <tr id="adminUsersNoMatches" hidden><td colspan="4">Geen gebruikers gevonden voor dit accounttype.</td></tr>
+          <tr id="adminUsersNoMatches" hidden><td colspan="5">Geen gebruikers gevonden voor dit accounttype.</td></tr>
         </tbody>
       </table>
     </div>
@@ -204,9 +227,9 @@
           <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
           <div class="admin-class-student-list">
             @foreach ($roleData['students'] as $student)
-              <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email) }}">
+              <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
                 <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($classForm === 'create' && in_array($student->id, $selectedClassStudentIds))>
-                <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small></span>
+                <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
               </label>
             @endforeach
           </div>
@@ -250,9 +273,9 @@
                   <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
                   <div class="admin-class-student-list">
                     @foreach ($roleData['students'] as $student)
-                      <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email) }}">
+                      <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
                         <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? in_array($student->id, $selectedClassStudentIds) : $classGroup->students->contains('id', $student->id))>
-                        <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small></span>
+                        <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
                       </label>
                     @endforeach
                   </div>
@@ -273,7 +296,7 @@
         <div class="admin-class-roster">
           <strong>Studenten</strong>
           @if ($classGroup->students->isNotEmpty())
-            <div>@foreach ($classGroup->students as $student)<span>{{ $student->naam }}</span>@endforeach</div>
+            <div>@foreach ($classGroup->students as $student)<span>{{ $student->naam }} · {{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</span>@endforeach</div>
           @else
             <span class="admin-class-empty">Er zijn nog geen studenten aan deze groep gekoppeld.</span>
           @endif

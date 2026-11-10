@@ -192,6 +192,7 @@
             <span class="coach-student-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($student['name'], 0, 1)) }}</span>
             <span class="coach-student-info">
               <strong>{{ $student['name'] }}</strong>
+              <span class="coach-student-identity">{{ $student['studentNumber'] ?: 'Studentnummer niet ingesteld' }} · {{ $student['year'] ? 'Leerjaar '.$student['year'] : 'Leerjaar niet ingesteld' }}</span>
               <span class="coach-phase-badge">{{ $student['phase'] ?? 'Geen studiefase ingesteld' }}</span>
               <span class="coach-class-membership">{{ implode(', ', $student['classNames']) }}</span>
             </span>
@@ -401,7 +402,7 @@
       <span class="coach-student-avatar coach-student-avatar-large" aria-hidden="true">{{ mb_strtoupper(mb_substr($student['name'], 0, 1)) }}</span>
       <div>
         <h1 id="coachStudentTitle-{{ $student['id'] }}">{{ $student['name'] }}</h1>
-        <p>{{ $student['phase'] ?? 'Geen studiefase ingesteld' }}</p>
+        <p>Studentnummer: {{ $student['studentNumber'] ?: 'Niet ingesteld' }} · {{ $student['year'] ? 'Leerjaar '.$student['year'] : 'Leerjaar niet ingesteld' }} · {{ $student['phase'] ?? 'Geen studiefase ingesteld' }}</p>
       </div>
     </header>
 

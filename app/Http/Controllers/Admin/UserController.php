@@ -20,15 +20,29 @@ class UserController extends Controller
         $data = $this->validatedUser($request, creating: true);
         $role = Role::where('naam', $data['rol'])->firstOrFail();
 
-        User::create([
-            'naam' => $data['naam'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'rol' => $role->naam,
-            'hoofdrol_id' => $role->id,
-        ]);
+        $user = DB::transaction(function () use ($data, $role): User {
+            $user = User::create([
+                'naam' => $data['naam'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'rol' => $role->naam,
+                'hoofdrol_id' => $role->id,
+                'leerjaar' => $role->naam === 'student' ? ($data['leerjaar'] ?? null) : null,
+            ]);
 
-        return $this->usersPage()->with('status', 'Het account is aangemaakt.');
+            if ($role->naam === 'student') {
+                $user->forceFill(['studentnummer' => $this->studentNumberFor($user)])->save();
+            }
+
+            return $user;
+        });
+
+        $status = 'Het account is aangemaakt.';
+        if ($role->naam === 'student') {
+            $status .= ' Studentnummer: '.$user->studentnummer.'.';
+        }
+
+        return $this->usersPage()->with('status', $status);
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -55,12 +69,16 @@ class UserController extends Controller
             $user->email = $data['email'];
             $user->rol = $role->naam;
             $user->hoofdrol_id = $role->id;
+            $user->leerjaar = $role->naam === 'student' ? ($data['leerjaar'] ?? null) : null;
 
             if (! empty($data['password'])) {
                 $user->password = $data['password'];
             }
 
             $user->save();
+            if ($role->naam === 'student' && ! $user->studentnummer) {
+                $user->forceFill(['studentnummer' => $this->studentNumberFor($user)])->save();
+            }
 
             if ($roleChanged) {
                 $user->extraRoles()->sync([]);
@@ -108,10 +126,18 @@ class UserController extends Controller
                 Rule::unique('gebruikers', 'email')->ignore($user),
             ],
             'rol' => ['required', 'string', Rule::in(self::ROLES), Rule::exists('rollen', 'naam')],
+            'leerjaar' => $request->input('rol') === 'student'
+                ? ['nullable', 'integer', 'between:1,4']
+                : ['prohibited'],
             'password' => $creating
                 ? ['required', 'string', 'min:8', 'confirmed']
                 : ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
+    }
+
+    private function studentNumberFor(User $user): string
+    {
+        return 'STU'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT);
     }
 
     private function administratorCount(): int

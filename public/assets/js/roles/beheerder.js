@@ -11,6 +11,18 @@ window.RoleApp.initializeRole({
 });
 RoleSettings.initialize();
 
+document.querySelectorAll("[data-admin-user-role-selector]").forEach((selector) => {
+  const updateStudentFields = () => {
+    const fields = selector.closest("form")?.querySelector("[data-admin-student-fields]");
+    const year = fields?.querySelector("select[name='leerjaar']");
+    if (!fields || !year) return;
+    fields.hidden = selector.value !== "student";
+    year.disabled = selector.value !== "student";
+  };
+  selector.addEventListener("change", updateStudentFields);
+  updateStudentFields();
+});
+
 const applicationAccentPicker = document.getElementById("application-accent-color");
 const applicationAccentValue = document.getElementById("applicationAccentColorValue");
 applicationAccentPicker?.addEventListener("input", () => {

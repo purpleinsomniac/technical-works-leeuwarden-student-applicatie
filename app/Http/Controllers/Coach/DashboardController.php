@@ -155,6 +155,8 @@ class DashboardController extends RoleDashboardController
                     ->map(fn (User $student): array => [
                         'id' => $student->id,
                         'name' => $student->naam,
+                        'studentNumber' => $student->studentnummer,
+                        'year' => $student->leerjaar,
                         'phase' => $student->studyPhase?->naam,
                     ])->all(),
             ])->all(),
@@ -210,6 +212,8 @@ class DashboardController extends RoleDashboardController
                 return [
                     'id' => $student->id,
                     'name' => $student->naam,
+                    'studentNumber' => $student->studentnummer,
+                    'year' => $student->leerjaar,
                     'phase' => $student->studyPhase?->naam,
                     'hours' => $student->progress->sum('gevalideerde_uren'),
                     'xp' => $xp,

@@ -71,7 +71,7 @@
 .admin-user-filter label { color: #405b6a; font-size: 12px; font-weight: 650; }
 .admin-user-filter .input { margin: 4px 0 0; }
 .admin-users-table-wrap { overflow-x: auto; }
-.admin-users-table { width: 100%; min-width: 640px; border-collapse: collapse; text-align: left; }
+.admin-users-table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
 .admin-users-table th,
 .admin-users-table td { padding: 13px 12px; border-top: 1px solid #edf1f4; color: #405b6a; font-size: 12px; vertical-align: top; }
 .admin-users-table th { color: #728391; font-size: 11px; font-weight: 700; }

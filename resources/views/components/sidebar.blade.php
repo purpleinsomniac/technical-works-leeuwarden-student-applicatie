@@ -77,6 +77,10 @@
         <dt>Accounttype</dt>
         <dd>{{ ['coach' => 'Docent', 'student' => 'Student', 'beheerder' => 'Beheerder', 'teamleider' => 'Teamleider'][$frontendUser['role']] ?? ucfirst($frontendUser['role']) }}</dd>
       </div>
+      @if ($frontendUser['role'] === 'student')
+        <div><dt>Studentnummer</dt><dd>{{ $user->studentnummer ?: 'Niet ingesteld' }}</dd></div>
+        <div><dt>Leerjaar</dt><dd>{{ $user->leerjaar ?: 'Niet ingesteld' }}</dd></div>
+      @endif
     </dl>
     </section>
     @if ($frontendUser['role'] === 'coach')

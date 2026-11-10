@@ -223,6 +223,7 @@
 /* Naam en fase */
 .app.role-coach .coach-student-info { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 2px; }
 .app.role-coach .coach-student-info strong { overflow: hidden; max-width: 100%; color: var(--ink); font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.app.role-coach .coach-student-identity { color: var(--muted); font-size: 10px; }
 .app.role-coach .coach-phase-badge { display: inline-flex; padding: 0; border: 0; background: none; color: var(--muted) !important; font-size: 12px !important; font-weight: 400; }
 /* Uren en uitkomsten */
 .app.role-coach .coach-student-meta { grid-column: auto; display: flex; flex-direction: column; gap: 0; padding: 0; border: 0; color: var(--muted); font-size: 12.5px; }

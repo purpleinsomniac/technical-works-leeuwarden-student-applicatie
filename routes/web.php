@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\ClassGroupController;
+use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\ApplicationSettingsController;
 use App\Http\Controllers\Admin\LeeruitkomstController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -61,10 +61,10 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
     });
 
-    Route::middleware('role:beheerder')->prefix('beheer/klassen')->name('admin.classes.')->group(function (): void {
-        Route::post('/', [ClassGroupController::class, 'store'])->name('store');
-        Route::put('/{classGroup}', [ClassGroupController::class, 'update'])->name('update');
-        Route::delete('/{classGroup}', [ClassGroupController::class, 'destroy'])->name('destroy');
+    Route::middleware('role:beheerder')->prefix('beheer/groepen')->name('admin.groups.')->group(function (): void {
+        Route::post('/', [GroupController::class, 'store'])->name('store');
+        Route::put('/{group}', [GroupController::class, 'update'])->name('update');
+        Route::delete('/{group}', [GroupController::class, 'destroy'])->name('destroy');
     });
 
     Route::middleware('role:student')->group(function (): void {

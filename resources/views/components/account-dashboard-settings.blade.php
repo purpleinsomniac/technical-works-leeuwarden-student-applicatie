@@ -43,7 +43,7 @@
     @elseif ($frontendUser['role'] === 'coach')
       @foreach ([
         'coachOverview' => 'Overzicht',
-        'coachStudents' => 'Studenten',
+        'coachGroups' => 'Groepen',
         'coachActivities' => 'Leeractiviteiten',
         'coachGoals' => 'Leerdoelen',
         'coachProjects' => 'Projecten',

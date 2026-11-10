@@ -181,17 +181,17 @@
   </section>
 </section>
 
-<section id="adminClasses" class="view hidden admin-dashboard" data-role-section="classes">
-  @php($classForm = old('_class_form'))
-  @php($selectedClassStudentIds = old('student_ids', []))
-  @php($selectedClassStudentIds = is_array($selectedClassStudentIds) ? $selectedClassStudentIds : [])
+<section id="adminGroups" class="view hidden admin-dashboard" data-role-section="groups">
+  @php($groupForm = old('_group_form'))
+  @php($selectedGroupStudentIds = old('student_ids', []))
+  @php($selectedGroupStudentIds = is_array($selectedGroupStudentIds) ? $selectedGroupStudentIds : [])
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
       <h1>Groepen</h1>
-      <p>Maak groepen aan en wijs per groep een docent en studenten toe. Docenten kunnen hun eigen groepsoverzicht bekijken.</p>
+      <p>Maak groepen aan en wijs per groep een docent en studenten toe. Docenten zien hun eigen groepen en studenten.</p>
     </div>
-    <span class="admin-class-count">{{ $roleData['classGroups']->count() }} groepen</span>
+    <span class="admin-class-count">{{ $roleData['groups']->count() }} {{ $roleData['groups']->count() === 1 ? 'groep' : 'groepen' }}</span>
   </header>
 
   @if (session('status'))<div class="notice" role="status">{{ session('status') }}</div>@endif
@@ -202,24 +202,24 @@
     </div>
   @endif
 
-  <details class="admin-panel admin-class-create" @if ($classForm === 'create') open @endif>
+  <details class="admin-panel admin-class-create" @if ($groupForm === 'create') open @endif>
     <summary class="admin-class-create-toggle"><span><strong>Nieuwe groep aanmaken</strong><small>Naam, schooljaar, docent en studenten instellen</small></span><span aria-hidden="true">+</span></summary>
-    <form action="{{ route('admin.classes.store', ['page' => 'groepen']) }}" method="post" class="admin-class-form">
+    <form action="{{ route('admin.groups.store', ['page' => 'groepen']) }}" method="post" class="admin-class-form">
       @csrf
-      <input type="hidden" name="_class_form" value="create">
+      <input type="hidden" name="_group_form" value="create">
       <div class="admin-class-fields">
-        <div><label for="new-class-name">Groepsnaam</label><input class="input" id="new-class-name" name="naam" value="{{ $classForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
-        <div><label for="new-class-schoolyear">Schooljaar</label><input class="input" id="new-class-schoolyear" name="schooljaar" value="{{ $classForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
+        <div><label for="new-group-name">Groepsnaam</label><input class="input" id="new-group-name" name="naam" value="{{ $groupForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
+        <div><label for="new-group-schoolyear">Schooljaar</label><input class="input" id="new-group-schoolyear" name="schooljaar" value="{{ $groupForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
         <div>
-          <label for="new-class-coach">Docent / SLB'er</label>
-          <select class="input" id="new-class-coach" name="coach_id">
+          <label for="new-group-coach">Docent / SLB'er</label>
+          <select class="input" id="new-group-coach" name="coach_id">
             <option value="">Nog geen docent gekoppeld</option>
             @foreach ($roleData['coaches'] as $coach)
-              <option value="{{ $coach->id }}" @selected($classForm === 'create' && (string) old('coach_id') === (string) $coach->id)>{{ $coach->naam }}</option>
+              <option value="{{ $coach->id }}" @selected($groupForm === 'create' && (string) old('coach_id') === (string) $coach->id)>{{ $coach->naam }}</option>
             @endforeach
           </select>
         </div>
-        <div class="admin-class-description-field"><label for="new-class-description">Omschrijving (optioneel)</label><textarea class="input" id="new-class-description" name="omschrijving" rows="2" maxlength="2000">{{ $classForm === 'create' ? old('omschrijving') : '' }}</textarea></div>
+        <div class="admin-class-description-field"><label for="new-group-description">Omschrijving (optioneel)</label><textarea class="input" id="new-group-description" name="omschrijving" rows="2" maxlength="2000">{{ $groupForm === 'create' ? old('omschrijving') : '' }}</textarea></div>
       </div>
       <fieldset class="admin-class-members">
         <legend>Studenten in deze groep <span>({{ $roleData['students']->count() }} beschikbaar)</span></legend>
@@ -228,7 +228,7 @@
           <div class="admin-class-student-list">
             @foreach ($roleData['students'] as $student)
               <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
-                <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($classForm === 'create' && in_array($student->id, $selectedClassStudentIds))>
+                <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($groupForm === 'create' && in_array($student->id, $selectedGroupStudentIds))>
                 <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
               </label>
             @endforeach
@@ -242,31 +242,31 @@
   </details>
 
   <div class="admin-class-list">
-    @forelse ($roleData['classGroups'] as $classGroup)
+    @forelse ($roleData['groups'] as $group)
       <article class="admin-panel admin-class-card">
         <div class="admin-class-card-heading">
-          <div><span class="admin-eyebrow">{{ $classGroup->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $classGroup->naam }}</h2><p>{{ $classGroup->students->count() }} {{ $classGroup->students->count() === 1 ? 'student' : 'studenten' }} · {{ $classGroup->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
+          <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
           <div class="admin-class-actions">
-            <details class="admin-class-edit" @if ($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id) open @endif>
+            <details class="admin-class-edit" @if ($groupForm === 'update' && (string) old('_group_id') === (string) $group->id) open @endif>
               <summary class="button">Groep beheren</summary>
-              <form action="{{ route('admin.classes.update', ['classGroup' => $classGroup, 'page' => 'groepen']) }}" method="post" class="admin-class-form">
+              <form action="{{ route('admin.groups.update', ['group' => $group, 'page' => 'groepen']) }}" method="post" class="admin-class-form">
                 @csrf
                 @method('PUT')
-                <input type="hidden" name="_class_form" value="update">
-                <input type="hidden" name="_class_group_id" value="{{ $classGroup->id }}">
+                <input type="hidden" name="_group_form" value="update">
+                <input type="hidden" name="_group_id" value="{{ $group->id }}">
                 <div class="admin-class-fields">
-                  <div><label for="class-{{ $classGroup->id }}-name">Groepsnaam</label><input class="input" id="class-{{ $classGroup->id }}-name" name="naam" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('naam', $classGroup->naam) : $classGroup->naam }}" maxlength="120" required></div>
-                  <div><label for="class-{{ $classGroup->id }}-schoolyear">Schooljaar</label><input class="input" id="class-{{ $classGroup->id }}-schoolyear" name="schooljaar" value="{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('schooljaar', $classGroup->schooljaar) : $classGroup->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
+                  <div><label for="group-{{ $group->id }}-name">Groepsnaam</label><input class="input" id="group-{{ $group->id }}-name" name="naam" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('naam', $group->naam) : $group->naam }}" maxlength="120" required></div>
+                  <div><label for="group-{{ $group->id }}-schoolyear">Schooljaar</label><input class="input" id="group-{{ $group->id }}-schoolyear" name="schooljaar" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('schooljaar', $group->schooljaar) : $group->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
                   <div>
-                    <label for="class-{{ $classGroup->id }}-coach">Docent / SLB'er</label>
-                    <select class="input" id="class-{{ $classGroup->id }}-coach" name="coach_id">
+                    <label for="group-{{ $group->id }}-coach">Docent / SLB'er</label>
+                    <select class="input" id="group-{{ $group->id }}-coach" name="coach_id">
                       <option value="">Geen docent gekoppeld</option>
                       @foreach ($roleData['coaches'] as $coach)
-                        <option value="{{ $coach->id }}" @selected($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? (string) old('coach_id') === (string) $coach->id : $classGroup->coach_id === $coach->id)>{{ $coach->naam }}</option>
+                        <option value="{{ $coach->id }}" @selected($groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? (string) old('coach_id') === (string) $coach->id : $group->coach_id === $coach->id)>{{ $coach->naam }}</option>
                       @endforeach
                     </select>
                   </div>
-                  <div class="admin-class-description-field"><label for="class-{{ $classGroup->id }}-description">Omschrijving</label><textarea class="input" id="class-{{ $classGroup->id }}-description" name="omschrijving" rows="2" maxlength="2000">{{ $classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? old('omschrijving', $classGroup->omschrijving) : $classGroup->omschrijving }}</textarea></div>
+                  <div class="admin-class-description-field"><label for="group-{{ $group->id }}-description">Omschrijving</label><textarea class="input" id="group-{{ $group->id }}-description" name="omschrijving" rows="2" maxlength="2000">{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('omschrijving', $group->omschrijving) : $group->omschrijving }}</textarea></div>
                 </div>
                 <fieldset class="admin-class-members">
                   <legend>Studenten in deze groep</legend>
@@ -274,7 +274,7 @@
                   <div class="admin-class-student-list">
                     @foreach ($roleData['students'] as $student)
                       <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
-                        <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($classForm === 'update' && (string) old('_class_group_id') === (string) $classGroup->id ? in_array($student->id, $selectedClassStudentIds) : $classGroup->students->contains('id', $student->id))>
+                        <input type="checkbox" name="student_ids[]" value="{{ $student->id }}" @checked($groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? in_array($student->id, $selectedGroupStudentIds) : $group->students->contains('id', $student->id))>
                         <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
                       </label>
                     @endforeach
@@ -283,20 +283,20 @@
                 <div class="admin-class-form-actions"><button class="button dark" type="submit">Groep opslaan</button></div>
               </form>
             </details>
-            <form action="{{ route('admin.classes.destroy', ['classGroup' => $classGroup, 'page' => 'groepen']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je deze groep wilt verwijderen? Studentaccounts en hun voortgang blijven behouden.')">
+            <form action="{{ route('admin.groups.destroy', ['group' => $group, 'page' => 'groepen']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je deze groep wilt verwijderen? Studentaccounts en hun voortgang blijven behouden.')">
               @csrf
               @method('DELETE')
               <button class="button admin-user-delete" type="submit">Verwijderen</button>
             </form>
           </div>
         </div>
-        @if ($classGroup->omschrijving)
-          <p class="admin-class-description">{{ $classGroup->omschrijving }}</p>
+        @if ($group->omschrijving)
+          <p class="admin-class-description">{{ $group->omschrijving }}</p>
         @endif
         <div class="admin-class-roster">
           <strong>Studenten</strong>
-          @if ($classGroup->students->isNotEmpty())
-            <div>@foreach ($classGroup->students as $student)<span>{{ $student->naam }} · {{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</span>@endforeach</div>
+          @if ($group->students->isNotEmpty())
+            <div>@foreach ($group->students as $student)<span>{{ $student->naam }} · {{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</span>@endforeach</div>
           @else
             <span class="admin-class-empty">Er zijn nog geen studenten aan deze groep gekoppeld.</span>
           @endif
@@ -374,25 +374,7 @@
   <form action="{{ route('admin.application-settings.update') }}" method="post">
     @csrf
     @method('PUT')
-    <div class="admin-settings-actions">
-      <button class="button dark admin-settings-save" type="submit">Instellingen opslaan</button>
-    </div>
     <div class="admin-content-grid">
-      <section class="admin-panel">
-        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">◈</span><div><h2>Applicatie-uiterlijk</h2><p>Pas de globale accentkleur en stijl aan voor alle dashboards.</p></div></div>
-        <label for="application-accent-color">Globale accentkleur</label>
-        <div class="admin-theme-color">
-          <input id="application-accent-color" name="application_accent_color" type="color" value="{{ old('application_accent_color', $roleData['applicationSettings']->application_accent_color) }}" required>
-          <span id="applicationAccentColorValue">{{ strtoupper(old('application_accent_color', $roleData['applicationSettings']->application_accent_color)) }}</span>
-        </div>
-        <label for="application-style">Stijl</label>
-        <select class="input" id="application-style" name="application_style" required>
-          <option value="standard" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'standard')>Standaard</option>
-          <option value="rounded" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'rounded')>Afgerond</option>
-          <option value="sharp" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'sharp')>Strak</option>
-        </select>
-        <p class="dim small">De kleurkiezer toont de hexcode. Bestaande persoonlijke accentvoorkeuren blijven behouden.</p>
-      </section>
       <section class="admin-panel">
         <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
         <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
@@ -417,6 +399,7 @@
         </label>
       </section>
     </div>
+    <button class="button dark admin-settings-save" type="submit">Instellingen opslaan</button>
   </form>
   <section class="admin-processing-note">
     <span class="admin-processing-icon" aria-hidden="true">i</span>

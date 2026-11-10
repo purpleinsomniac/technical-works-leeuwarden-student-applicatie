@@ -59,6 +59,10 @@ de seeder in `database/outcomes.json`. Na het seeden leest de applicatie alle
 leeruitkomsten, opdrachten, voortgang, reflecties, feedback en leerdoelen uit de
 database; JavaScript bevat hiervan geen tweede hardcoded kopie.
 
+De beheerder maakt groepen aan en koppelt hier een docent en studenten aan. De
+groepen en lidmaatschappen worden opgeslagen in de tabellen `groepen` en
+`groep_student`; docenten zien alleen de groepen die aan hen zijn toegewezen.
+
 Maak databasewijzigingen altijd samen: stem migraties en modelrelaties eerst af,
 zodat twee teamleden niet tegelijk dezelfde tabel aanpassen.
 

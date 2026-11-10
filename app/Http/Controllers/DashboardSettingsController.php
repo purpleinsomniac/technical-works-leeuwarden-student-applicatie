@@ -27,7 +27,7 @@ class DashboardSettingsController extends Controller
             'sections.*' => ['required', 'string', 'distinct', Rule::in(match ($activeRole) {
                 'beheerder' => ['overview', 'users', 'classes', 'learningOutcomes', 'applicationSettings'],
                 'teamleider' => ['groups', 'reports'],
-                'coach' => ['coachOverview', 'coachStudents', 'coachActivities', 'coachGoals', 'coachProjects'],
+                'coach' => ['coachOverview', 'coachGroups', 'coachActivities', 'coachGoals', 'coachProjects'],
             })],
         ]);
 

@@ -3,56 +3,56 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ClassGroup;
+use App\Models\Group;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
-class ClassGroupController extends Controller
+class GroupController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
-        $data = $this->validatedClass($request);
+        $data = $this->validatedGroup($request);
 
         DB::transaction(function () use ($data): void {
-            $classGroup = ClassGroup::create([
+            $group = Group::create([
                 'naam' => $data['naam'],
                 'schooljaar' => $data['schooljaar'] ?? null,
                 'omschrijving' => $data['omschrijving'] ?? null,
                 'coach_id' => $data['coach_id'] ?? null,
             ]);
-            $classGroup->students()->sync($data['student_ids'] ?? []);
+            $group->students()->sync($data['student_ids'] ?? []);
         });
 
-        return $this->classesPage()->with('status', 'De klas is aangemaakt.');
+        return $this->groupsPage()->with('status', 'De groep is aangemaakt.');
     }
 
-    public function update(Request $request, ClassGroup $classGroup): RedirectResponse
+    public function update(Request $request, Group $group): RedirectResponse
     {
-        $data = $this->validatedClass($request);
+        $data = $this->validatedGroup($request);
 
-        DB::transaction(function () use ($classGroup, $data): void {
-            $classGroup->update([
+        DB::transaction(function () use ($group, $data): void {
+            $group->update([
                 'naam' => $data['naam'],
                 'schooljaar' => $data['schooljaar'] ?? null,
                 'omschrijving' => $data['omschrijving'] ?? null,
                 'coach_id' => $data['coach_id'] ?? null,
             ]);
-            $classGroup->students()->sync($data['student_ids'] ?? []);
+            $group->students()->sync($data['student_ids'] ?? []);
         });
 
-        return $this->classesPage()->with('status', 'De klas en de gekoppelde studenten zijn bijgewerkt.');
+        return $this->groupsPage()->with('status', 'De groep en de gekoppelde studenten zijn bijgewerkt.');
     }
 
-    public function destroy(ClassGroup $classGroup): RedirectResponse
+    public function destroy(Group $group): RedirectResponse
     {
-        $classGroup->delete();
+        $group->delete();
 
-        return $this->classesPage()->with('status', 'De klas is verwijderd. Studentaccounts blijven behouden.');
+        return $this->groupsPage()->with('status', 'De groep is verwijderd. Studentaccounts blijven behouden.');
     }
 
-    private function validatedClass(Request $request): array
+    private function validatedGroup(Request $request): array
     {
         return $request->validate([
             'naam' => ['required', 'string', 'max:120'],
@@ -73,8 +73,8 @@ class ClassGroupController extends Controller
         ]);
     }
 
-    private function classesPage(): RedirectResponse
+    private function groupsPage(): RedirectResponse
     {
-        return redirect()->route('admin.dashboard', ['page' => 'klassen']);
+        return redirect()->route('admin.dashboard', ['page' => 'groepen']);
     }
 }

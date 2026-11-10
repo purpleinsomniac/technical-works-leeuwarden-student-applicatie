@@ -1,5 +1,5 @@
-function show(page) {
-  if (window.RoleSettings && !window.RoleSettings.isSectionVisible(page)) return;
+function show(page, force = false) {
+  if (!force && window.RoleSettings && !window.RoleSettings.isSectionVisible(page)) return;
   document.getElementById("app").classList.remove("hidden");
 
   document.querySelectorAll(".view").forEach((view) => {

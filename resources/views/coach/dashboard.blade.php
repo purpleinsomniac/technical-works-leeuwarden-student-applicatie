@@ -8,9 +8,9 @@
     <div>
       <span class="coach-eyebrow">Jouw werkoverzicht</span>
       <h1 id="coachOverviewTitle">Begeleiding in één oogopslag</h1>
-      <p>Begin met ingeleverd werk en opvolging. Open daarna direct de student of het volledige overzicht.</p>
+      <p>Begin met ingeleverd werk en opvolging. Bekijk daarna de groepen en studenten die aan jou zijn toegewezen.</p>
     </div>
-    <button class="button dark coach-overview-action" type="button" onclick="show('coachStudents')">Studenten bekijken <span aria-hidden="true">→</span></button>
+    <button class="button dark coach-overview-action" type="button" onclick="show('coachGroups', true)">Groepen bekijken <span aria-hidden="true">→</span></button>
   </header>
 
   @if (session('status'))
@@ -83,52 +83,58 @@
     </section>
   </div>
 
-  <section class="coach-phase-groups" aria-labelledby="coachPhaseGroupsTitle">
+</section>
+
+<section id="coachGroups" class="view hidden coach-page" data-role-section="coachGroups" aria-labelledby="coachGroupsTitle">
+  <header class="coach-page-hero">
+    <div>
+      <span class="coach-eyebrow">Jouw begeleiding</span>
+      <h1 id="coachGroupsTitle">Mijn groepen</h1>
+      <p>Bekijk de groepen die aan jou zijn toegewezen en open de studenten die daarbij horen.</p>
+    </div>
+  </header>
+
+  <section class="coach-phase-groups" aria-labelledby="coachAssignedGroupsTitle">
     <div class="coach-section-heading">
-      <div><span class="coach-eyebrow">Klassen van de beheerder</span><h2 id="coachPhaseGroupsTitle">Mijn klassen</h2><p>Je ziet alleen de klassen die door de beheerder aan jou zijn toegewezen.</p></div>
-      <button class="coach-text-link" type="button" onclick="show('coachStudents')">Studentenlijst openen <span aria-hidden="true">→</span></button>
+      <div><h2 id="coachAssignedGroupsTitle">Toegewezen groepen</h2><p>Selecteer een groep om de gekoppelde studenten te bekijken.</p></div>
+      <span class="coach-section-count">{{ count($frontendData['groups']) }} {{ count($frontendData['groups']) === 1 ? 'groep' : 'groepen' }}</span>
     </div>
     <div class="coach-phase-group-list">
-      @forelse ($frontendData['classGroups'] as $classGroup)
-        <button class="coach-phase-group coach-class-group" type="button" onclick="openCoachClass({{ $classGroup['id'] }})">
+      @forelse ($frontendData['groups'] as $group)
+        <button class="coach-phase-group coach-class-group" type="button"
+                data-coach-group-card="{{ $group['id'] }}" aria-pressed="false"
+                onclick="openCoachGroup({{ $group['id'] }})">
           <span class="coach-class-group-copy">
-            <strong>{{ $classGroup['name'] }}</strong>
-            <small>{{ $classGroup['schoolYear'] ?: 'Schooljaar niet ingesteld' }} · {{ count($classGroup['students']) }} {{ count($classGroup['students']) === 1 ? 'student' : 'studenten' }}</small>
-            @if ($classGroup['description'])<small>{{ $classGroup['description'] }}</small>@endif
+            <strong>{{ $group['name'] }}</strong>
+            <small>{{ $group['schoolYear'] ?: 'Schooljaar niet ingesteld' }} · {{ count($group['students']) }} {{ count($group['students']) === 1 ? 'student' : 'studenten' }}</small>
+            @if ($group['description'])<small>{{ $group['description'] }}</small>@endif
             <span class="coach-class-group-roster">
-              @forelse ($classGroup['students'] as $student)
+              @forelse (collect($group['students'])->take(5) as $student)
                 <span>{{ $student['name'] }}{{ $student['phase'] ? ' · '.$student['phase'] : '' }}</span>
               @empty
                 <span>Nog geen studenten gekoppeld</span>
               @endforelse
+              @if (count($group['students']) > 5)
+                <span>+ {{ count($group['students']) - 5 }} meer</span>
+              @endif
             </span>
           </span>
           <span aria-hidden="true">→</span>
         </button>
       @empty
-        <div class="coach-worklist-empty"><strong>Er zijn nog geen klassen aan jou toegewezen</strong><span>Neem contact op met de beheerder om een klas met studenten aan je account te koppelen.</span></div>
+        <div class="coach-worklist-empty"><strong>Er zijn nog geen groepen aan jou toegewezen</strong><span>Neem contact op met de beheerder om een groep met studenten aan je account te koppelen.</span></div>
       @endforelse
     </div>
   </section>
-</section>
 
-<section id="coachStudents" class="view hidden coach-page" data-role-section="coachStudents" aria-labelledby="coachStudentsTitle">
-  <header class="coach-page-hero">
-    <div>
-      <span class="coach-eyebrow">Jouw begeleiding</span>
-      <h1 id="coachStudentsTitle">Studentenoverzicht</h1>
-      <p>Bekijk de voortgang en ontwikkeling van je studenten en bied gerichte begeleiding.</p>
-    </div>
-  </header>
-
-  <section class="coach-roster">
+  <section class="coach-roster" id="coachStudentRoster">
     <div class="coach-section-heading">
       <div>
-        <span class="coach-eyebrow">Studentenbeheer</span>
-        <h2>Mijn studenten</h2>
+        <span class="coach-eyebrow">Groepsleden</span>
+        <h2 id="coachRosterTitle">Studenten in mijn groepen</h2>
         <p>Open een profiel om voortgang te bekijken en bij te werken.</p>
       </div>
-      <span class="coach-section-count">{{ $displayedStudentCount }} {{ $displayedStudentCount === 1 ? 'student' : 'studenten' }}</span>
+      <span class="coach-section-count" id="coachStudentCount" aria-live="polite">{{ $displayedStudentCount }} {{ $displayedStudentCount === 1 ? 'student' : 'studenten' }}</span>
     </div>
 
     @if ($displayedStudentCount)
@@ -141,11 +147,11 @@
           </span>
         </label>
         <label class="coach-class-filter">
-          <span class="coach-control-label">Klas</span>
-          <select id="coachClassFilter">
-            <option value="">Alle klassen</option>
-            @foreach ($frontendData['classGroups'] as $classGroup)
-              <option value="{{ $classGroup['id'] }}">{{ $classGroup['name'] }}{{ $classGroup['schoolYear'] ? ' · '.$classGroup['schoolYear'] : '' }}</option>
+          <span class="coach-control-label">Groep</span>
+          <select id="coachGroupFilter">
+            <option value="">Alle studenten in mijn groepen</option>
+            @foreach ($frontendData['groups'] as $group)
+              <option value="{{ $group['id'] }}">{{ $group['name'] }}{{ $group['schoolYear'] ? ' · '.$group['schoolYear'] : '' }}</option>
             @endforeach
           </select>
         </label>
@@ -183,7 +189,7 @@
             data-coach-target-hours="{{ $studentTargetHours }}"
             data-student-progress="{{ $studentProgress }}"
             data-student-xp="{{ $student['xp'] }}"
-            data-student-class-ids=",{{ implode(',', $student['classIds']) }},"
+            data-student-group-ids=",{{ implode(',', $student['groupIds']) }},"
             data-student-name="{{ mb_strtolower($student['name']) }}"
             data-student-phase="{{ mb_strtolower($student['phase'] ?? 'Geen studiefase ingesteld') }}"
             onclick="show('coachStudent-{{ $student['id'] }}')"
@@ -193,7 +199,7 @@
             <span class="coach-student-info">
               <strong>{{ $student['name'] }}</strong>
               <span class="coach-phase-badge">{{ $student['phase'] ?? 'Geen studiefase ingesteld' }}</span>
-              <span class="coach-class-membership">{{ implode(', ', $student['classNames']) }}</span>
+              <span class="coach-class-membership">{{ implode(', ', $student['groupNames']) }}</span>
             </span>
             <span class="coach-student-meta">
               <span><strong data-coach-student-hours>{{ $student['hours'] }}</strong> gevalideerde uren</span>
@@ -389,10 +395,10 @@
 @foreach ($roleData as $student)
   @php($studentTargetHours = collect($student['outcomes'])->sum(fn (array $outcome): int => (int) $outcome['target']))
   @php($studentProgress = $studentTargetHours > 0 ? min(100, (int) round(($student['hours'] / $studentTargetHours) * 100)) : 0)
-  <section id="coachStudent-{{ $student['id'] }}" class="view hidden coach-page coach-student-detail" data-role-section="coachStudents" data-student-id="{{ $student['id'] }}" aria-labelledby="coachStudentTitle-{{ $student['id'] }}">
+  <section id="coachStudent-{{ $student['id'] }}" class="view hidden coach-page coach-student-detail" data-role-section="coachGroups" data-student-id="{{ $student['id'] }}" data-coach-target-hours="{{ $studentTargetHours }}" aria-labelledby="coachStudentTitle-{{ $student['id'] }}">
     <div class="coach-detail-top">
-      <button class="button coach-back-button" type="button" onclick="show('coachStudents')">
-        <span aria-hidden="true">←</span> Alle studenten
+      <button class="button coach-back-button" type="button" onclick="show('coachGroups')">
+        <span aria-hidden="true">←</span> Terug naar groepen
       </button>
       <span class="coach-eyebrow">Studentoverzicht</span>
     </div>

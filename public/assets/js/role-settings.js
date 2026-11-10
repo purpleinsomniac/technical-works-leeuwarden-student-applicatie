@@ -56,8 +56,13 @@
     }
 
     const savedSections = Array.isArray(saved?.sections)
-      ? saved.sections.filter((section) => sectionKeys.includes(section))
+      ? saved.sections
+        .map((section) => (section === "coachStudents" ? "coachGroups" : section))
+        .filter((section) => sectionKeys.includes(section))
       : [];
+    if (window.LARAVEL_USER.role === "coach" && sectionKeys.includes("coachGroups") && !savedSections.includes("coachGroups")) {
+      savedSections.push("coachGroups");
+    }
 
     return {
       compact: saved?.compact === true,

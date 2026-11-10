@@ -2,7 +2,7 @@ window.RoleApp.initializeRole({
   label: "Docent",
   routes: [
     ["Overzicht", "coachOverview"],
-    ["Studenten", "coachStudents"],
+    ["Groepen", "coachGroups"],
     ["Leeractiviteiten", "coachActivities"],
     ["Leerdoelen", "coachGoals"],
     ["Projecten", "coachProjects"],
@@ -68,10 +68,10 @@ function createPager(allItems, pageSize, anchor, label) {
   };
 }
 
-/* Pas de naam- en fasefilters toe voordat de gevonden studenten worden gepagineerd. */
+/* Pas de naam-, fase- en groepsfilters toe voordat de gevonden studenten worden gepagineerd. */
 const coachStudentSearch = document.getElementById("coachStudentSearch");
 const coachPhaseFilter = document.getElementById("coachPhaseFilter");
-const coachClassFilter = document.getElementById("coachClassFilter");
+const coachGroupFilter = document.getElementById("coachGroupFilter");
 const coachStudentSort = document.getElementById("coachStudentSort");
 const coachStudentCards = [...document.querySelectorAll(".coach-student-card[data-student-name]")];
 const coachNoResults = document.getElementById("coachNoResults");
@@ -83,13 +83,13 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
   function filterCoachStudents() {
     const searchTerm = coachStudentSearch.value.trim().toLocaleLowerCase("nl");
     const selectedPhase = coachPhaseFilter.value;
-    const selectedClass = coachClassFilter?.value ?? "";
+    const selectedGroup = coachGroupFilter?.value ?? "";
 
     const matches = coachStudentCards.filter((card) => {
       const matchesName = card.dataset.studentName.includes(searchTerm);
       const matchesPhase = !selectedPhase || card.dataset.studentPhase === selectedPhase;
-      const matchesClass = !selectedClass || card.dataset.studentClassIds.includes(`,${selectedClass},`);
-      return matchesName && matchesPhase && matchesClass;
+      const matchesGroup = !selectedGroup || card.dataset.studentGroupIds.includes(`,${selectedGroup},`);
+      return matchesName && matchesPhase && matchesGroup;
     });
 
     const sort = coachStudentSort?.value ?? "name";
@@ -104,29 +104,43 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
     });
 
     studentPager.show(matches);
+    const studentCount = document.getElementById("coachStudentCount");
+    if (studentCount) {
+      studentCount.textContent = `${matches.length} ${matches.length === 1 ? "student" : "studenten"}`;
+    }
     coachNoResults.classList.toggle("hidden", matches.length > 0);
+
+    // Laat in de kop zien welke groep is gekozen.
+    const rosterTitle = document.getElementById("coachRosterTitle");
+    if (rosterTitle) {
+      const groupName = selectedGroup
+        ? coachGroupFilter.selectedOptions[0].textContent.split(" · ")[0]
+        : "";
+      rosterTitle.textContent = groupName ? `Studenten in ${groupName}` : "Studenten in mijn groepen";
+    }
+
+    // Markeer de gekozen groepskaart.
+    document.querySelectorAll("[data-coach-group-card]").forEach((card) => {
+      const active = card.dataset.coachGroupCard === selectedGroup;
+      card.classList.toggle("is-active", active);
+      card.setAttribute("aria-pressed", String(active));
+    });
   }
 
   coachStudentSearch.addEventListener("input", filterCoachStudents);
   coachPhaseFilter.addEventListener("change", filterCoachStudents);
-  coachClassFilter?.addEventListener("change", filterCoachStudents);
+  coachGroupFilter?.addEventListener("change", filterCoachStudents);
   coachStudentSort?.addEventListener("change", filterCoachStudents);
   filterCoachStudents();
 }
 
-window.openCoachPhase = function (phase) {
-  show("coachStudents");
-  if (coachClassFilter) coachClassFilter.value = "";
-  if (!coachPhaseFilter) return;
-  coachPhaseFilter.value = [...coachPhaseFilter.options].some((option) => option.value === phase) ? phase : "";
-  coachPhaseFilter.dispatchEvent(new Event("change"));
-};
-
-window.openCoachClass = function (classId) {
-  show("coachStudents");
+window.openCoachGroup = function (groupId) {
+  show("coachGroups");
+  if (coachStudentSearch) coachStudentSearch.value = "";
   if (coachPhaseFilter) coachPhaseFilter.value = "";
-  if (coachClassFilter) coachClassFilter.value = String(classId);
-  coachClassFilter?.dispatchEvent(new Event("change"));
+  if (coachGroupFilter) coachGroupFilter.value = String(groupId);
+  coachGroupFilter?.dispatchEvent(new Event("change"));
+  document.getElementById("coachStudentRoster")?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 window.openCoachProjectQueue = function () {

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Coach;
 
 use App\Http\Controllers\RoleDashboardController;
 use App\Models\Assignment;
-use App\Models\ClassGroup;
+use App\Models\Group;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
@@ -21,15 +21,15 @@ class DashboardController extends RoleDashboardController
     {
         /** @var User $user */
         $user = $request->user();
-        $classGroups = $user->coachedClassGroups()
+        $groups = $user->coachedGroups()
             ->with(['students' => fn ($query) => $query
                 ->where('rol', 'student')
                 ->with(['studyPhase', 'progress.learningOutcome'])])
             ->orderBy('naam')
             ->orderBy('schooljaar')
             ->get();
-        $students = $classGroups
-            ->flatMap(fn (ClassGroup $classGroup) => $classGroup->students)
+        $students = $groups
+            ->flatMap(fn (Group $group) => $group->students)
             ->unique('id')
             ->sortBy('naam')
             ->values();
@@ -38,8 +38,8 @@ class DashboardController extends RoleDashboardController
             user: $user,
             activeRole: 'coach',
             view: 'coach.dashboard',
-            frontendData: $this->overviewData($user, $students, $classGroups),
-            roleData: $this->students($students, $classGroups),
+            frontendData: $this->overviewData($user, $students, $groups),
+            roleData: $this->students($students, $groups),
             style: 'css/roles/coach.css',
             scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/coach.js'],
         );
@@ -48,7 +48,7 @@ class DashboardController extends RoleDashboardController
     /**
      * Verzamel de leeractiviteiten, doelen en projecten voor docentoverzichten.
      */
-    private function overviewData(User $coach, Collection $students, Collection $classGroups): array
+    private function overviewData(User $coach, Collection $students, Collection $groups): array
     {
         $studentIds = $students->pluck('id');
 
@@ -146,12 +146,12 @@ class DashboardController extends RoleDashboardController
             'projects' => $projects,
             'pendingProjects' => $pendingProjects,
             'pendingFeedback' => $pendingFeedback,
-            'classGroups' => $classGroups->map(fn (ClassGroup $classGroup): array => [
-                'id' => $classGroup->id,
-                'name' => $classGroup->naam,
-                'schoolYear' => $classGroup->schooljaar,
-                'description' => $classGroup->omschrijving,
-                'students' => $classGroup->students
+            'groups' => $groups->map(fn (Group $group): array => [
+                'id' => $group->id,
+                'name' => $group->naam,
+                'schoolYear' => $group->schooljaar,
+                'description' => $group->omschrijving,
+                'students' => $group->students
                     ->map(fn (User $student): array => [
                         'id' => $student->id,
                         'name' => $student->naam,
@@ -165,14 +165,14 @@ class DashboardController extends RoleDashboardController
     /**
      * Geef de coach alleen gegevens die nodig zijn om studenten te begeleiden.
      */
-    private function students(Collection $students, Collection $classGroups): array
+    private function students(Collection $students, Collection $groups): array
     {
         $studentIds = $students->pluck('id');
-        $classMemberships = $classGroups
-            ->flatMap(fn (ClassGroup $classGroup) => $classGroup->students->map(fn (User $student): array => [
+        $groupMemberships = $groups
+            ->flatMap(fn (Group $group) => $group->students->map(fn (User $student): array => [
                 'studentId' => $student->id,
-                'classId' => $classGroup->id,
-                'className' => $classGroup->naam,
+                'groupId' => $group->id,
+                'groupName' => $group->naam,
             ]))
             ->groupBy('studentId');
         $activityXp = DB::table('activity_xp')
@@ -201,11 +201,11 @@ class DashboardController extends RoleDashboardController
         ];
 
         return $students
-            ->map(function (User $student) use ($activityXp, $challengeXp, $levelNames, $classMemberships): array {
+            ->map(function (User $student) use ($activityXp, $challengeXp, $levelNames, $groupMemberships): array {
                 $xp = (int) ($activityXp[$student->id] ?? 0) + (int) ($challengeXp[$student->id] ?? 0);
                 $level = intdiv($xp, 1000) + 1;
                 $levelProgress = $xp % 1000;
-                $memberships = $classMemberships->get($student->id, collect());
+                $memberships = $groupMemberships->get($student->id, collect());
 
                 return [
                     'id' => $student->id,
@@ -217,8 +217,8 @@ class DashboardController extends RoleDashboardController
                     'levelName' => $levelNames[$level - 1] ?? 'Meester · rang '.($level - 9),
                     'levelProgress' => $levelProgress,
                     'levelProgressPercent' => $levelProgress / 10,
-                    'classIds' => $memberships->pluck('classId')->all(),
-                    'classNames' => $memberships->pluck('className')->all(),
+                    'groupIds' => $memberships->pluck('groupId')->all(),
+                    'groupNames' => $memberships->pluck('groupName')->all(),
                     // Zet actieve leeruitkomsten bovenaan, zodat lopend werk snel zichtbaar is.
                     'outcomes' => $student->progress
                         ->sortBy(fn ($progress): int => in_array($progress->status, ['gestart', 'in_ontwikkeling'], true) ? 0 : 1)

@@ -3,7 +3,7 @@ window.RoleApp.initializeRole({
   routes: [
     ["Overzicht", "adminProcessing"],
     ["Gebruikers", "adminUsers"],
-    ["Klassen", "adminClasses"],
+    ["Groepen", "adminGroups"],
     ["Leeruitkomsten", "adminLearningOutcomes"],
     ["Applicatie-instellingen", "adminApplicationSettings"],
     ["Instellingen", "adminPreferencesSettings"],
@@ -33,8 +33,8 @@ if (new URLSearchParams(window.location.search).get("page") === "gebruikers") {
   show("adminUsers");
 }
 
-if (new URLSearchParams(window.location.search).get("page") === "klassen") {
-  show("adminClasses");
+if (new URLSearchParams(window.location.search).get("page") === "groepen") {
+  show("adminGroups");
 }
 
 if (new URLSearchParams(window.location.search).get("page") === "applicatie-instellingen") {

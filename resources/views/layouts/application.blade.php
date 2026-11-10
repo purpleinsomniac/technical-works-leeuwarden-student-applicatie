@@ -7,9 +7,12 @@
     <link rel="stylesheet" href="{{ asset('assets/'.$roleAssets['style']) }}">
   @endpush
 @endif
+@push('styles')
+  <link rel="stylesheet" href="{{ asset('assets/css/application-theme.css') }}">
+@endpush
 
 @section('content')
-  <div class="app role-{{ $frontendUser['role'] }}" id="app">
+  <div class="app role-{{ $frontendUser['role'] }}" id="app" data-application-style="{{ $applicationSettings->application_style }}" style="--application-accent: {{ $applicationSettings->application_accent_color }}">
     @include('components.sidebar')
 
     <main class="main">
@@ -26,6 +29,10 @@
 @push('scripts')
   <script>
     window.LARAVEL_USER = {{ Illuminate\Support\Js::from($frontendUser) }};
+    window.LARAVEL_APPLICATION_THEME = {{ Illuminate\Support\Js::from([
+        'accentColor' => $applicationSettings->application_accent_color,
+        'style' => $applicationSettings->application_style,
+    ]) }};
     window.LARAVEL_STATE = {{ Illuminate\Support\Js::from($frontendState) }};
     window.LARAVEL_NOTIFICATION_SETTINGS = {{ Illuminate\Support\Js::from(array_replace($user->appState?->gegevens['notification-settings'] ?? [], array_intersect_key($user->appState?->gegevens['profile-settings'] ?? [], array_flip(['email_notifications','platform_notifications'])))) }};
     window.LARAVEL_DATA = {{ Illuminate\Support\Js::from($frontendData) }};

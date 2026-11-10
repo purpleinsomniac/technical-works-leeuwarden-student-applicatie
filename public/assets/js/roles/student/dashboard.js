@@ -106,7 +106,7 @@ const defaultDashboardPreferences = Object.freeze({
   compact: false,
   darkMode: false,
   theme: 'light',
-  accent: '#009b87',
+  accent: window.LARAVEL_APPLICATION_THEME?.accentColor || '#009b87',
   density: 'standard',
   outcomes: true,
   goals: true,

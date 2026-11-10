@@ -11,6 +11,16 @@ window.RoleApp.initializeRole({
 });
 RoleSettings.initialize();
 
+const applicationAccentPicker = document.getElementById("application-accent-color");
+const applicationAccentValue = document.getElementById("applicationAccentColorValue");
+applicationAccentPicker?.addEventListener("input", () => {
+  document.getElementById("app")?.style.setProperty("--application-accent", applicationAccentPicker.value);
+  if (applicationAccentValue) applicationAccentValue.textContent = applicationAccentPicker.value.toUpperCase();
+});
+document.getElementById("application-style")?.addEventListener("change", (event) => {
+  document.getElementById("app")?.setAttribute("data-application-style", event.target.value);
+});
+
 function toggleAdminUserForm() {
   const form = document.getElementById("createAdminUser");
   const button = document.getElementById("toggleAdminUserForm");

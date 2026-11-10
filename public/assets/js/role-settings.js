@@ -79,7 +79,9 @@
 
   function normalizeAccentColor(value) {
     if (Object.prototype.hasOwnProperty.call(accentColors, value)) return accentColors[value];
-    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : accentColors.teal;
+    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
+      ? value.toLowerCase()
+      : window.LARAVEL_APPLICATION_THEME?.accentColor || accentColors.teal;
   }
 
   function saveLocally() {
@@ -360,7 +362,7 @@
       darkMode: false,
       theme: "light",
       density: "standard",
-      accent: "#009b87",
+      accent: window.LARAVEL_APPLICATION_THEME?.accentColor || accentColors.teal,
       sections: [...sectionKeys],
     };
     notificationPreferences = { ...defaultNotificationPreferences };

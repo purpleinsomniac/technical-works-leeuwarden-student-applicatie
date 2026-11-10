@@ -9,6 +9,8 @@ class ApplicationSetting extends Model
     protected $table = 'applicatie_instellingen';
 
     protected $fillable = [
+        'application_accent_color',
+        'application_style',
         'max_upload_size_mb',
         'allowed_upload_extensions',
         'maintenance_mode',

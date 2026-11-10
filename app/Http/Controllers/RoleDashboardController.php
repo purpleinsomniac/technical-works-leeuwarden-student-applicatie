@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApplicationSetting;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 
@@ -29,6 +30,7 @@ abstract class RoleDashboardController extends Controller
 
         return view($view, [
             'user' => $user,
+            'applicationSettings' => $roleData['applicationSettings'] ?? ApplicationSetting::current(),
             'frontendUser' => [
                 'id' => $user->id,
                 'name' => $user->naam,

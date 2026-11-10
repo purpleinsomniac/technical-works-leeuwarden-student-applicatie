@@ -26,15 +26,6 @@
     amber: "#efb014",
     green: "#78b915",
   };
-  const accentLabels = {
-    teal: "Turkoois",
-    blue: "Blauw",
-    purple: "Paars",
-    pink: "Roze",
-    orange: "Oranje",
-    amber: "Geel",
-    green: "Groen",
-  };
   let preferences;
   let notificationPreferences;
   let settingsSaveTimer;
@@ -68,7 +59,7 @@
       density: ["compact", "standard", "spacious"].includes(saved?.density)
         ? saved.density
         : saved?.compact === true ? "compact" : "standard",
-      accent: Object.prototype.hasOwnProperty.call(accentColors, saved?.accent) ? saved.accent : "teal",
+      accent: normalizeAccentColor(saved?.accent),
       sections: sectionKeys.length
         ? (savedSections.length ? savedSections : [...sectionKeys])
         : [],
@@ -84,6 +75,11 @@
       console.error("Could not read notification settings from local storage.", error);
     }
     return { ...defaultNotificationPreferences, ...saved };
+  }
+
+  function normalizeAccentColor(value) {
+    if (Object.prototype.hasOwnProperty.call(accentColors, value)) return accentColors[value];
+    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : accentColors.teal;
   }
 
   function saveLocally() {
@@ -109,7 +105,7 @@
     root.classList.toggle("theme-dark", preferences.theme === "dark" || systemDark);
     root.dataset.density = preferences.density;
     root.dataset.accent = preferences.accent;
-    root.style.setProperty("--student-accent", accentColors[preferences.accent]);
+    root.style.setProperty("--student-accent", preferences.accent);
     document.getElementById("app")?.classList.toggle("dashboard-compact", preferences.density === "compact");
 
     document.querySelectorAll('[data-role-setting="compact"]').forEach((input) => { input.checked = preferences.density === "compact"; });
@@ -150,9 +146,7 @@
 
     themeContainer.innerHTML = choices("theme", preferences.theme, themeOptions, (value) => `<span class="theme-preview ${value}" aria-hidden="true"><i></i><b><em></em><em></em><em></em></b></span>`);
     densityContainer.innerHTML = choices("density", preferences.density, densityOptions, () => '<span class="density-symbol" aria-hidden="true">☰</span>');
-    accentContainer.innerHTML = Object.entries(accentColors).map(([value, color]) =>
-      `<label style="--choice-color:${color}" title="${accentLabels[value]}"><input type="radio" name="role-appearance-accent" aria-label="${accentLabels[value]}" value="${value}" data-role-appearance="accent" ${preferences.accent === value ? "checked" : ""}><span aria-hidden="true">${preferences.accent === value ? "✓" : ""}</span></label>`
-    ).join("");
+    accentContainer.innerHTML = `<label for="roleAccentColor"><span>Kleur kiezen</span><input id="roleAccentColor" type="color" value="${preferences.accent}" aria-label="Accentkleur kiezen" data-role-appearance="accent"></label><label for="roleAccentHex"><span>Hexcode</span><input id="roleAccentHex" type="text" value="${preferences.accent.toUpperCase()}" pattern="#[0-9A-Fa-f]{6}" maxlength="7" spellcheck="false" aria-label="Accentkleur als hexcode" oninput="this.setCustomValidity('')" data-role-appearance="accent-hex"></label>`;
   }
 
   function renderNotifications() {
@@ -288,7 +282,19 @@
       preferences.theme = changedInput.checked ? "dark" : "light";
       preferences.darkMode = changedInput.checked;
     } else if (changedInput.dataset.roleAppearance) {
-      preferences[changedInput.dataset.roleAppearance] = changedInput.value;
+      if (changedInput.dataset.roleAppearance === "accent-hex") {
+        if (!/^#[0-9a-f]{6}$/i.test(changedInput.value)) {
+          changedInput.setCustomValidity("Vul een hexkleur in, bijvoorbeeld #009B87.");
+          changedInput.reportValidity();
+          return;
+        }
+        changedInput.setCustomValidity("");
+        preferences.accent = changedInput.value.toLowerCase();
+      } else {
+        preferences[changedInput.dataset.roleAppearance] = changedInput.dataset.roleAppearance === "accent"
+          ? changedInput.value.toLowerCase()
+          : changedInput.value;
+      }
       if (changedInput.dataset.roleAppearance === "theme") preferences.darkMode = changedInput.value === "dark";
       if (changedInput.dataset.roleAppearance === "density") preferences.compact = changedInput.value === "compact";
     } else if (changedInput.dataset.roleSectionSetting) {
@@ -354,7 +360,7 @@
       darkMode: false,
       theme: "light",
       density: "standard",
-      accent: "teal",
+      accent: "#009b87",
       sections: [...sectionKeys],
     };
     notificationPreferences = { ...defaultNotificationPreferences };

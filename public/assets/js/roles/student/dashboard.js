@@ -106,7 +106,7 @@ const defaultDashboardPreferences = Object.freeze({
   compact: false,
   darkMode: false,
   theme: 'light',
-  accent: 'teal',
+  accent: '#009b87',
   density: 'standard',
   outcomes: true,
   goals: true,
@@ -142,6 +142,7 @@ function getDashboardPreferences() {
     const preferences = { ...defaultDashboardPreferences, ...(saved && typeof saved === "object" ? saved : {}) };
     if (!saved?.theme) preferences.theme = saved?.darkMode ? 'dark' : 'light';
     if (!saved?.density) preferences.density = saved?.compact ? 'compact' : 'standard';
+    preferences.accent = normalizeAccentColor(preferences.accent);
     return preferences;
   } catch {
     return { ...defaultDashboardPreferences };
@@ -156,7 +157,7 @@ function applyDashboardPreferences() {
   root.classList.toggle('theme-dark', preferences.theme === 'dark' || (preferences.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
   root.dataset.density = preferences.density;
   root.dataset.accent = preferences.accent;
-  root.style.setProperty('--student-accent', settingsAccentColors[preferences.accent] || settingsAccentColors.teal);
+  root.style.setProperty('--student-accent', preferences.accent);
   dashboard.classList.toggle("dashboard-compact", preferences.density === 'compact');
   for (const key of ["outcomes", "goals", "actions", "feedback", "deadlines"]) {
     dashboard.querySelector('[data-dashboard-widget="' + key + '"]')?.classList.toggle("hidden", !preferences[key]);
@@ -182,6 +183,10 @@ function renderDashboardSettings() {
 }
 
 const settingsAccentColors = {teal:'#009b87', blue:'#168bed', purple:'#6840e8', pink:'#df238b', orange:'#fa7900', amber:'#efb014', green:'#78b915'};
+function normalizeAccentColor(value) {
+  if (Object.prototype.hasOwnProperty.call(settingsAccentColors, value)) return settingsAccentColors[value];
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : defaultDashboardPreferences.accent;
+}
 let settingsActiveTab = 'appearance';
 function selectSettingsTab(tab) {
   settingsActiveTab = tab;
@@ -200,13 +205,21 @@ function updateAppearanceSetting(key, value) {
   applyDashboardPreferences();
   renderAppearanceSettings();
 }
+function updateAppearanceAccentHex(input) {
+  if (!/^#[0-9a-f]{6}$/i.test(input.value)) {
+    input.setCustomValidity('Vul een hexkleur in, bijvoorbeeld #009B87.');
+    input.reportValidity();
+    return;
+  }
+  input.setCustomValidity('');
+  updateAppearanceSetting('accent', input.value.toLowerCase());
+}
 function renderAppearanceSettings() {
   const preferences = getDashboardPreferences();
   const choices = (key, options) => options.map(([value,title,description]) => '<label class="settings-choice ' + (preferences[key] === value ? 'selected' : '') + '"><input type="radio" name="appearance-' + key + '" value="' + value + '" ' + (preferences[key] === value ? 'checked' : '') + ' onchange="updateAppearanceSetting(\'' + key + '\', this.value)">' + (key === 'theme' ? '<span class="theme-preview ' + value + '" aria-hidden="true"><i></i><b><em></em><em></em><em></em></b></span>' : '<span class="density-symbol" aria-hidden="true">☰</span>') + '<span><strong>' + title + '</strong><small>' + description + '</small></span></label>').join('');
   document.getElementById('settingsThemeOptions').innerHTML = choices('theme', [['light','Licht','Heldere en frisse weergave'],['dark','Donker','Rustig en prettig voor je ogen'],['system','Systeem','Volgt je apparaatinstellingen']]);
   document.getElementById('settingsDensityOptions').innerHTML = choices('density', [['compact','Compact','Meer informatie op het scherm'],['standard','Standaard','Gebalanceerde weergave'],['spacious','Ruim','Meer witruimte en grotere kaarten']]);
-  const labels = {teal:'Turkoois',blue:'Blauw',purple:'Paars',pink:'Roze',orange:'Oranje',amber:'Geel',green:'Groen'};
-  document.getElementById('settingsAccentOptions').innerHTML = Object.entries(settingsAccentColors).map(([value,color]) => '<label style="--choice-color:' + color + '" title="' + labels[value] + '"><input type="radio" name="appearance-accent" aria-label="' + labels[value] + '" ' + (preferences.accent === value ? 'checked' : '') + ' onchange="updateAppearanceSetting(\'accent\',\'' + value + '\')"><span aria-hidden="true">' + (preferences.accent === value ? '✓' : '') + '</span></label>').join('');
+  document.getElementById('settingsAccentOptions').innerHTML = '<label for="studentAccentColor"><span>Kleur kiezen</span><input id="studentAccentColor" type="color" value="' + preferences.accent + '" aria-label="Accentkleur kiezen" onchange="updateAppearanceSetting(\'accent\', this.value.toLowerCase())"></label><label for="studentAccentHex"><span>Hexcode</span><input id="studentAccentHex" type="text" value="' + preferences.accent.toUpperCase() + '" pattern="#[0-9A-Fa-f]{6}" maxlength="7" spellcheck="false" aria-label="Accentkleur als hexcode" oninput="this.setCustomValidity(\'\')" onchange="updateAppearanceAccentHex(this)"></label>';
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (getDashboardPreferences().theme === 'system') applyDashboardPreferences(); });
 
@@ -262,4 +275,3 @@ document.addEventListener('profile-preferences-saved', (event) => {
   renderNotificationSettings();
 });
 applyNotificationPreferences();
-

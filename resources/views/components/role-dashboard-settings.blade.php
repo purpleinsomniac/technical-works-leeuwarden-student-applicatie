@@ -24,7 +24,7 @@
       <section class="settings-panel" data-settings-panel="appearance">
         <header><span aria-hidden="true">◉</span><div><h2>Uiterlijk</h2><p>Pas het thema, de accentkleur en de weergave aan.</p></div></header>
         <fieldset><legend>Thema</legend><p>Kies de algemene weergave van de omgeving.</p><div data-role-theme-options class="settings-choice-grid"></div></fieldset>
-        <fieldset><legend>Accentkleur</legend><p>Bepaal de hoofdkleur van knoppen, actieve elementen en accenten.</p><div data-role-accent-options class="settings-color-options"></div></fieldset>
+        <fieldset><legend>Accentkleur</legend><p>Bepaal de hoofdkleur van knoppen, actieve elementen en accenten.</p><div data-role-accent-options class="settings-color-options settings-accent-picker"></div></fieldset>
         <fieldset><legend>Weergavedichtheid</legend><p>Bepaal hoeveel ruimte er tussen onderdelen zit.</p><div data-role-density-options class="settings-choice-grid"></div></fieldset>
       </section>
 

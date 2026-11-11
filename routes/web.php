@@ -56,6 +56,8 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
         ->name('admin.application-settings.update');
 
     Route::middleware('role:beheerder')->prefix('beheer/gebruikers')->name('admin.users.')->group(function (): void {
+        Route::get('/sjabloon', [AdminUserController::class, 'downloadImportTemplate'])->name('template');
+        Route::post('/importeren', [AdminUserController::class, 'import'])->name('import');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');

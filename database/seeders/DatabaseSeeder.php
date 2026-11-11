@@ -102,17 +102,16 @@ class DatabaseSeeder extends Seeder
         }
 
         $demoUsers = [
-            'student' => ['Sam de Vries', 'student@example.test'],
-            'coach' => ['Mevrouw Jansen', 'coach@example.test'],
-            'teamleider' => ['Onderwijsmanager', 'manager@example.test'],
-            'beheerder' => ['Applicatiebeheerder', 'admin@example.test'],
+            ['naam' => 'Sam de Vries', 'email' => 'student@example.test', 'rol' => 'student'],
+            ['naam' => 'Mevrouw Jansen', 'email' => 'coach@example.test', 'rol' => 'coach'],
         ];
 
-        foreach ($demoUsers as $rol => [$naam, $email]) {
+        foreach ($demoUsers as $demoUser) {
+            $rol = $demoUser['rol'];
             $gebruiker = User::updateOrCreate(
-                ['email' => $email],
+                ['email' => $demoUser['email']],
                 [
-                    'naam' => $naam,
+                    'naam' => $demoUser['naam'],
                     'rol' => $rol,
                     'hoofdrol_id' => $roles[$rol]->id,
                     'studiefase_id' => $rol === 'student' ? $studiefases['OF']->id : null,
@@ -120,10 +119,11 @@ class DatabaseSeeder extends Seeder
                 ],
             );
 
-            // Alleen de beheerder krijgt extra rollen om alle schermen te testen.
-            $gebruiker->extraRoles()->sync(
-                $rol === 'beheerder' ? $roles->pluck('id')->all() : [],
-            );
+            if ($rol === 'student' && ! $gebruiker->studentnummer) {
+                $gebruiker->forceFill([
+                    'studentnummer' => 'STU'.str_pad((string) $gebruiker->id, 6, '0', STR_PAD_LEFT),
+                ])->save();
+            }
         }
 
         $student = User::where('email', 'student@example.test')->firstOrFail();

@@ -8,12 +8,151 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
     private const ROLES = ['student', 'coach', 'teamleider', 'beheerder'];
+
+    public function downloadImportTemplate(): StreamedResponse
+    {
+        return response()->streamDownload(
+            static function (): void {
+                echo "naam;email;leerjaar;tijdelijk_wachtwoord\r\n";
+            },
+            'studenten-import-sjabloon.csv',
+            ['Content-Type' => 'text/csv; charset=UTF-8'],
+        );
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'bestand' => ['required', 'file', 'extensions:csv', 'max:2048'],
+        ]);
+
+        $handle = fopen($request->file('bestand')->getRealPath(), 'rb');
+        if ($handle === false) {
+            throw ValidationException::withMessages([
+                'bestand' => 'Het CSV-bestand kan niet worden gelezen.',
+            ]);
+        }
+
+        $rows = [];
+        $errors = [];
+        try {
+            $firstLine = fgets($handle);
+            if ($firstLine === false) {
+                throw ValidationException::withMessages([
+                    'bestand' => 'Het CSV-bestand is leeg.',
+                ]);
+            }
+
+            // Excel may save the template with commas or semicolons depending on regional settings.
+            $delimiter = $this->csvDelimiter($firstLine);
+            rewind($handle);
+            $headers = fgetcsv($handle, null, $delimiter, '"', '');
+            if ($headers === false) {
+                throw ValidationException::withMessages([
+                    'bestand' => 'De kolomkoppen konden niet worden gelezen.',
+                ]);
+            }
+
+            $headers = array_map(
+                static fn ($header): string => strtolower(trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $header))),
+                $headers,
+            );
+            $requiredHeaders = ['naam', 'email', 'leerjaar', 'tijdelijk_wachtwoord'];
+            if (
+                count($headers) !== count($requiredHeaders)
+                || count(array_unique($headers)) !== count($requiredHeaders)
+                || array_diff($requiredHeaders, $headers) !== []
+            ) {
+                throw ValidationException::withMessages([
+                    'bestand' => 'Gebruik de kolomkoppen uit het importsjabloon: naam, email, leerjaar, tijdelijk_wachtwoord.',
+                ]);
+            }
+
+            $rowNumber = 1;
+            $seenEmails = [];
+            while (($values = fgetcsv($handle, null, $delimiter, '"', '')) !== false) {
+                $rowNumber++;
+                if (collect($values)->every(static fn ($value): bool => trim((string) $value) === '')) {
+                    continue;
+                }
+
+                if (count($values) !== count($headers)) {
+                    $errors[] = "Rij {$rowNumber}: het aantal ingevulde waarden komt niet overeen met de kolomkoppen.";
+                    continue;
+                }
+
+                $values = array_combine($headers, $values);
+                $student = [
+                    'naam' => trim((string) $values['naam']),
+                    'email' => trim((string) $values['email']),
+                    'leerjaar' => trim((string) $values['leerjaar']) ?: null,
+                    'tijdelijk_wachtwoord' => (string) $values['tijdelijk_wachtwoord'],
+                ];
+                $validator = Validator::make($student, [
+                    'naam' => ['required', 'string', 'max:255'],
+                    'email' => ['required', 'string', 'email', 'max:255'],
+                    'leerjaar' => ['nullable', 'integer', 'between:1,4'],
+                    'tijdelijk_wachtwoord' => ['required', 'string', 'min:8', 'max:255'],
+                ]);
+
+                if ($validator->fails()) {
+                    foreach ($validator->errors()->all() as $message) {
+                        $errors[] = "Rij {$rowNumber}: {$message}";
+                    }
+
+                    continue;
+                }
+
+                $normalizedEmail = strtolower($student['email']);
+                if (isset($seenEmails[$normalizedEmail]) || User::whereRaw('LOWER(email) = ?', [$normalizedEmail])->exists()) {
+                    $errors[] = "Rij {$rowNumber}: het e-mailadres {$student['email']} bestaat al of staat meerdere keren in het bestand.";
+                    continue;
+                }
+
+                $seenEmails[$normalizedEmail] = true;
+                $rows[] = $student;
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        if ($rows === [] && $errors === []) {
+            $errors[] = 'Het bestand bevat geen studentgegevens.';
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages(['bestand' => $errors]);
+        }
+
+        // Validate every row before writing so an invalid file cannot create a partial batch.
+        DB::transaction(function () use ($rows): void {
+            $studentRole = Role::where('naam', 'student')->firstOrFail();
+
+            foreach ($rows as $row) {
+                $student = User::create([
+                    'naam' => $row['naam'],
+                    'email' => $row['email'],
+                    'rol' => $studentRole->naam,
+                    'hoofdrol_id' => $studentRole->id,
+                    'leerjaar' => $row['leerjaar'],
+                    'password' => $row['tijdelijk_wachtwoord'],
+                ]);
+                $student->forceFill(['studentnummer' => $this->studentNumberFor($student)])->save();
+            }
+        });
+
+        $count = count($rows);
+
+        return $this->usersPage()->with('status', "{$count} ".($count === 1 ? 'student is' : 'studenten zijn').' geïmporteerd.');
+    }
 
     public function store(Request $request): RedirectResponse
     {
@@ -138,6 +277,17 @@ class UserController extends Controller
     private function studentNumberFor(User $user): string
     {
         return 'STU'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT);
+    }
+
+    private function csvDelimiter(string $firstLine): string
+    {
+        $counts = [
+            ';' => substr_count($firstLine, ';'),
+            ',' => substr_count($firstLine, ','),
+            "\t" => substr_count($firstLine, "\t"),
+        ];
+
+        return array_search(max($counts), $counts, true);
     }
 
     private function administratorCount(): int

@@ -67,6 +67,21 @@
     </div>
   @endif
 
+  {{-- Import accepts the downloadable CSV template; server-side validation rejects the whole file on any row error. --}}
+  <section class="admin-panel admin-user-create">
+    <div class="admin-panel-heading">
+      <div><h2>Studenten importeren</h2><p>Importeer meerdere studentaccounts tegelijk vanuit een CSV-bestand dat je met Excel kunt bewerken.</p></div>
+    </div>
+    <p>Gebruik de kolommen <code>naam</code>, <code>email</code>, <code>leerjaar</code> en <code>tijdelijk_wachtwoord</code>. Leerjaar is optioneel (1 t/m 4); het wachtwoord moet minimaal 8 tekens bevatten. Elk e-mailadres moet nog niet in de applicatie bestaan. Studentnummers worden automatisch aangemaakt.</p>
+    <p>Download het sjabloon, open het in Excel en sla het daarna op als CSV UTF-8 (maximaal 2 MB). Tijdelijke wachtwoorden staan onversleuteld in het bestand: deel en verwijder het bestand zorgvuldig. Een fout in een rij voorkomt dat de hele import wordt opgeslagen.</p>
+    <p><a href="{{ route('admin.users.template') }}">Download importsjabloon</a></p>
+    <form action="{{ route('admin.users.import', ['page' => 'gebruikers']) }}" method="post" enctype="multipart/form-data" class="admin-user-form">
+      @csrf
+      <div><label for="student-import-file">CSV-bestand</label><input class="input" id="student-import-file" name="bestand" type="file" accept=".csv,text/csv" required></div>
+      <button class="button dark" type="submit">Studenten importeren</button>
+    </form>
+  </section>
+
   {{-- Keep account creation collapsed until requested, or reopened after a failed submission. --}}
   <section class="admin-panel admin-user-create" id="createAdminUser" @if (!request()->boolean('new')) hidden @endif>
     <div class="admin-panel-heading">

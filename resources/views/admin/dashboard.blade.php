@@ -391,6 +391,22 @@
     @method('PUT')
     <div class="admin-content-grid">
       <section class="admin-panel">
+        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">◈</span><div><h2>Applicatie-uiterlijk</h2><p>Pas de globale accentkleur en stijl aan voor alle dashboards.</p></div></div>
+        <label for="application-accent-color">Globale accentkleur</label>
+        <div class="admin-theme-color">
+          <input id="application-accent-color" name="application_accent_color" type="color" value="{{ old('application_accent_color', $roleData['applicationSettings']->application_accent_color) }}" required>
+          <span id="applicationAccentColorValue">{{ strtoupper(old('application_accent_color', $roleData['applicationSettings']->application_accent_color)) }}</span>
+        </div>
+        <label for="application-style">Stijl</label>
+        <select class="input" id="application-style" name="application_style" required>
+          <option value="standard" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'standard')>Standaard</option>
+          <option value="rounded" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'rounded')>Afgerond</option>
+          <option value="sharp" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'sharp')>Strak</option>
+        </select>
+        <p class="dim small">De kleurkiezer toont de hexcode. Bestaande persoonlijke accentvoorkeuren blijven behouden.</p>
+      </section>
+
+      <section class="admin-panel">
         <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
         <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
         <input class="input" id="max-upload-size" name="max_upload_size_mb" type="number" min="1" max="50" value="{{ old('max_upload_size_mb', $roleData['applicationSettings']->max_upload_size_mb) }}" required>

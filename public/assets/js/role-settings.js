@@ -58,6 +58,10 @@
     if (window.LARAVEL_USER.role === "coach" && sectionKeys.includes("coachGroups") && !savedSections.includes("coachGroups")) {
       savedSections.push("coachGroups");
     }
+    // Herstel de coachnavigatie als een oude of beschadigde voorkeur alleen Groepen overliet.
+    if (window.LARAVEL_USER.role === "coach" && savedSections.length === 1) {
+      savedSections = [...sectionKeys];
+    }
     return {
       version: 3,
       compact: saved?.compact === true,
@@ -312,9 +316,11 @@
       const sections = sectionInputs
         .filter((input) => input.checked)
         .map((input) => input.dataset.roleSectionSetting);
-      if (sections.length === 0) {
+      if (sections.length === 0 || (window.LARAVEL_USER.role === "coach" && sections.length === 1)) {
         changedInput.checked = true;
-        setStatus("Kies ten minste één zichtbaar onderdeel.", "error");
+        setStatus(window.LARAVEL_USER.role === "coach"
+          ? "Er moeten meerdere coachonderdelen zichtbaar blijven. De navigatie is hersteld."
+          : "Kies ten minste één zichtbaar onderdeel.", "error");
         return;
       }
       preferences.sections = sections;

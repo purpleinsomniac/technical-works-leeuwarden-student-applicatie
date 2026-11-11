@@ -1711,7 +1711,7 @@
 }
 
 /* Desktop groups workspace: fixed frame, with independent group and student scrollers. */
-@media (min-width: 1121px) {
+@media (min-width: 1280px) {
   #app.role-coach.coach-groups-active > .main {
     height: 100vh;
     height: 100dvh;
@@ -2477,6 +2477,47 @@
   .app.role-coach .coach-student-card {
     transition: none;
   }
+}
+
+/* Groepenpagina: duidelijke samenvatting boven de zelfstandig scrollende werkpanelen. */
+#app.role-coach #coachGroups .coach-groups-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+#app.role-coach #coachGroups .coach-group-hero-stats {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+#app.role-coach #coachGroups .coach-group-hero-stats > span {
+  display: grid;
+  min-width: 104px;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid #dce8f2;
+  border-radius: 12px;
+  background: #f7fafc;
+  text-align: center;
+}
+
+#app.role-coach #coachGroups .coach-group-hero-stats strong {
+  color: #16364b;
+  font-size: 20px;
+}
+
+#app.role-coach #coachGroups .coach-group-hero-stats small {
+  color: #6f8292;
+  font-size: 11px;
+}
+
+@media (max-width: 680px) {
+  #app.role-coach #coachGroups .coach-groups-hero { align-items: flex-start; flex-direction: column; }
+  #app.role-coach #coachGroups .coach-group-hero-stats { width: 100%; }
+  #app.role-coach #coachGroups .coach-group-hero-stats > span { flex: 1; }
 }
 
 /* Leeractiviteiten, leerdoelen en projecten als afzonderlijke docentoverzichten. */
@@ -5937,5 +5978,143 @@
   #app.role-coach .coach-page.is-accenting .coach-student-hero::after {
     animation: none;
     transform: scaleX(1);
+  }
+}
+
+/* Keep the roster controls compact and student cards at their full content height. */
+#app.role-coach #coachGroups .coach-roster-tools {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.5fr) repeat(3, minmax(135px, 1fr));
+  align-items: end;
+  gap: 12px;
+  padding: 14px;
+}
+
+#app.role-coach #coachGroups .coach-roster-tools > label {
+  min-width: 0;
+}
+
+#app.role-coach #coachGroups .coach-roster-tools > .coach-search {
+  grid-column: auto;
+}
+
+#app.role-coach #coachGroups .coach-roster-heading-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 9px;
+}
+
+#app.role-coach #coachGroups .coach-filter-reset {
+  min-height: 34px;
+  padding: 0 11px;
+  border-color: #d8e1ed;
+  border-radius: 9px;
+  background: #fff;
+  color: #52667b;
+  font-size: 11px;
+}
+
+#app.role-coach #coachGroups .coach-filter-reset:hover {
+  border-color: #b7c7dc;
+  background: #f5f8fc;
+  color: #213b54;
+}
+
+#app.role-coach #coachGroups .coach-student-grid {
+  display: flex;
+  min-height: 0;
+  max-height: min(64vh, 700px);
+  flex-direction: column;
+  align-content: start;
+  gap: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 2px 5px 2px 1px;
+  overscroll-behavior-y: contain;
+}
+
+#app.role-coach #coachGroups .coach-student-card {
+  display: grid;
+  flex: 0 0 auto;
+  min-height: 132px;
+  grid-template-columns: 42px minmax(150px, 1.35fr) minmax(105px, .8fr) minmax(150px, 1.2fr) minmax(115px, .9fr) 112px;
+  align-items: center;
+  gap: 12px;
+  overflow: visible;
+  padding: 14px 16px;
+}
+
+#app.role-coach #coachGroups .coach-student-card > .coach-student-meta,
+#app.role-coach #coachGroups .coach-student-card > .coach-student-level,
+#app.role-coach #coachGroups .coach-student-card > .coach-student-progress,
+#app.role-coach #coachGroups .coach-student-card > .coach-student-action {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+@media (max-width: 1500px) {
+  #app.role-coach #coachGroups .coach-roster-tools {
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(115px, 1fr));
+  }
+
+  #app.role-coach #coachGroups .coach-student-card {
+    min-height: 0;
+    grid-template-columns: 40px minmax(0, 1fr) 116px;
+    grid-template-rows: auto auto auto auto;
+    align-items: center;
+    gap: 9px 12px;
+  }
+
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-avatar { grid-column: 1; grid-row: 1; }
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-info { grid-column: 2; grid-row: 1; }
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-action { grid-column: 3; grid-row: 1; }
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-meta,
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-level,
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-progress {
+    grid-column: 2 / 4;
+  }
+}
+
+@media (max-width: 980px) {
+  #app.role-coach #coachGroups .coach-roster-tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #app.role-coach #coachGroups .coach-roster-tools > .coach-search {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  #app.role-coach #coachGroups .coach-roster-heading-actions {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+  }
+
+  #app.role-coach #coachGroups .coach-roster-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #app.role-coach #coachGroups .coach-roster-tools > .coach-search {
+    grid-column: auto;
+  }
+
+  #app.role-coach #coachGroups .coach-student-card {
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto;
+    padding: 13px;
+  }
+
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-action {
+    grid-column: 2;
+    grid-row: 5;
+    text-align: left;
+  }
+
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-meta,
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-level,
+  #app.role-coach #coachGroups .coach-student-card > .coach-student-progress {
+    grid-column: 2;
   }
 }

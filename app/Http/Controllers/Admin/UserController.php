@@ -30,8 +30,9 @@ class UserController extends Controller
 
     public function import(Request $request): RedirectResponse
     {
-        $request->validate([
+        $importOptions = $request->validate([
             'bestand' => ['required', 'file', 'extensions:csv', 'max:2048'],
+            'groep_id' => ['nullable', 'integer', Rule::exists('groepen', 'id')],
         ]);
 
         $handle = fopen($request->file('bestand')->getRealPath(), 'rb');
@@ -133,7 +134,7 @@ class UserController extends Controller
         }
 
         // Validate every row before writing so an invalid file cannot create a partial batch.
-        DB::transaction(function () use ($rows): void {
+        DB::transaction(function () use ($rows, $importOptions): void {
             $studentRole = Role::where('naam', 'student')->firstOrFail();
 
             foreach ($rows as $row) {
@@ -146,6 +147,9 @@ class UserController extends Controller
                     'password' => $row['tijdelijk_wachtwoord'],
                 ]);
                 $student->forceFill(['studentnummer' => $this->studentNumberFor($student)])->save();
+                if (! empty($importOptions['groep_id'])) {
+                    $student->groups()->sync([(int) $importOptions['groep_id']]);
+                }
             }
         });
 
@@ -171,6 +175,7 @@ class UserController extends Controller
 
             if ($role->naam === 'student') {
                 $user->forceFill(['studentnummer' => $this->studentNumberFor($user)])->save();
+                $user->groups()->sync($data['group_ids'] ?? []);
             }
 
             return $user;
@@ -217,6 +222,9 @@ class UserController extends Controller
             $user->save();
             if ($role->naam === 'student' && ! $user->studentnummer) {
                 $user->forceFill(['studentnummer' => $this->studentNumberFor($user)])->save();
+            }
+            if ($role->naam === 'student') {
+                $user->groups()->sync($data['group_ids'] ?? []);
             }
 
             if ($roleChanged) {
@@ -268,6 +276,10 @@ class UserController extends Controller
             'leerjaar' => $request->input('rol') === 'student'
                 ? ['nullable', 'integer', 'between:1,4']
                 : ['prohibited'],
+            'group_ids' => $request->input('rol') === 'student'
+                ? ['nullable', 'array']
+                : ['prohibited'],
+            'group_ids.*' => ['integer', 'distinct', Rule::exists('groepen', 'id')],
             'password' => $creating
                 ? ['required', 'string', 'min:8', 'confirmed']
                 : ['nullable', 'string', 'min:8', 'confirmed'],

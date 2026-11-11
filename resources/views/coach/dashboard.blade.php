@@ -93,11 +93,15 @@
 </section>
 
 <section id="coachGroups" class="view hidden coach-page" data-role-section="coachGroups" aria-labelledby="coachGroupsTitle">
-  <header class="coach-page-hero">
+  <header class="coach-page-hero coach-groups-hero">
     <div>
       <span class="coach-eyebrow">Jouw begeleiding</span>
       <h1 id="coachGroupsTitle">Mijn groepen</h1>
-      <p>Bekijk de groepen die aan jou zijn toegewezen en open de studenten die daarbij horen.</p>
+      <p>Een overzichtelijke werkplek voor je groepen en de studenten die eraan zijn gekoppeld.</p>
+    </div>
+    <div class="coach-group-hero-stats" aria-label="Samenvatting groepen en studenten">
+      <span><strong>{{ count($frontendData['groups']) }}</strong><small>{{ count($frontendData['groups']) === 1 ? 'groep' : 'groepen' }}</small></span>
+      <span><strong>{{ $frontendData['studentCount'] }}</strong><small>{{ $frontendData['studentCount'] === 1 ? 'student' : 'studenten' }}</small></span>
     </div>
   </header>
 
@@ -141,7 +145,10 @@
         <h2 id="coachRosterTitle">Studenten in mijn groepen</h2>
         <p>Open een profiel om voortgang te bekijken en bij te werken.</p>
       </div>
-      <span class="coach-section-count" id="coachStudentCount" aria-live="polite">{{ $displayedStudentCount }} {{ $displayedStudentCount === 1 ? 'student' : 'studenten' }}</span>
+      <div class="coach-roster-heading-actions">
+        <button class="button coach-filter-reset hidden" id="coachRosterReset" type="button">Filters wissen</button>
+        <span class="coach-section-count" id="coachStudentCount" aria-live="polite">{{ $displayedStudentCount }} {{ $displayedStudentCount === 1 ? 'student' : 'studenten' }}</span>
+      </div>
     </div>
 
     @if ($displayedStudentCount)
@@ -237,7 +244,7 @@
       <div class="coach-empty-state">
         <span class="coach-empty-icon" aria-hidden="true">♙</span>
         <h3>Er zijn nog geen studenten</h3>
-        <p>Zodra studenten aan de leeromgeving zijn toegevoegd, verschijnen ze hier.</p>
+        <p>Laat de beheerder controleren of deze groep aan jouw account is toegewezen en of studenten aan de groep zijn gekoppeld.</p>
       </div>
     @endif
   </section>

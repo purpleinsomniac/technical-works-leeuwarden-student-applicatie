@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Group;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,10 +59,11 @@ class GroupController extends Controller
             'naam' => ['required', 'string', 'max:120'],
             'schooljaar' => ['nullable', 'string', 'max:20'],
             'omschrijving' => ['nullable', 'string', 'max:2000'],
+            // Zonder coach verschijnt de groep niet in "Mijn groepen".
             'coach_id' => [
-                'nullable',
+                'required',
                 'integer',
-                Rule::exists('gebruikers', 'id')->where('rol', 'coach'),
+                Rule::in(User::canCoach()->pluck('id')->all()),
             ],
             'student_ids' => ['nullable', 'array'],
             'student_ids.*' => [
@@ -70,6 +72,9 @@ class GroupController extends Controller
                 'distinct',
                 Rule::exists('gebruikers', 'id')->where('rol', 'student'),
             ],
+        ], [
+            'coach_id.required' => 'Koppel een docent aan de groep; anders verschijnt de groep niet op de coachpagina.',
+            'coach_id.in' => 'Kies een geldig coachaccount voor deze groep.',
         ]);
     }
 

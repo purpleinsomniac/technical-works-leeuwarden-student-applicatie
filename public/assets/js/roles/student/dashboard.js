@@ -106,7 +106,9 @@ const defaultDashboardPreferences = Object.freeze({
   compact: false,
   darkMode: false,
   theme: 'light',
-  accent: window.LARAVEL_APPLICATION_THEME?.accentColor || '#009b87',
+  accent: window.LARAVEL_APPLICATION_THEME?.globalAccentColor
+    || window.LARAVEL_APPLICATION_THEME?.accentColor
+    || '#009b87',
   density: 'standard',
   outcomes: true,
   goals: true,
@@ -158,6 +160,7 @@ function applyDashboardPreferences() {
   root.dataset.density = preferences.density;
   root.dataset.accent = preferences.accent;
   root.style.setProperty('--student-accent', preferences.accent);
+  document.getElementById('app')?.style.setProperty('--application-accent', preferences.accent);
   dashboard.classList.toggle("dashboard-compact", preferences.density === 'compact');
   for (const key of ["outcomes", "goals", "actions", "feedback", "deadlines"]) {
     dashboard.querySelector('[data-dashboard-widget="' + key + '"]')?.classList.toggle("hidden", !preferences[key]);

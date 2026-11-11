@@ -108,6 +108,7 @@
 
   function apply() {
     const root = document.documentElement;
+    document.getElementById("app")?.style.setProperty("--application-accent", preferences.accent);
     const systemDark = preferences.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches;
     root.classList.toggle("theme-dark", preferences.theme === "dark" || systemDark);
     root.dataset.density = preferences.density;
@@ -367,7 +368,9 @@
       darkMode: false,
       theme: "light",
       density: "standard",
-      accent: window.LARAVEL_APPLICATION_THEME?.accentColor || accentColors.teal,
+      accent: window.LARAVEL_APPLICATION_THEME?.globalAccentColor
+        || window.LARAVEL_APPLICATION_THEME?.accentColor
+        || accentColors.teal,
       sections: [...sectionKeys],
     };
     notificationPreferences = { ...defaultNotificationPreferences };

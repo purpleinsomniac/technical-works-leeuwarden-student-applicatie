@@ -28,11 +28,11 @@
   background: var(--application-accent);
 }
 
-#app[data-application-style="rounded"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile) {
+#app[data-application-style="rounded"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .settings-account-security, .settings-save-copy, .notification-setting-row, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile) {
   border-radius: 18px;
 }
 
-#app[data-application-style="rounded"] :is(.button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row) {
+#app[data-application-style="rounded"] :is(.button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row, .settings-menu button) {
   border-radius: 12px;
 }
 
@@ -40,6 +40,6 @@
   border-radius: 14px;
 }
 
-#app[data-application-style="sharp"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile, .button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row) {
+#app[data-application-style="sharp"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .settings-account-security, .settings-save-copy, .notification-setting-row, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile, .button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row, .settings-menu button, .settings-panel > header > span, .notification-setting-icon) {
   border-radius: 3px;
 }

@@ -12,7 +12,7 @@
 @endpush
 
 @section('content')
-  <div class="app role-{{ $frontendUser['role'] }}" id="app" data-application-style="{{ $applicationSettings->application_style }}" style="--application-accent: {{ $applicationSettings->application_accent_color }}">
+  <div class="app role-{{ $frontendUser['role'] }}" id="app" data-application-style="{{ $applicationSettings->application_style }}" style="--application-accent: {{ $applicationAccentColor }}">
     @include('components.sidebar')
 
     <main class="main">
@@ -30,7 +30,8 @@
   <script>
     window.LARAVEL_USER = {{ Illuminate\Support\Js::from($frontendUser) }};
     window.LARAVEL_APPLICATION_THEME = {{ Illuminate\Support\Js::from([
-        'accentColor' => $applicationSettings->application_accent_color,
+        'accentColor' => $applicationAccentColor,
+        'globalAccentColor' => $applicationSettings->application_accent_color,
         'style' => $applicationSettings->application_style,
     ]) }};
     window.LARAVEL_STATE = {{ Illuminate\Support\Js::from($frontendState) }};

@@ -34,7 +34,7 @@
         </label>
       @endforeach
     @elseif ($frontendUser['role'] === 'teamleider')
-      @foreach (['groups' => 'Groepsoverzicht', 'reports' => 'Rapportages'] as $key => $label)
+      @foreach (['groups' => 'Groepsoverzicht', 'teachers' => 'Docenten', 'reports' => 'Rapportages'] as $key => $label)
         <label class="account-dashboard-setting">
           <span>{{ $label }}</span>
           <input type="checkbox" data-role-section-setting="{{ $key }}">

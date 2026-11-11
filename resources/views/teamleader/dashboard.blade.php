@@ -29,6 +29,31 @@
   </div>
 </section>
 
+<section id="managerTeachers" class="view hidden" data-role-section="teachers">
+  <div class="head">
+    <div>
+      <h1>Docenten</h1>
+      <p class="dim">Overzicht van alle Docenten.</p>
+    </div>
+  </div>
+  <div class="card manager-teachers-table-wrap">
+    <table class="manager-teachers-table">
+      <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th></tr></thead>
+      <tbody>
+        @forelse ($roleData['coaches'] as $coach)
+          <tr>
+            <td>{{ $coach->naam }}</td>
+            <td><a href="mailto:{{ $coach->email }}">{{ $coach->email }}</a></td>
+            <td>{{ ucfirst($coach->primaryRole?->naam ?? $coach->rol) }}</td>
+          </tr>
+        @empty
+          <tr><td colspan="3">Er zijn nog geen docenten.</td></tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+</section>
+
 {{-- Report view reuses the same totals and explains why export is not yet available. --}}
 <section id="managerReports" class="view hidden" data-role-section="reports">
   <h1>Rapportages</h1>

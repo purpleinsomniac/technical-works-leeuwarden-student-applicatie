@@ -54,6 +54,16 @@ class DashboardController extends RoleDashboardController
 
         return [
             'studentCount' => User::where('rol', 'student')->count(),
+            'coaches' => User::query()
+                ->with('primaryRole')
+                ->where(function ($query): void {
+                    $query->whereHas('primaryRole', fn ($roleQuery) => $roleQuery->where('naam', 'coach'))
+                        ->orWhere(function ($query): void {
+                            $query->whereNull('hoofdrol_id')->where('rol', 'coach');
+                        });
+                })
+                ->orderBy('naam')
+                ->get(['id', 'naam', 'email', 'rol', 'hoofdrol_id']),
             'averagePercentage' => (int) round($percentages->avg() ?? 0),
             'attentionCount' => $progress->whereIn('status', ['niet_gestart', 'gestart'])->count(),
             'phases' => $phasePercentages,

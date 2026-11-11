@@ -46,16 +46,20 @@
       console.error("Could not read dashboard settings from local storage.", error);
     }
 
-    const savedSections = Array.isArray(saved?.sections)
+    let savedSections = Array.isArray(saved?.sections)
       ? saved.sections
         .map((section) => (section === "coachStudents" ? "coachGroups" : section))
         .filter((section) => sectionKeys.includes(section))
       : [];
+    // Oude coachvoorkeuren konden maar één route bewaren; herstel die eenmalig naar alle huidige tabbladen.
+    if (window.LARAVEL_USER.role === "coach" && Number(saved?.version ?? 0) < 3) {
+      savedSections = [...sectionKeys];
+    }
     if (window.LARAVEL_USER.role === "coach" && sectionKeys.includes("coachGroups") && !savedSections.includes("coachGroups")) {
       savedSections.push("coachGroups");
     }
-
     return {
+      version: 3,
       compact: saved?.compact === true,
       darkMode: saved?.darkMode === true,
       theme: ["light", "dark", "system"].includes(saved?.theme)
@@ -363,6 +367,7 @@
 
   function reset() {
     preferences = {
+      version: 3,
       compact: false,
       darkMode: false,
       theme: "light",

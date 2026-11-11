@@ -19,6 +19,41 @@ class DashboardController extends RoleDashboardController
     /** Toon het coachdashboard met de bijbehorende gegevens en bestanden. */
     public function __invoke(Request $request): View
     {
+        return $this->renderCoachPage($request, 'overview');
+    }
+
+    public function groups(Request $request): View
+    {
+        return $this->renderCoachPage($request, 'groups');
+    }
+
+    public function activities(Request $request): View
+    {
+        return $this->renderCoachPage($request, 'activities');
+    }
+
+    public function goals(Request $request): View
+    {
+        return $this->renderCoachPage($request, 'goals');
+    }
+
+    public function projects(Request $request): View
+    {
+        return $this->renderCoachPage($request, 'projects');
+    }
+
+    public function feedback(Request $request): View
+    {
+        return $this->renderCoachPage($request, 'feedback');
+    }
+
+    public function student(Request $request, int $student): View
+    {
+        return $this->renderCoachPage($request, 'student', $student);
+    }
+
+    private function renderCoachPage(Request $request, string $page, ?int $studentId = null): View
+    {
         /** @var User $user */
         $user = $request->user();
         $groups = $user->coachedGroups()
@@ -33,15 +68,23 @@ class DashboardController extends RoleDashboardController
             ->unique('id')
             ->sortBy('naam')
             ->values();
+        $roleData = $this->students($students, $groups);
+
+        if ($studentId !== null) {
+            $student = collect($roleData)->firstWhere('id', $studentId);
+            abort_unless($student, 404);
+            $roleData = [$student];
+        }
 
         return $this->dashboardView(
             user: $user,
             activeRole: 'coach',
             view: 'coach.dashboard',
             frontendData: $this->overviewData($user, $students, $groups),
-            roleData: $this->students($students, $groups),
+            roleData: $roleData,
             style: 'css/roles/coach.css',
             scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/coach.js'],
+            extraData: ['coachPage' => $page, 'coachStudentId' => $studentId],
         );
     }
 
@@ -77,6 +120,7 @@ class DashboardController extends RoleDashboardController
             ->latest()
             ->get()
             ->map(fn (LearningGoal $goal): array => [
+                'studentId' => $goal->user->id,
                 'student' => $goal->user->naam,
                 'title' => $goal->onderwerp,
                 'description' => $goal->omschrijving,

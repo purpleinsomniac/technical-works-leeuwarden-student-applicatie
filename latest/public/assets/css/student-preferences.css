@@ -1,0 +1,68 @@
+/* Eén kleurenset voor alle studentpagina's, inclusief de detailvensters. */
+html.theme-dark { color-scheme:dark; --student-surface:#162e3b; --student-raised:#1d3947; --student-border:#365363; --student-text:#edf5f8; --student-muted:#b4c8d3; }
+html.theme-dark body { background:#0c202c; color:var(--student-text); }
+html.theme-dark .main { background:#102633; color:var(--student-text); }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal,.outcome-reflection-modal,.registration-modal) span:not([aria-hidden="true"]) { color:inherit; }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal,.outcome-reflection-modal,.registration-modal) :is(h1,h2,h3,h4,strong,b,legend,dt,dd,label,summary) { color:var(--student-text) !important; }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal,.outcome-reflection-modal,.registration-modal) :is(p,small,.dim,.code,.metric-label,.detail-stat > span,.reflection-date,.hours-date,.reflection-row-code,.reflection-row-date,.reflection-row-person,.field-help,.settings-saved) { color:var(--student-muted) !important; }
+html.theme-dark :is(.card,.settings-panel,.settings-menu,.goals-panel,.goal-insight-card,.development-group,.hours-summary-card,.hours-registration-card,.project-summary-grid > article,.goal-overview-stats > article,.reflection-highlights > article,.reflection-layout > div,.profile-card,.profile-redesign,.goal-detail-dialog,.xp-help-panel,.xp-progress-card,.current-assignment-card,.project-next-step,.dashboard-widget-grid > section,.dashboard-primary-grid > article,.outcome-detail-stats,.registration-modal,.outcome-reflection-modal) { background:var(--student-surface) !important; border-color:var(--student-border) !important; color:var(--student-text) !important; }
+html.theme-dark :is(.assignment-row,.assignment-row-open,.assignment-files,.assignment-outcome,.assignment-file-row,.goal-list-row,.goal-preview,.goal-badge,.hours-registration-row,.development-outcome,.reflection-table-row,.feedback-table-row,.simple,.profile-action,.profile-option,.profile-password-fields,.linked-outcome,.outcome-reflection-row,.outcome-feedback-row,.outcome-reflection-empty,.registration-detail-grid > div,.registration-outcome,.registration-outcome-group button,.detail-section,.xp-rewards li) { background:var(--student-surface) !important; border-color:var(--student-border) !important; color:var(--student-text) !important; }
+html.theme-dark :is(.reflection-table-heading,.hours-table-head,.development-table-head,.hours-table-footer,.reflection-detail-footer,.registration-modal-footer,.reflection-detail-modal-head,.account-modal-person,.profile-card > header,.profile-password-date,.outcome-reflections-compact,.outcome-feedback-compact,.reflection-detail-content section,.assignment-detail-information > div,.week-plan-preview li,.settings-choice,.settings-card-head) { background:var(--student-raised) !important; border-color:var(--student-border) !important; color:var(--student-text) !important; }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal) :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) { background:#102935 !important; border-color:#486675 !important; color:var(--student-text) !important; }
+html.theme-dark :is(input,textarea)::placeholder { color:#9eb7c6 !important; opacity:1; }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal) :is(a,.card-link,.mutedlink,.back-link,.compact-add-button) { color:#83e2cd !important; }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal) button:not(.dark):not(.sidebar-account):not(.goal-detail-backdrop):not(.account-modal-backdrop) { color:var(--student-text); }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal) :is(.button:not(.dark),.modal-close,.account-modal-close,.catalog-pagination button,.hours-pagination button,.reflection-filter-button,.reflection-type-tabs button,.tab,.goals-tab,.goals-phase-tab) { background:var(--student-raised) !important; border-color:var(--student-border) !important; color:var(--student-text) !important; }
+html.theme-dark :is(.main,.account-modal,.goal-detail-modal) :is(.button.dark,.button.dark strong,#goalCompleteButton) { color:#fff !important; }
+html.theme-dark :is(.settings-choice.selected,.settings-menu button.active,.reflection-filter-button.active,.reflection-type-tabs button.active,.hours-phase-tabs button.active,.catalog-pagination button.active,.hours-pagination button.active,.tab.active,.goals-tab.active) { background:#20594f !important; color:#c2ffec !important; border-color:#52bca3 !important; }
+html.theme-dark :is(.pill,.skill-tag,.hours-phase-badge,.hours-outcome-chip,.hours-value > span,.reflection-row-label,.reflection-row-status,.goal-list-status,.assignment-row-status,.assignment-status,.goal-status,#detailStatus,#detailPointsBadge,.profile-option-icon,.profile-card header > span,.registration-status,.settings-option-icon,.project-detail-icon) { background:#244d48 !important; color:#a4f3dc !important; border-color:#3b7366 !important; }
+html.theme-dark :is(.xp-star,.xp-help,.outcome-feedback-compact .compact-add-button) { background:#3e305c !important; color:#dfc3ff !important; }
+html.theme-dark .bar,html.theme-dark .xp-track { background:#36515e !important; }
+html.theme-dark .hours-progress-ring { background:conic-gradient(var(--student-accent,#009b87) var(--hours-progress),#36515e 0); }
+html.theme-dark .hours-progress-ring::before { background:var(--student-surface); }
+html.theme-dark :is(#reflections,#assignmentDetail)::before { opacity:.12; }
+html.theme-dark :is(.reflection-card-art,.feedback-card-art,.goal-detail-art,.reflection-detail-art,.feedback-detail-art,.registration-illustration) { opacity:.55; }
+html.theme-dark .profile-footer,html.theme-dark .profile-card-body { border-color:var(--student-border); }
+
+/* Geneste kaarten en hoverstaten mogen geen lichte ondergrond behouden. */
+html.theme-dark :is(.dashboard-action-row,.dashboard-outcome-row,.dashboard-deadline-list button,.dashboard-feedback-quote,.dashboard-settings-shortcut,.dashboard-panel,.development-metrics article,.development-panel,.development-skill-link,.development-outcome-body,.catalog-intro,.catalog-filter,.catalog-card,.learning-catalog-filter,.catalog-outcome-row,.goal-outcome-choice,.goal-phase-choice,.goal-next-step,.goal-phase-group,.hours-notification,.processing-notification,.xp-challenge,.notice,.warning,.empty-state,.reflection-table-body,.reflection-outcome-option) {
+  background:var(--student-raised) !important;
+  border-color:var(--student-border) !important;
+  color:var(--student-text) !important;
+}
+html.theme-dark .main button:not(.dark):not(.goal-detail-backdrop):not(.goal-detail-backdrop *):not(.modal-close):not(.icon-button):not(.card-link):not(.mutedlink):not(.back-link):not(.settings-color-options button) {
+  background-color:var(--student-raised);
+  color:var(--student-text);
+}
+html.theme-dark :is(.dashboard-action-row,.dashboard-outcome-row,.dashboard-deadline-list button,.assignment-row-open,.assignment-outcome,.goal-list-row,.goal-outcome-choice,.goal-phase-choice,.development-skill-link,.hours-registration-row,.catalog-outcome-row,.feedback-table-row,.reflection-table-row > summary,.reflection-outcome-option,.profile-action):hover {
+  background:#274b59 !important;
+  border-color:#65958d !important;
+  color:var(--student-text) !important;
+}
+html.theme-dark :is(.dashboard-phase-tabs,.hours-phase-tabs,.goal-phase-tabs,.reflection-skill-tabs,.settings-choice-grid,.goals-toolbar) { background-color:#142f3c !important; border-color:var(--student-border) !important; }
+html.theme-dark :is(.action-status,.dashboard-goals-icon,.dashboard-card-icon,.goal-list-icon,.goal-badge i,.goal-choice-count,.goal-choice-number,.goal-choice-check,.goal-step > span,.goal-phase-group header > span,.goal-overview-stats article > span,.development-metrics article > b,.development-group summary > small,.development-status,.dev-metric-icon,.catalog-code,.catalog-archive-badge,.reflection-highlight-icon,.reflection-row-title i,.hours-assignment-icon,.assignment-row-icon,.current-assignment-icon,.settings-card-icon,.processing-badge,.processing-read-status,.xp-rewards b,.goal-streak > strong,.goal-streak > span,.outcome-progress-hero .metric-label) {
+  background:#244d48 !important;
+  color:#b5f5e1 !important;
+  border-color:#47796c !important;
+}
+html.theme-dark :is(.main,.goal-detail-modal,.registration-modal,.outcome-reflection-modal,.account-modal) :is(.big,.development-points,.development-chevron,.development-row-bar b,.dashboard-goals-label,.dashboard-card-title,.goal-card-description,.hours-chevron,.assignment-row-chevron,.goal-list-arrow,.goal-linked-arrow,.reflection-row-person,.registration-outcome > span,.hours-value,.settings-menu strong) { color:var(--student-text) !important; }
+html.theme-dark :is(.goal-badge.locked,.goal-previous-button:disabled) { opacity:1; background:#2b3e49 !important; color:#c1ccd3 !important; }
+html.theme-dark :is(.goal-outcome-choice.selected,.goal-phase-choice.selected,.goal-phase-tabs button.active,.reflection-skill-tabs button.active,.reflection-outcome-option.selected) { background:#20594f !important; color:#c2ffec !important; border-color:#52bca3 !important; }
+html.theme-dark :is(.reflection-detail-content section > span,.registration-detail-grid > div::before,.registration-outcome-group button::before,.compact-reflection-heading::before,.linked-outcome > i) { background:#244d48 !important; color:#b5f5e1 !important; }
+html.theme-dark .form-message.error { background:#512f37 !important; color:#ffcece !important; }
+html.theme-dark .form-message.success { background:#205044 !important; color:#baf8d9 !important; }
+
+/* Dichtheid verandert witruimte en rijhoogte, zonder tekst te verkleinen. */
+html[data-density="compact"] { --student-card-space:16px; --student-row-space:10px; --student-layout-gap:12px; --student-row-height:64px; }
+html[data-density="standard"] { --student-card-space:22px; --student-row-space:16px; --student-layout-gap:20px; --student-row-height:86px; }
+html[data-density="spacious"] { --student-card-space:28px; --student-row-space:23px; --student-layout-gap:28px; --student-row-height:106px; }
+html[data-density] .main :is(.dashboard-primary-grid,.dashboard-widget-grid,.assignment-detail-grid,.outcome-detail-grid,.goals-workspace,.goal-overview-stats,.reflection-highlights,.project-summary-grid,.project-spotlight) { gap:var(--student-layout-gap) !important; }
+html[data-density] .main :is(.dashboard-widget-grid > section,.dashboard-primary-grid > article,.assignment-detail-main,.assignment-detail-outcomes,.detail-card,.goals-panel,.goal-insight-card,.reflection-highlights > article,.project-summary-grid > article,.goal-overview-stats > article,.current-assignment-main,.hours-summary-card,.hours-registration-head) { padding:var(--student-card-space) !important; }
+html[data-density] .main :is(.assignment-row-open,.goal-list-row,.hours-registration-row,.development-outcome,.reflection-table-row > summary,.feedback-table-row,.assignment-outcome,.outcome-reflection-row,.outcome-feedback-row) { padding-top:var(--student-row-space) !important; padding-bottom:var(--student-row-space) !important; }
+html[data-density] .main :is(.assignment-row-open,.goal-list-row,.hours-registration-row) { min-height:var(--student-row-height) !important; }
+html[data-density] .main :is(.assignment-list,.goal-list) { gap:var(--student-layout-gap) !important; }
+html[data-density] #studentDashboard .dashboard-primary-grid { grid-auto-rows:minmax(0,auto) !important; }
+html[data-density] #studentDashboard .dashboard-primary-grid > article { min-height:0 !important; }
+@media(max-width:650px) {
+  html[data-density="spacious"] { --student-card-space:22px; --student-layout-gap:18px; --student-row-space:18px; }
+}

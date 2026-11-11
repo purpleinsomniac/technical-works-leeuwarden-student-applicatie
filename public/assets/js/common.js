@@ -1,14 +1,35 @@
 function show(page, force = false) {
   if (!force && window.RoleSettings && !window.RoleSettings.isSectionVisible(page)) return;
-  document.getElementById("app").classList.remove("hidden");
+  const app = document.getElementById("app");
+  app.classList.remove("hidden");
+  app.classList.toggle("coach-groups-active", app.classList.contains("role-coach") && page === "coachGroups");
 
+  let activeView = null;
   document.querySelectorAll(".view").forEach((view) => {
-    view.classList.toggle("hidden", view.id !== page);
+    const active = view.id === page;
+    view.classList.toggle("hidden", !active);
+    view.classList.remove("is-accenting");
+    if (active) activeView = view;
   });
 
   document.querySelectorAll("[data-route]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.route === page);
+    const active = button.dataset.route === page;
+    button.classList.toggle("active", active);
+    if (active) button.setAttribute("aria-current", "page");
+    else button.removeAttribute("aria-current");
   });
+
+  if (activeView && app.classList.contains("role-coach")) {
+    window.requestAnimationFrame(() => {
+      if (activeView.classList.contains("hidden")) return;
+      if (activeView.coachAccentTimer) window.clearTimeout(activeView.coachAccentTimer);
+      activeView.classList.add("is-accenting");
+      activeView.coachAccentTimer = window.setTimeout(() => {
+        activeView.classList.remove("is-accenting");
+        activeView.coachAccentTimer = null;
+      }, 760);
+    });
+  }
 
   window.scrollTo(0, 0);
 }

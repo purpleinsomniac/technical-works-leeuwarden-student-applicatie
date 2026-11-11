@@ -203,7 +203,7 @@ class UserController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($data, $role, $roleChanged, $user): void {
+        DB::transaction(function () use ($data, $role, $roleChanged, $user, $currentRole): void {
             $user->naam = $data['naam'];
             $user->email = $data['email'];
             $user->rol = $role->naam;

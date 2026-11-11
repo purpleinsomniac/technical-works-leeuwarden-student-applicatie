@@ -18,6 +18,9 @@ document.querySelectorAll("[data-admin-user-role-selector]").forEach((selector) 
     if (!fields || !year) return;
     fields.hidden = selector.value !== "student";
     year.disabled = selector.value !== "student";
+    fields.querySelectorAll("input[name='group_ids[]']").forEach((input) => {
+      input.disabled = selector.value !== "student";
+    });
   };
   selector.addEventListener("change", updateStudentFields);
   updateStudentFields();

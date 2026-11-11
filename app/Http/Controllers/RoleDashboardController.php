@@ -19,6 +19,7 @@ abstract class RoleDashboardController extends Controller
         array $roleData = [],
         ?string $style = null,
         array $scripts = [],
+        array $extraData = [],
     ): View {
         $user->loadMissing('appState');
         $applicationSettings = $roleData['applicationSettings'] ?? ApplicationSetting::current();
@@ -50,7 +51,7 @@ abstract class RoleDashboardController extends Controller
             ->map(fn (string $namePart): string => mb_strtoupper(mb_substr($namePart, 0, 1)))
             ->implode('');
 
-        return view($view, [
+        return view($view, array_merge([
             'user' => $user,
             'applicationSettings' => $applicationSettings,
             'applicationAccentColor' => $applicationAccentColor,
@@ -67,6 +68,6 @@ abstract class RoleDashboardController extends Controller
                 'style' => $style,
                 'scripts' => $scripts,
             ],
-        ]);
+        ], $extraData));
     }
 }

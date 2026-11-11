@@ -46,16 +46,24 @@
       console.error("Could not read dashboard settings from local storage.", error);
     }
 
-    const savedSections = Array.isArray(saved?.sections)
+    let savedSections = Array.isArray(saved?.sections)
       ? saved.sections
         .map((section) => (section === "coachStudents" ? "coachGroups" : section))
         .filter((section) => sectionKeys.includes(section))
       : [];
+    // Oude coachvoorkeuren konden maar één route bewaren; herstel die eenmalig naar alle huidige tabbladen.
+    if (window.LARAVEL_USER.role === "coach" && Number(saved?.version ?? 0) < 3) {
+      savedSections = [...sectionKeys];
+    }
     if (window.LARAVEL_USER.role === "coach" && sectionKeys.includes("coachGroups") && !savedSections.includes("coachGroups")) {
       savedSections.push("coachGroups");
     }
-
+    // Herstel de coachnavigatie als een oude of beschadigde voorkeur alleen Groepen overliet.
+    if (window.LARAVEL_USER.role === "coach" && savedSections.length === 1) {
+      savedSections = [...sectionKeys];
+    }
     return {
+      version: 3,
       compact: saved?.compact === true,
       darkMode: saved?.darkMode === true,
       theme: ["light", "dark", "system"].includes(saved?.theme)
@@ -309,9 +317,11 @@
       const sections = sectionInputs
         .filter((input) => input.checked)
         .map((input) => input.dataset.roleSectionSetting);
-      if (sections.length === 0) {
+      if (sections.length === 0 || (window.LARAVEL_USER.role === "coach" && sections.length === 1)) {
         changedInput.checked = true;
-        setStatus("Kies ten minste één zichtbaar onderdeel.", "error");
+        setStatus(window.LARAVEL_USER.role === "coach"
+          ? "Er moeten meerdere coachonderdelen zichtbaar blijven. De navigatie is hersteld."
+          : "Kies ten minste één zichtbaar onderdeel.", "error");
         return;
       }
       preferences.sections = sections;
@@ -364,6 +374,7 @@
 
   function reset() {
     preferences = {
+      version: 3,
       compact: false,
       darkMode: false,
       theme: "light",

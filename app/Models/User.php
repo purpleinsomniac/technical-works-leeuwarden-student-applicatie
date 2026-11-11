@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -83,6 +84,21 @@ class User extends Authenticatable
 
         return $primaryRole === 'beheerder'
             && $this->extraRoles()->where('naam', $roleName)->exists();
+    }
+
+    /** Include administrators who have coach access as an additional role. */
+    public function scopeCanCoach(Builder $query): Builder
+    {
+        return $query->where(function (Builder $accounts): void {
+            $accounts
+                ->where('rol', 'coach')
+                ->orWhereHas('primaryRole', fn (Builder $role) => $role->where('naam', 'coach'))
+                ->orWhere(function (Builder $administrators): void {
+                    $administrators
+                        ->whereHas('primaryRole', fn (Builder $role) => $role->where('naam', 'beheerder'))
+                        ->whereHas('extraRoles', fn (Builder $role) => $role->where('naam', 'coach'));
+                });
+        });
     }
 
     public function learningGoals(): HasMany

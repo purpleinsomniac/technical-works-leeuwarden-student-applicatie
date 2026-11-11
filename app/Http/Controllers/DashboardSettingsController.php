@@ -18,6 +18,7 @@ class DashboardSettingsController extends Controller
         abort_unless($user->canUseRole($activeRole), 403);
 
         $preferences = $request->validate([
+            'version' => ['sometimes', 'integer', 'min:3', 'max:3'],
             'compact' => ['required', 'boolean'],
             'darkMode' => ['required', 'boolean'],
             'theme' => ['required', Rule::in(['light', 'dark', 'system'])],
@@ -27,9 +28,10 @@ class DashboardSettingsController extends Controller
             'sections.*' => ['required', 'string', 'distinct', Rule::in(match ($activeRole) {
                 'beheerder' => ['overview', 'users', 'classes', 'learningOutcomes', 'applicationSettings'],
                 'teamleider' => ['groups', 'reports'],
-                'coach' => ['coachOverview', 'coachGroups', 'coachActivities', 'coachGoals', 'coachProjects'],
+                'coach' => ['coachOverview', 'coachGroups', 'coachActivities', 'coachGoals', 'coachProjects', 'coachFeedback'],
             })],
         ]);
+        $preferences['version'] ??= 2;
 
         $state = UserState::firstOrNew(['gebruiker_id' => $user->id]);
         $state->gegevens = array_replace($state->gegevens ?? [], [

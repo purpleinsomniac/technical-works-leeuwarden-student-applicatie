@@ -47,6 +47,7 @@
         'coachActivities' => 'Leeractiviteiten',
         'coachGoals' => 'Leerdoelen',
         'coachProjects' => 'Projecten',
+        'coachFeedback' => 'Feedback',
       ] as $key => $label)
         <label class="account-dashboard-setting">
           <span>{{ $label }}</span>

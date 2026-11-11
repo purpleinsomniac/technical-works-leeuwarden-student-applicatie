@@ -43,7 +43,17 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
         ->name('dashboard-settings.update');
 
     Route::get('/student', StudentDashboardController::class)->middleware('role:student')->name('student.dashboard');
-    Route::get('/coach', CoachDashboardController::class)->middleware('role:coach')->name('coach.dashboard');
+    Route::middleware('role:coach')->prefix('coach')->name('coach.')->group(function (): void {
+        Route::get('/', CoachDashboardController::class)->name('dashboard');
+        Route::get('/groepen', [CoachDashboardController::class, 'groups'])->name('groups');
+        Route::get('/leeractiviteiten', [CoachDashboardController::class, 'activities'])->name('activities');
+        Route::get('/leerdoelen', [CoachDashboardController::class, 'goals'])->name('goals');
+        Route::get('/projecten', [CoachDashboardController::class, 'projects'])->name('projects');
+        Route::get('/feedback', [CoachDashboardController::class, 'feedback'])->name('feedback');
+        Route::get('/studenten/{student}', [CoachDashboardController::class, 'student'])
+            ->whereNumber('student')
+            ->name('student');
+    });
     Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');
     Route::get('/beheer', AdminDashboardController::class)->middleware('role:beheerder')->name('admin.dashboard');
 

@@ -6,9 +6,98 @@ window.RoleApp.initializeRole({
     ["Leeractiviteiten", "coachActivities"],
     ["Leerdoelen", "coachGoals"],
     ["Projecten", "coachProjects"],
+    ["Feedback", "coachFeedback"],
   ],
 });
 RoleSettings.initialize();
+
+// Geef elk hoofdonderwerp een eigen deelbare URL en herstel die pagina na verversen.
+const coachPageRoutes = {
+  coachOverview: "overview",
+  coachGroups: "groups",
+  coachActivities: "activities",
+  coachGoals: "goals",
+  coachProjects: "projects",
+  coachFeedback: "feedback",
+};
+const coachNav = document.getElementById("nav");
+coachNav.querySelectorAll("[data-route]").forEach((button) => {
+  const routeKey = coachPageRoutes[button.dataset.route];
+  const url = window.LARAVEL_COACH_ROUTES?.[routeKey];
+  if (!url) return;
+  const link = document.createElement("a");
+  link.className = button.className;
+  link.dataset.route = button.dataset.route;
+  link.href = url;
+  const counts = {
+    coachGroups: window.LARAVEL_DATA?.groups?.length,
+    coachActivities: window.LARAVEL_DATA?.activities?.length,
+    coachGoals: window.LARAVEL_DATA?.goals?.length,
+    coachProjects: window.LARAVEL_DATA?.projects?.length,
+    coachFeedback: window.LARAVEL_DATA?.pendingFeedback?.length,
+  };
+  const title = document.createElement("span");
+  title.textContent = button.textContent;
+  link.append(title);
+  const count = counts[button.dataset.route];
+  if (Number.isFinite(count)) {
+    const badge = document.createElement("span");
+    badge.className = "coach-nav-count";
+    badge.textContent = String(count);
+    badge.setAttribute("aria-hidden", "true");
+    link.append(badge);
+    link.setAttribute("aria-label", `${button.textContent}, ${count}`);
+  }
+  button.replaceWith(link);
+});
+const initialCoachView = {
+  overview: "coachOverview",
+  groups: "coachGroups",
+  activities: "coachActivities",
+  goals: "coachGoals",
+  projects: "coachProjects",
+  feedback: "coachFeedback",
+}[window.LARAVEL_COACH_PAGE] || "coachOverview";
+const requestedStudentId = Number(window.LARAVEL_COACH_STUDENT_ID || 0);
+const coachViewFromLocation = () => {
+  const currentPath = window.location.pathname.replace(/\/$/, "");
+  for (const [viewId, routeKey] of Object.entries(coachPageRoutes)) {
+    const routePath = new URL(window.LARAVEL_COACH_ROUTES[routeKey], window.location.origin).pathname.replace(/\/$/, "");
+    if (routePath === currentPath) return viewId;
+  }
+  return null;
+};
+const initialStudentView = window.LARAVEL_COACH_PAGE === "student" && requestedStudentId
+  ? `coachStudent-${requestedStudentId}`
+  : null;
+show(initialStudentView || coachViewFromLocation() || initialCoachView, true);
+
+// Wissel coachpagina's zonder de zijbalk opnieuw op te bouwen; URL en browsergeschiedenis blijven synchroon.
+coachNav.addEventListener("click", (event) => {
+  const link = event.target.closest("a[data-route]");
+  if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+  if (!window.RoleSettings.isSectionVisible(link.dataset.route)) return;
+  event.preventDefault();
+  window.history.pushState({ coachView: link.dataset.route }, "", link.href);
+  show(link.dataset.route);
+  if (link.dataset.route === "coachProjects" && coachProjectStatusFilter) {
+    coachProjectStatusFilter.value = new URL(link.href).searchParams.get("status") || "";
+    coachProjectStatusFilter.dispatchEvent(new Event("change"));
+  }
+  coachMobileMenuButton?.setAttribute("aria-expanded", "false");
+  coachSidebar?.classList.remove("is-open");
+});
+
+window.addEventListener("popstate", () => {
+  const viewId = coachViewFromLocation();
+  if (!viewId) return;
+  show(viewId, true);
+  if (viewId === "coachProjects" && coachProjectStatusFilter) {
+    const status = new URL(window.location.href).searchParams.get("status") || "";
+    coachProjectStatusFilter.value = status;
+    coachProjectStatusFilter.dispatchEvent(new Event("change"));
+  }
+});
 
 // Gebruik het zichtbare label als toegankelijke naam voor elke navigatieknop.
 document.querySelectorAll("#nav [data-route]").forEach((button) => {
@@ -76,6 +165,7 @@ const coachStudentSort = document.getElementById("coachStudentSort");
 const coachStudentCards = [...document.querySelectorAll(".coach-student-card[data-student-name]")];
 const coachNoResults = document.getElementById("coachNoResults");
 const coachStudentGrid = document.querySelector(".coach-student-grid");
+const coachRosterReset = document.getElementById("coachRosterReset");
 
 if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid) {
   const studentPager = createPager(coachStudentCards, 8, coachStudentGrid, "Pagina's met studenten");
@@ -108,7 +198,13 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
     if (studentCount) {
       studentCount.textContent = `${matches.length} ${matches.length === 1 ? "student" : "studenten"}`;
     }
+    coachRosterReset?.classList.toggle("hidden", !(
+      searchTerm || selectedPhase || selectedGroup || (coachStudentSort?.value ?? "name") !== "name"
+    ));
     coachNoResults.classList.toggle("hidden", matches.length > 0);
+    coachNoResults.textContent = matches.length
+      ? ""
+      : "Geen studenten gevonden met deze filters. Pas je zoekopdracht aan of wis de filters.";
 
     // Laat in de kop zien welke groep is gekozen.
     const rosterTitle = document.getElementById("coachRosterTitle");
@@ -128,9 +224,21 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
   }
 
   coachStudentSearch.addEventListener("input", filterCoachStudents);
+  coachStudentSearch.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !coachStudentSearch.value) return;
+    coachStudentSearch.value = "";
+    filterCoachStudents();
+  });
   coachPhaseFilter.addEventListener("change", filterCoachStudents);
   coachGroupFilter?.addEventListener("change", filterCoachStudents);
   coachStudentSort?.addEventListener("change", filterCoachStudents);
+  coachRosterReset?.addEventListener("click", () => {
+    coachStudentSearch.value = "";
+    coachPhaseFilter.value = "";
+    if (coachGroupFilter) coachGroupFilter.value = "";
+    if (coachStudentSort) coachStudentSort.value = "name";
+    filterCoachStudents();
+  });
   filterCoachStudents();
 }
 
@@ -138,27 +246,21 @@ window.openCoachGroup = function (groupId) {
   show("coachGroups");
   if (coachStudentSearch) coachStudentSearch.value = "";
   if (coachPhaseFilter) coachPhaseFilter.value = "";
+  if (coachStudentSort) coachStudentSort.value = "name";
   if (coachGroupFilter) coachGroupFilter.value = String(groupId);
   coachGroupFilter?.dispatchEvent(new Event("change"));
-  document.getElementById("coachStudentRoster")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // On desktop the roster has its own scroll area; do not scroll the whole page past the group panel.
+  if (window.matchMedia("(max-width: 1279px)").matches) {
+    document.getElementById("coachStudentRoster")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 };
 
 window.openCoachProjectQueue = function () {
-  show("coachProjects");
-  const statusFilter = document.getElementById("coachProjectStatusFilter");
-  const search = document.getElementById("coachProjectSearch");
-  if (statusFilter) statusFilter.value = "review";
-  if (search) search.value = "";
-  statusFilter?.dispatchEvent(new Event("change"));
+  window.location.href = `${window.LARAVEL_COACH_ROUTES.projects}?status=review`;
 };
 
 window.openCoachProjects = function () {
-  show("coachProjects");
-  const statusFilter = document.getElementById("coachProjectStatusFilter");
-  const search = document.getElementById("coachProjectSearch");
-  if (statusFilter) statusFilter.value = "";
-  if (search) search.value = "";
-  statusFilter?.dispatchEvent(new Event("change"));
+  window.location.href = window.LARAVEL_COACH_ROUTES.projects;
 };
 
 /* Filter, sort, and paginate the project list without leaving the dashboard. */
@@ -184,15 +286,62 @@ if (coachProjectGrid && coachProjectSearch && coachProjectStatusFilter && coachP
   }
 
   coachProjectSearch.addEventListener("input", filterCoachProjects);
-  coachProjectStatusFilter.addEventListener("change", filterCoachProjects);
+  coachProjectStatusFilter.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    if (coachProjectStatusFilter.value) url.searchParams.set("status", coachProjectStatusFilter.value);
+    else url.searchParams.delete("status");
+    window.history.replaceState({}, "", url);
+    filterCoachProjects();
+  });
+  document.querySelectorAll("[data-project-filter-shortcut]").forEach((button) => {
+    button.addEventListener("click", () => {
+      coachProjectStatusFilter.value = button.dataset.projectFilterShortcut;
+      coachProjectStatusFilter.dispatchEvent(new Event("change"));
+      document.querySelector("#coachProjects .coach-directory-tools")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
+  if (["review", "active", "concept", "completed"].includes(window.LARAVEL_COACH_PROJECT_FILTER)) {
+    coachProjectStatusFilter.value = window.LARAVEL_COACH_PROJECT_FILTER;
+  }
   filterCoachProjects();
 }
 
 /* Keep the remaining read-only directories compact. */
+const coachDirectoryPagers = new WeakMap();
 document.querySelectorAll(".coach-directory-grid").forEach((grid) => {
   if (grid === coachProjectGrid) return;
   const cards = [...grid.children];
-  createPager(cards, 6, grid, "Pagina's").show(cards);
+  const pager = createPager(cards, 6, grid, "Pagina's");
+  coachDirectoryPagers.set(grid, pager);
+  pager.show(cards);
+});
+
+/* Zoek ook snel door activiteiten en doelen, zonder de huidige pagina kwijt te raken. */
+[
+  ["coachActivitySearch", "coachActivityNoResults", "coachActivityPhaseFilter", "phase"],
+  ["coachGoalSearch", "coachGoalNoResults", "coachGoalStatusFilter", "status"],
+].forEach(([inputId, emptyId, selectId, dataKey]) => {
+  const input = document.getElementById(inputId);
+  const empty = document.getElementById(emptyId);
+  const select = document.getElementById(selectId);
+  const grid = input?.closest(".coach-directory-tools")?.nextElementSibling?.nextElementSibling;
+  if (!input || !empty || !grid?.classList.contains("coach-directory-grid")) return;
+  const cards = [...grid.querySelectorAll("[data-directory-search]")];
+  const pager = coachDirectoryPagers.get(grid);
+  if (!pager) return;
+  const filter = () => {
+    const term = input.value.trim().toLocaleLowerCase("nl");
+    const selected = select?.value ?? "";
+    const matches = cards.filter((card) =>
+      card.dataset.directorySearch.includes(term) &&
+      (!selected || (card.dataset[`directory${dataKey[0].toUpperCase()}${dataKey.slice(1)}`] ?? "").toLocaleLowerCase("nl") === selected),
+    );
+    pager.show(matches);
+    empty.classList.toggle("hidden", matches.length > 0);
+  };
+  input.addEventListener("input", filter);
+  select?.addEventListener("change", filter);
+  filter();
 });
 
 /* Paginate long work queues while keeping all open actions available. */

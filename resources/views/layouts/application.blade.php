@@ -4,7 +4,7 @@
 
 @if ($roleAssets['style'])
   @push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/'.$roleAssets['style']) }}">
+    <link rel="stylesheet" href="{{ asset('assets/'.$roleAssets['style']) }}?v={{ filemtime(public_path('assets/'.$roleAssets['style'])) }}">
   @endpush
 @endif
 @push('styles')
@@ -39,6 +39,18 @@
     window.LARAVEL_DATA = {{ Illuminate\Support\Js::from($frontendData) }};
     window.LARAVEL_SAVE_URL = {{ Illuminate\Support\Js::from(route('state.save')) }};
     window.LARAVEL_ROLE_SETTINGS_URL = {{ Illuminate\Support\Js::from(route('dashboard-settings.update')) }};
+    window.LARAVEL_COACH_ROUTES = {{ Illuminate\Support\Js::from([
+        'overview' => route('coach.dashboard'),
+        'groups' => route('coach.groups'),
+        'activities' => route('coach.activities'),
+        'goals' => route('coach.goals'),
+        'projects' => route('coach.projects'),
+        'feedback' => route('coach.feedback'),
+        'student' => route('coach.student', ['student' => '__ID__']),
+    ]) }};
+    window.LARAVEL_COACH_PAGE = {{ Illuminate\Support\Js::from($coachPage ?? 'overview') }};
+    window.LARAVEL_COACH_STUDENT_ID = {{ Illuminate\Support\Js::from($coachStudentId ?? null) }};
+    window.LARAVEL_COACH_PROJECT_FILTER = {{ Illuminate\Support\Js::from(request()->query('status', '')) }};
     window.LARAVEL_API = {{ Illuminate\Support\Js::from([
         'challengeSync' => route('challenges.sync'),
         'notificationSettings' => route('profile.notifications'),
@@ -58,6 +70,6 @@
     window.LARAVEL_CSRF = {{ Illuminate\Support\Js::from(csrf_token()) }};
   </script>
   @foreach ($roleAssets['scripts'] as $script)
-    <script src="{{ asset('assets/'.$script) }}"></script>
+    <script src="{{ asset('assets/'.$script) }}?v={{ filemtime(public_path('assets/'.$script)) }}"></script>
   @endforeach
 @endpush

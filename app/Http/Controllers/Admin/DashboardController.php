@@ -42,13 +42,13 @@ class DashboardController extends RoleDashboardController
                 ->orderBy('naam')
                 ->orderBy('schooljaar')
                 ->get(),
-            'coaches' => User::where('rol', 'coach')->orderBy('naam')->get(['id', 'naam']),
+            'coaches' => User::canCoach()->orderBy('naam')->get(['id', 'naam']),
             'students' => User::where('rol', 'student')->orderBy('naam')->get(['id', 'naam', 'email', 'studentnummer', 'leerjaar']),
             'progressCount' => Progress::count(),
             'assignmentCount' => Assignment::count(),
             'outcomeCount' => LearningOutcome::count(),
             'lastProgressUpdate' => Progress::max('updated_at'),
-            'users' => User::with('primaryRole')->orderBy('naam')->get(),
+            'users' => User::with(['primaryRole', 'groups'])->orderBy('naam')->get(),
             'roles' => Role::orderBy('naam')->get(),
             'learningOutcomes' => LearningOutcome::query()
                 ->select('leeruitkomsten.*')

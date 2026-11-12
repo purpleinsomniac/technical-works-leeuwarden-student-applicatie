@@ -43,6 +43,16 @@
               <button id="dashboardCurrentProjectButton" class="card-link" type="button" onclick="show('assignments')">Ga verder <span aria-hidden="true">→</span></button>
             </article>
 
+            <article class="dashboard-metric-card dashboard-next-deadline-card">
+              <div class="dashboard-card-heading">
+                <span class="dashboard-card-icon" data-icon="calendar" aria-hidden="true"></span>
+                <span class="metric-label">Aankomende deadline</span>
+              </div>
+              <h2 class="dashboard-card-title" id="nextDeadlineDate">Nog geen deadline</h2>
+              <div class="dim" id="nextDeadlineTitle">Je hebt op dit moment geen openstaande projecten.</div>
+              <button id="dashboardNextDeadlineButton" class="card-link" type="button" onclick="show('assignments')">Bekijk project <span aria-hidden="true">→</span></button>
+            </article>
+
 
           </div>
 

@@ -2023,7 +2023,7 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 #studentDashboard .dashboard-phase-tabs { width:min(100%,760px); grid-auto-rows:42px; background:#f7faff; border:1px solid #e0e8f0; border-radius:99px; overflow:hidden; margin-bottom:20px; }
 #studentDashboard .dashboard-phase-tabs .tab { height:42px; min-height:42px; padding:8px 12px; font-size:13px; }
 #studentDashboard .dashboard-phase-tabs .tab.active { background:#ddf6ec; color:#087953; border-radius:99px; box-shadow:inset 0 -3px #14956e; }
-#studentDashboard .dashboard-primary-grid { grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr); grid-auto-rows:minmax(180px,auto); gap:16px; }
+#studentDashboard .dashboard-primary-grid { grid-template-columns:minmax(0,1.55fr) minmax(0,.95fr) minmax(0,.95fr); grid-auto-rows:minmax(180px,auto); gap:16px; }
 #studentDashboard .dashboard-primary-grid > article { height:auto; min-height:180px; max-height:none; padding:22px; border:0; border-radius:17px; }
 #studentDashboard .dashboard-progress-card { position:relative; overflow:hidden; background:linear-gradient(115deg,#e5f8ef,#c1efdf); }
 #studentDashboard .dashboard-progress-card .dashboard-card-heading { position:relative; z-index:1; }
@@ -2036,9 +2036,23 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 #studentDashboard .dashboard-assignment-card .dashboard-card-heading { justify-content:flex-start; gap:12px; }
 #studentDashboard .dashboard-assignment-card .metric-label { text-transform:uppercase; font-size:10px; color:#655caa; letter-spacing:1px; }
 #studentDashboard .dashboard-assignment-card .dashboard-card-title { font-size:19px; margin:12px 0 5px; }
+#studentDashboard .dashboard-next-deadline-card { position:relative; overflow:hidden; border:1px solid #f2dfc5; background:linear-gradient(135deg,#fffaf2,#fff4df); }
+#studentDashboard .dashboard-next-deadline-card::after { content:""; position:absolute; right:-34px; bottom:-55px; width:150px; height:100px; border-radius:50%; background:#ffe6be; opacity:.72; transform:rotate(-12deg); }
+#studentDashboard .dashboard-next-deadline-card > * { position:relative; z-index:1; }
+#studentDashboard .dashboard-next-deadline-card .dashboard-card-heading { justify-content:flex-start; gap:10px; }
+#studentDashboard .dashboard-next-deadline-card .dashboard-card-icon { width:31px; height:31px; border-radius:9px; background:#fff0dc; color:#e48218; padding:7px; }
+#studentDashboard .dashboard-next-deadline-card .metric-label { color:#615caa; font-size:10px; letter-spacing:1px; text-transform:uppercase; }
+#studentDashboard .dashboard-next-deadline-card .dashboard-card-title { margin:14px 0 4px; font-size:18px; }
+#studentDashboard .dashboard-next-deadline-card .dim { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#studentDashboard .dashboard-next-deadline-card .card-link { margin-top:auto; text-align:left; }
 #studentDashboard .dashboard-widget-grid { grid-template-columns:repeat(6,minmax(0,1fr)); grid-auto-rows:minmax(210px,auto); gap:15px; }
 #studentDashboard .dashboard-widget-grid > section { grid-column:span 2; height:auto; min-height:210px; max-height:none; padding:17px; border-radius:15px; }
-#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="outcomes"],#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="goals"] { grid-column:span 3; min-height:230px; }
+#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="outcomes"],#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="goals"] { min-height:230px; }
+#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="outcomes"],
+#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="goals"],
+#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="actions"] { grid-column:span 2; }
+#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="feedback"] { grid-column:span 2; min-height:165px; }
+#studentDashboard .dashboard-widget-grid > [data-dashboard-widget="deadlines"] { grid-column:span 4; min-height:165px; }
 #studentDashboard .dashboard-current-goals { background:linear-gradient(130deg,#f1faf6,#e6f5ef); border:1px solid #d9ece4; }
 #studentDashboard .dashboard-current-goals .dashboard-goals-heading { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
 .dashboard-goals-icon { display:grid; place-items:center; width:34px; height:34px; flex:none; border-radius:10px; background:#d9f1e6; color:#16886e; }
@@ -2061,14 +2075,19 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 #studentDashboard .card-link { font-size:10px; white-space:nowrap; }
 #studentDashboard .dashboard-outcome-row { padding:9px 0; font-size:11px; }
 #studentDashboard .dashboard-feedback-quote { margin:9px 0; border-radius:10px; background:#eef0fa; padding:13px; font-size:12px; line-height:1.6; }
+#studentDashboard .dashboard-deadline-list button { grid-template-columns:115px minmax(0,1fr) auto 12px; }
+.dashboard-deadline-status { min-width:82px; border-radius:999px; background:#fff1d8; color:#9b651e; padding:4px 9px; font-size:9px; font-weight:750; text-align:center; }
+.dashboard-deadline-status.active { background:#e0f1ff; color:#24709d; }
+.dashboard-deadline-status.review { background:#eee8ff; color:#7259ad; }
 #studentDashboard .dashboard-week-card .week-plan-preview li { font-size:11px; padding:7px 9px; }
 .theme-dark #studentDashboard .dashboard-progress-card { background:linear-gradient(115deg,#1b483c,#1d5f4e); }
 .theme-dark #studentDashboard .dashboard-progress-card .big { color:#e4fff1; }
 .theme-dark #studentDashboard .dashboard-primary-grid .dashboard-assignment-card { background:#302947; }
+.theme-dark #studentDashboard .dashboard-next-deadline-card { border-color:#5b4b35; background:#352e22; }
 .theme-dark #studentDashboard .dashboard-current-goals { background:#193b30; border-color:#325446; }
 .theme-dark #studentDashboard .dashboard-feedback-quote { background:#293347; }
-@media(max-width:1100px) { #studentDashboard .dashboard-widget-grid > section { grid-column:span 3; } }
-@media(max-width:700px) { #studentDashboard .dashboard-primary-grid { grid-template-columns:1fr; } #studentDashboard .dashboard-widget-grid { grid-template-columns:1fr; } #studentDashboard .dashboard-widget-grid > section,#studentDashboard .dashboard-widget-grid > [data-dashboard-widget] { grid-column:1; } #studentDashboard .dashboard-panel-title h2 { font-size:14px; } }
+@media(max-width:1100px) { #studentDashboard .dashboard-primary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } #studentDashboard .dashboard-progress-card { grid-column:span 2; } #studentDashboard .dashboard-widget-grid > section { grid-column:span 3; } }
+@media(max-width:700px) { #studentDashboard .dashboard-primary-grid { grid-template-columns:1fr; } #studentDashboard .dashboard-primary-grid > article { grid-column:1; } #studentDashboard .dashboard-widget-grid { grid-template-columns:1fr; } #studentDashboard .dashboard-widget-grid > section,#studentDashboard .dashboard-widget-grid > [data-dashboard-widget] { grid-column:1; } #studentDashboard .dashboard-panel-title h2 { font-size:14px; } #studentDashboard .dashboard-deadline-list button { grid-template-columns:82px minmax(0,1fr) 12px; } #studentDashboard .dashboard-deadline-status { display:none; } }
 .week-plan-dialog { max-height:calc(100dvh - 40px); overflow:auto; width:min(620px,100%); }
 .week-task-list { display:grid; gap:10px; margin-top:22px; }
 .week-task { display:flex; align-items:center; gap:12px; border:1px solid #dce8e5; border-radius:10px; padding:12px; }

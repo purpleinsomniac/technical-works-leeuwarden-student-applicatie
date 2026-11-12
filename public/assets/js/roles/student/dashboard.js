@@ -28,6 +28,13 @@ function renderDashboard() {
   document.getElementById("currentWorkMeta").textContent = work.type + " · " + current[1];
   const currentProject = assignments.find((item) => item.phase === phase && item.status !== 'completed');
   document.getElementById('dashboardCurrentProjectButton').onclick = () => currentProject ? openAssignment(currentProject.id) : show('assignments');
+
+  const nextDeadline = assignments
+    .filter((assignment) => assignment.status !== 'completed')
+    .sort((a, b) => String(a.dueDateIso || '9999-12-31').localeCompare(String(b.dueDateIso || '9999-12-31')))[0];
+  document.getElementById('nextDeadlineDate').textContent = nextDeadline?.dueDate || 'Nog geen deadline';
+  document.getElementById('nextDeadlineTitle').textContent = nextDeadline?.title || 'Je hebt op dit moment geen openstaande projecten.';
+  document.getElementById('dashboardNextDeadlineButton').onclick = () => nextDeadline ? openAssignment(nextDeadline.id) : show('assignments');
   renderWeekPlanSummary();
 
   const phaseOutcomes = outcomes
@@ -80,7 +87,9 @@ function renderDashboard() {
         esc(assignment.dueDate) +
         "</span><strong>" +
         esc(assignment.title) +
-        '</strong><span aria-hidden="true">›</span></button>',
+        '</strong><span class="dashboard-deadline-status ' + esc(assignment.status || 'todo') + '">' +
+        (assignment.status === 'active' ? 'In voortgang' : assignment.status === 'review' ? 'In review' : 'Nog te starten') +
+        '</span><span aria-hidden="true">›</span></button>',
     )
     .join("");
 

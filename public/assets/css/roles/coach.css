@@ -5770,6 +5770,111 @@
   color: #596486;
 }
 
+#app.role-coach .coach-directory-page .coach-directory-card.coach-goal-student-card {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#app.role-coach .coach-goal-student-summary {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px 20px 28px;
+  cursor: pointer;
+  list-style: none;
+}
+
+#app.role-coach .coach-goal-student-summary::-webkit-details-marker {
+  display: none;
+}
+
+#app.role-coach .coach-goal-student-summary:focus-visible {
+  outline: 3px solid #8a7ae2;
+  outline-offset: -4px;
+}
+
+#app.role-coach .coach-goal-student-summary .coach-directory-person-avatar {
+  flex: none;
+}
+
+#app.role-coach .coach-goal-student-name {
+  min-width: 0;
+  flex: 1;
+  color: #172033;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#app.role-coach .coach-goal-student-count {
+  color: #647087;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+#app.role-coach .coach-goal-student-chevron {
+  color: #7162b2;
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+#app.role-coach .coach-goal-student-card[open] .coach-goal-student-chevron {
+  transform: rotate(180deg);
+}
+
+#app.role-coach .coach-goal-list {
+  border-top: 1px solid #edf0f5;
+}
+
+#app.role-coach .coach-goal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px 20px 28px;
+}
+
+#app.role-coach .coach-goal-item + .coach-goal-item {
+  border-top: 1px solid #edf0f5;
+}
+
+#app.role-coach .coach-goal-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#app.role-coach .coach-directory-page .coach-goal-item h2 {
+  min-width: 0;
+  margin: 0;
+  color: #172033;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+#app.role-coach .coach-goal-item .coach-directory-description {
+  min-height: 0;
+}
+
+#app.role-coach .coach-goal-item .coach-directory-link {
+  margin-top: 0;
+}
+
+#app.role-coach .coach-goal-empty {
+  margin: 0;
+  padding: 20px 28px;
+  color: #647087;
+}
+
+#app.role-coach .coach-goal-student-profile {
+  display: inline-flex;
+  margin: 0 28px 20px;
+}
+
 #app.role-coach .coach-directory-page .coach-directory-link {
   min-height: 56px;
   margin-top: auto;

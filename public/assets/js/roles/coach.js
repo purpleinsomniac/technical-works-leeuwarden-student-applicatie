@@ -308,18 +308,18 @@ if (coachProjectGrid && coachProjectSearch && coachProjectStatusFilter && coachP
 
 /* Keep the remaining read-only directories compact. */
 const coachDirectoryPagers = new WeakMap();
+const coachGoalGrid = document.querySelector("#coachGoals .coach-directory-grid");
 document.querySelectorAll(".coach-directory-grid").forEach((grid) => {
-  if (grid === coachProjectGrid) return;
+  if (grid === coachProjectGrid || grid === coachGoalGrid) return;
   const cards = [...grid.children];
   const pager = createPager(cards, 6, grid, "Pagina's");
   coachDirectoryPagers.set(grid, pager);
   pager.show(cards);
 });
 
-/* Zoek ook snel door activiteiten en doelen, zonder de huidige pagina kwijt te raken. */
+/* Zoek snel door leeractiviteiten zonder de huidige pagina kwijt te raken. */
 [
   ["coachActivitySearch", "coachActivityNoResults", "coachActivityPhaseFilter", "phase"],
-  ["coachGoalSearch", "coachGoalNoResults", "coachGoalStatusFilter", "status"],
 ].forEach(([inputId, emptyId, selectId, dataKey]) => {
   const input = document.getElementById(inputId);
   const empty = document.getElementById(emptyId);
@@ -343,6 +343,45 @@ document.querySelectorAll(".coach-directory-grid").forEach((grid) => {
   select?.addEventListener("change", filter);
   filter();
 });
+
+const coachGoalSearch = document.getElementById("coachGoalSearch");
+const coachGoalStatusFilter = document.getElementById("coachGoalStatusFilter");
+const coachGoalNoResults = document.getElementById("coachGoalNoResults");
+
+if (coachGoalSearch && coachGoalStatusFilter && coachGoalGrid && coachGoalNoResults) {
+  const goalStudentCards = [...coachGoalGrid.children];
+
+  function filterCoachGoals() {
+    const searchTerm = coachGoalSearch.value.trim().toLocaleLowerCase("nl");
+    const selectedStatus = coachGoalStatusFilter.value;
+    let visibleStudentCount = 0;
+
+    goalStudentCards.forEach((card) => {
+      const studentMatches = card.dataset.studentName.includes(searchTerm);
+      const goals = [...card.querySelectorAll(".coach-goal-item")];
+      let visibleGoalCount = 0;
+
+      goals.forEach((goal) => {
+        const matchesSearch = !searchTerm || studentMatches || goal.dataset.directorySearch.includes(searchTerm);
+        const matchesStatus = !selectedStatus || goal.dataset.directoryStatus === selectedStatus;
+        const isVisible = matchesSearch && matchesStatus;
+        goal.classList.toggle("hidden", !isVisible);
+        if (isVisible) visibleGoalCount += 1;
+      });
+
+      const matchesEmptyStudent = goals.length === 0 && !selectedStatus && (!searchTerm || studentMatches);
+      const isVisible = visibleGoalCount > 0 || matchesEmptyStudent;
+      card.classList.toggle("hidden", !isVisible);
+      if (isVisible) visibleStudentCount += 1;
+    });
+
+    coachGoalNoResults.classList.toggle("hidden", visibleStudentCount > 0);
+  }
+
+  coachGoalSearch.addEventListener("input", filterCoachGoals);
+  coachGoalStatusFilter.addEventListener("change", filterCoachGoals);
+  filterCoachGoals();
+}
 
 /* Paginate long work queues while keeping all open actions available. */
 document.querySelectorAll("#coachPendingProjects, .coach-feedback-confirmation-list").forEach((list) => {

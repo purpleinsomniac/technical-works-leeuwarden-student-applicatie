@@ -22,6 +22,28 @@ abstract class RoleDashboardController extends Controller
         array $extraData = [],
     ): View {
         $user->loadMissing('appState');
+        $applicationSettings = $roleData['applicationSettings'] ?? ApplicationSetting::current();
+        $personalSettings = $user->appState?->gegevens ?? [];
+        $personalAppearance = is_array($personalSettings)
+            ? ($personalSettings['ontwikkeling-dashboard-instellingen'] ?? [])
+            : [];
+        $personalAccent = is_array($personalAppearance) ? ($personalAppearance['accent'] ?? null) : null;
+        $accentColors = [
+            'teal' => '#009b87',
+            'blue' => '#168bed',
+            'purple' => '#6840e8',
+            'pink' => '#df238b',
+            'orange' => '#fa7900',
+            'amber' => '#efb014',
+            'green' => '#78b915',
+        ];
+        if (is_string($personalAccent) && isset($accentColors[$personalAccent])) {
+            $personalAccent = $accentColors[$personalAccent];
+        }
+        $applicationAccentColor = is_string($personalAccent)
+            && preg_match('/^#[0-9A-Fa-f]{6}$/D', $personalAccent) === 1
+            ? strtolower($personalAccent)
+            : $applicationSettings->application_accent_color;
 
         $initials = collect(preg_split('/\s+/', trim($user->naam)))
             ->filter()
@@ -31,7 +53,8 @@ abstract class RoleDashboardController extends Controller
 
         return view($view, array_merge([
             'user' => $user,
-            'applicationSettings' => $roleData['applicationSettings'] ?? ApplicationSetting::current(),
+            'applicationSettings' => $applicationSettings,
+            'applicationAccentColor' => $applicationAccentColor,
             'frontendUser' => [
                 'id' => $user->id,
                 'name' => $user->naam,

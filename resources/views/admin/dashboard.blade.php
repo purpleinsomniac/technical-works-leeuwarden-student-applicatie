@@ -48,6 +48,8 @@
 
 {{-- Account management: create accounts, filter the list, and edit or delete existing users. --}}
 <section id="adminUsers" class="view hidden admin-dashboard" data-role-section="users">
+  @php($selectedUserGroupIds = old('group_ids', $roleData['groups']->count() === 1 ? [$roleData['groups']->first()->id] : []))
+  @php($selectedUserGroupIds = is_array($selectedUserGroupIds) ? $selectedUserGroupIds : [])
   <header class="admin-hero">
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
@@ -78,6 +80,16 @@
     <form action="{{ route('admin.users.import', ['page' => 'gebruikers']) }}" method="post" enctype="multipart/form-data" class="admin-user-form">
       @csrf
       <div><label for="student-import-file">CSV-bestand</label><input class="input" id="student-import-file" name="bestand" type="file" accept=".csv,text/csv" required></div>
+      <div>
+        <label for="student-import-group">Aan groep koppelen</label>
+        <select class="input" id="student-import-group" name="groep_id">
+          <option value="">Later toewijzen</option>
+          @foreach ($roleData['groups'] as $group)
+            <option value="{{ $group->id }}" @selected((string) old('groep_id', $roleData['groups']->count() === 1 ? $group->id : '') === (string) $group->id)>{{ $group->naam }}{{ $group->coach ? ' · '.$group->coach->naam : '' }}</option>
+          @endforeach
+        </select>
+        <small>Studenten in een gekoppelde groep zijn zichtbaar voor de docent van die groep.</small>
+      </div>
       <button class="button dark" type="submit">Studenten importeren</button>
     </form>
   </section>
@@ -108,6 +120,14 @@
             @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) old('leerjaar') === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
           </select>
           <small>Het studentnummer wordt automatisch aangemaakt en kan daarna niet worden gewijzigd.</small>
+          <fieldset class="admin-user-group-fields">
+            <legend>Groep(en) voor deze student</legend>
+            @forelse ($roleData['groups'] as $group)
+              <label><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked(in_array($group->id, $selectedUserGroupIds))><span>{{ $group->naam }}<small>{{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</small></span></label>
+            @empty
+              <small>Maak eerst een groep aan om deze student aan een docent te koppelen.</small>
+            @endforelse
+          </fieldset>
         </div>
         <div><label for="new-user-password">Tijdelijk wachtwoord</label><input class="input" id="new-user-password" name="password" type="password" autocomplete="new-password" minlength="8" required></div>
         <div><label for="new-user-password-confirmation">Herhaal wachtwoord</label><input class="input" id="new-user-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8" required></div>
@@ -154,6 +174,7 @@
                     @csrf
                     {{-- Laravel interprets this form as an update while the browser submits POST. --}}
                     @method('PUT')
+                    <input type="hidden" name="_account_user_id" value="{{ $managedUser->id }}">
                     <div class="admin-user-fields">
                       <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
                       <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
@@ -170,6 +191,15 @@
                           <option value="">Niet ingesteld</option>
                           @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) $managedUser->leerjaar === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
                         </select>
+                        <fieldset class="admin-user-group-fields">
+                          <legend>Groep(en) voor deze student</legend>
+                          @forelse ($roleData['groups'] as $group)
+                            @php($selectedGroupsAfterError = (string) old('_account_user_id') === (string) $managedUser->id ? $selectedUserGroupIds : null)
+                            <label><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked($selectedGroupsAfterError !== null ? in_array($group->id, $selectedGroupsAfterError) : $managedUser->groups->contains('id', $group->id))><span>{{ $group->naam }}<small>{{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</small></span></label>
+                          @empty
+                            <small>Maak eerst een groep aan om deze student aan een docent te koppelen.</small>
+                          @endforelse
+                        </fieldset>
                       </div>
                       <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
                       <div><label for="user-{{ $managedUser->id }}-password-confirmation">Herhaal nieuw wachtwoord</label><input class="input" id="user-{{ $managedUser->id }}-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8"></div>
@@ -204,7 +234,7 @@
     <div class="admin-hero-copy">
       <span class="admin-eyebrow">Beheeromgeving</span>
       <h1>Groepen</h1>
-      <p>Maak groepen aan en wijs per groep een docent en studenten toe. Docenten zien hun eigen groepen en studenten.</p>
+      <p>Maak groepen aan, wijs een docent toe en koppel studenten. Studenten uit Gebruikers kun je hier of direct bij hun account aan een groep toevoegen.</p>
     </div>
     <span class="admin-class-count">{{ $roleData['groups']->count() }} {{ $roleData['groups']->count() === 1 ? 'groep' : 'groepen' }}</span>
   </header>
@@ -227,10 +257,10 @@
         <div><label for="new-group-schoolyear">Schooljaar</label><input class="input" id="new-group-schoolyear" name="schooljaar" value="{{ $groupForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
         <div>
           <label for="new-group-coach">Docent / SLB'er</label>
-          <select class="input" id="new-group-coach" name="coach_id">
-            <option value="">Nog geen docent gekoppeld</option>
+          <select class="input" id="new-group-coach" name="coach_id" required>
+            <option value="">Kies een docent — die ziet deze groep</option>
             @foreach ($roleData['coaches'] as $coach)
-              <option value="{{ $coach->id }}" @selected($groupForm === 'create' && (string) old('coach_id') === (string) $coach->id)>{{ $coach->naam }}</option>
+              <option value="{{ $coach->id }}" @selected($groupForm === 'create' ? (string) old('coach_id', $roleData['coaches']->count() === 1 ? $coach->id : '') === (string) $coach->id : false)>{{ $coach->naam }}</option>
             @endforeach
           </select>
         </div>
@@ -274,8 +304,8 @@
                   <div><label for="group-{{ $group->id }}-schoolyear">Schooljaar</label><input class="input" id="group-{{ $group->id }}-schoolyear" name="schooljaar" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('schooljaar', $group->schooljaar) : $group->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
                   <div>
                     <label for="group-{{ $group->id }}-coach">Docent / SLB'er</label>
-                    <select class="input" id="group-{{ $group->id }}-coach" name="coach_id">
-                      <option value="">Geen docent gekoppeld</option>
+                    <select class="input" id="group-{{ $group->id }}-coach" name="coach_id" required>
+                      <option value="">Kies een docent — die ziet deze groep</option>
                       @foreach ($roleData['coaches'] as $coach)
                         <option value="{{ $coach->id }}" @selected($groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? (string) old('coach_id') === (string) $coach->id : $group->coach_id === $coach->id)>{{ $coach->naam }}</option>
                       @endforeach

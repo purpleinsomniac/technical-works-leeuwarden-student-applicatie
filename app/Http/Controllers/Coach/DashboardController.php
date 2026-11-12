@@ -56,7 +56,12 @@ class DashboardController extends RoleDashboardController
     {
         /** @var User $user */
         $user = $request->user();
-        $groups = $user->coachedGroups()
+        // An administrator using the coach view can still inspect every group.
+        // Regular coaches remain limited to groups assigned to their own account.
+        $groupsQuery = $user->canUseRole('beheerder')
+            ? Group::query()
+            : $user->coachedGroups();
+        $groups = $groupsQuery
             ->with(['students' => fn ($query) => $query
                 ->where('rol', 'student')
                 ->with(['studyPhase', 'progress.learningOutcome'])])

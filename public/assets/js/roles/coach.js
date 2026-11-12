@@ -165,6 +165,7 @@ const coachStudentSort = document.getElementById("coachStudentSort");
 const coachStudentCards = [...document.querySelectorAll(".coach-student-card[data-student-name]")];
 const coachNoResults = document.getElementById("coachNoResults");
 const coachStudentGrid = document.querySelector(".coach-student-grid");
+const coachRosterReset = document.getElementById("coachRosterReset");
 
 if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid) {
   const studentPager = createPager(coachStudentCards, 8, coachStudentGrid, "Pagina's met studenten");
@@ -197,7 +198,13 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
     if (studentCount) {
       studentCount.textContent = `${matches.length} ${matches.length === 1 ? "student" : "studenten"}`;
     }
+    coachRosterReset?.classList.toggle("hidden", !(
+      searchTerm || selectedPhase || selectedGroup || (coachStudentSort?.value ?? "name") !== "name"
+    ));
     coachNoResults.classList.toggle("hidden", matches.length > 0);
+    coachNoResults.textContent = matches.length
+      ? ""
+      : "Geen studenten gevonden met deze filters. Pas je zoekopdracht aan of wis de filters.";
 
     // Laat in de kop zien welke groep is gekozen.
     const rosterTitle = document.getElementById("coachRosterTitle");
@@ -217,9 +224,21 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
   }
 
   coachStudentSearch.addEventListener("input", filterCoachStudents);
+  coachStudentSearch.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !coachStudentSearch.value) return;
+    coachStudentSearch.value = "";
+    filterCoachStudents();
+  });
   coachPhaseFilter.addEventListener("change", filterCoachStudents);
   coachGroupFilter?.addEventListener("change", filterCoachStudents);
   coachStudentSort?.addEventListener("change", filterCoachStudents);
+  coachRosterReset?.addEventListener("click", () => {
+    coachStudentSearch.value = "";
+    coachPhaseFilter.value = "";
+    if (coachGroupFilter) coachGroupFilter.value = "";
+    if (coachStudentSort) coachStudentSort.value = "name";
+    filterCoachStudents();
+  });
   filterCoachStudents();
 }
 
@@ -227,9 +246,13 @@ window.openCoachGroup = function (groupId) {
   show("coachGroups");
   if (coachStudentSearch) coachStudentSearch.value = "";
   if (coachPhaseFilter) coachPhaseFilter.value = "";
+  if (coachStudentSort) coachStudentSort.value = "name";
   if (coachGroupFilter) coachGroupFilter.value = String(groupId);
   coachGroupFilter?.dispatchEvent(new Event("change"));
-  document.getElementById("coachStudentRoster")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // On desktop the roster has its own scroll area; do not scroll the whole page past the group panel.
+  if (window.matchMedia("(max-width: 1279px)").matches) {
+    document.getElementById("coachStudentRoster")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 };
 
 window.openCoachProjectQueue = function () {

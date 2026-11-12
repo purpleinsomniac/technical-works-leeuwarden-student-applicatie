@@ -4,6 +4,7 @@
 .admin-eyebrow { display: block; margin-bottom: 8px; color: #168479; font-size: 10px; font-weight: 750; letter-spacing: 1.6px; text-transform: uppercase; }
 .admin-hero h1 { margin-bottom: 10px; }
 .admin-hero p { margin: 0; color: #6b7c8e; font-size: 13px; }
+.admin-hero-actions { display: flex; flex: none; flex-wrap: wrap; gap: 10px; }
 .admin-hero-action { display: inline-flex; flex: none; align-items: center; gap: 12px; }
 .admin-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .admin-stat { position: relative; display: flex; min-height: 170px; flex-direction: column; align-items: flex-start; overflow: hidden; padding: 21px; border: 1px solid #e1e8ef; border-radius: 15px; background: #fff; box-shadow: 0 5px 16px rgba(22, 47, 67, 0.035); }
@@ -67,6 +68,8 @@
 .admin-user-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0 16px; }
 .admin-user-fields label { color: #405b6a; font-size: 12px; font-weight: 650; }
 .admin-user-fields .input { margin: 6px 0 15px; }
+.admin-import-confirmation { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 15px; color: #405b6a; font-size: 12px; }
+.admin-import-confirmation input { flex: none; margin-top: 3px; accent-color: #168479; }
 .admin-user-filter { display: flex; max-width: 290px; flex-direction: column; gap: 3px; margin-bottom: 12px; }
 .admin-user-filter label { color: #405b6a; font-size: 12px; font-weight: 650; }
 .admin-user-filter .input { margin: 4px 0 0; }
@@ -190,7 +193,8 @@
 
 @media (max-width: 680px) {
   .admin-hero { align-items: flex-start; flex-direction: column; }
-  .admin-hero-action { align-self: stretch; justify-content: center; }
+  .admin-hero-actions { align-self: stretch; }
+  .admin-hero-action { flex: 1; align-self: stretch; justify-content: center; }
   .admin-content-grid { grid-template-columns: 1fr; }
   .admin-outcome-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-section-heading { align-items: flex-start; flex-direction: column; }

@@ -36,18 +36,35 @@ document.getElementById("application-style")?.addEventListener("change", (event)
   document.getElementById("app")?.setAttribute("data-application-style", event.target.value);
 });
 
-function toggleAdminUserForm() {
-  const form = document.getElementById("createAdminUser");
-  const button = document.getElementById("toggleAdminUserForm");
+function toggleAdminForm(formId, buttonId, queryKey) {
+  const form = document.getElementById(formId);
+  const button = document.getElementById(buttonId);
 
   if (!form || !button) return;
 
   form.hidden = !form.hidden;
   button.setAttribute("aria-expanded", String(!form.hidden));
 
+  const url = new URL(window.location.href);
+  url.searchParams.set("page", "gebruikers");
+  if (form.hidden) {
+    url.searchParams.delete(queryKey);
+  } else {
+    url.searchParams.set(queryKey, "1");
+  }
+  window.history.replaceState({}, "", url.toString());
+
   if (!form.hidden) {
     form.scrollIntoView({ behavior: "smooth" });
   }
+}
+
+function toggleAdminUserForm() {
+  toggleAdminForm("createAdminUser", "toggleAdminUserForm", "new");
+}
+
+function toggleStudentImportForm() {
+  toggleAdminForm("studentImportForm", "toggleStudentImportForm", "import");
 }
 
 if (new URLSearchParams(window.location.search).get("page") === "leeruitkomsten") {

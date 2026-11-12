@@ -56,8 +56,10 @@
       <h1>Gebruikers</h1>
       <p>Maak accounts aan, wijzig gegevens en beheer accountrollen.</p>
     </div>
-    {{-- The query flag keeps the form open after validation redirects back to this page. --}}
-    <button class="button admin-hero-action" id="toggleAdminUserForm" type="button" aria-controls="createAdminUser" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleAdminUserForm()">Account aanmaken <span aria-hidden="true">+</span></button>
+    <div class="admin-hero-actions">
+      <button class="button admin-hero-action" id="toggleAdminUserForm" type="button" aria-controls="createAdminUser" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleAdminUserForm()">Account aanmaken <span aria-hidden="true">+</span></button>
+      <button class="button admin-hero-action" id="toggleStudentImportForm" type="button" aria-controls="studentImportForm" aria-expanded="{{ request()->boolean('import') || session('importReview') ? 'true' : 'false' }}" onclick="toggleStudentImportForm()">Studenten importeren <span aria-hidden="true">↓</span></button>
+    </div>
   </header>
 
   {{-- Give administrators a visible result after a save or a validation error. --}}
@@ -69,17 +71,42 @@
     </div>
   @endif
 
-  {{-- Import accepts the downloadable CSV template; server-side validation rejects the whole file on any row error. --}}
-  <section class="admin-panel admin-user-create">
+  @if (session('importReview'))
+    <div class="notice" role="status">
+      <p><strong>Controleer de wijzigingen voor bestaande studenten</strong></p>
+      <p>Er is nog niets opgeslagen. Selecteer hetzelfde CSV-bestand opnieuw en bevestig de wijzigingen om de import uit te voeren.</p>
+      <ul>
+        @foreach (session('importReview') as $change)
+          <li>
+            {{ $change['email'] }} —
+            naam: {{ $change['current']['naam'] }} → {{ $change['incoming']['naam'] }};
+            leerjaar: {{ $change['current']['leerjaar'] ?? 'Niet ingesteld' }} → {{ $change['incoming']['leerjaar'] ?? 'Niet ingesteld' }}
+          </li>
+        @endforeach
+      </ul>
+      @if (session('importReviewNewCount') > 0)
+        <p>Na bevestiging worden ook {{ session('importReviewNewCount') }} nieuwe studenten uit dit bestand toegevoegd.</p>
+      @endif
+      <p>Bij bestaande accounts blijven wachtwoord, studentnummer en groepskoppelingen ongewijzigd.</p>
+    </div>
+  @endif
+
+  <section class="admin-panel admin-user-create" id="studentImportForm" @if (!request()->boolean('import') && !session('importReview') && !$errors->has('bestand')) hidden @endif>
     <div class="admin-panel-heading">
       <div><h2>Studenten importeren</h2><p>Importeer meerdere studentaccounts tegelijk vanuit een CSV-bestand dat je met Excel kunt bewerken.</p></div>
     </div>
-    <p>Gebruik de kolommen <code>naam</code>, <code>email</code>, <code>leerjaar</code> en <code>tijdelijk_wachtwoord</code>. Leerjaar is optioneel (1 t/m 4); het wachtwoord moet minimaal 8 tekens bevatten. Elk e-mailadres moet nog niet in de applicatie bestaan. Studentnummers worden automatisch aangemaakt.</p>
-    <p>Download het sjabloon, open het in Excel en sla het daarna op als CSV UTF-8 (maximaal 2 MB). Tijdelijke wachtwoorden staan onversleuteld in het bestand: deel en verwijder het bestand zorgvuldig. Een fout in een rij voorkomt dat de hele import wordt opgeslagen.</p>
+    <p>Gebruik de kolommen <code>naam</code>, <code>email</code>, <code>leerjaar</code> en <code>tijdelijk_wachtwoord</code>. Leerjaar is optioneel (1 t/m 4); het wachtwoord moet minimaal 8 tekens bevatten. Bestaande studentaccounts met dezelfde e-mail worden alleen na bevestiging bijgewerkt. Studentnummers worden automatisch aangemaakt.</p>
+    <p>Download het sjabloon, open het in Excel en sla het daarna op als CSV UTF-8 (maximaal 2 MB). Tijdelijke wachtwoorden staan onversleuteld in het bestand: deel en verwijder het bestand zorgvuldig. Wachtwoorden en groepskoppelingen van bestaande accounts worden niet gewijzigd. Een fout in een rij voorkomt dat de hele import wordt opgeslagen.</p>
     <p><a href="{{ route('admin.users.template') }}">Download importsjabloon</a></p>
     <form action="{{ route('admin.users.import', ['page' => 'gebruikers']) }}" method="post" enctype="multipart/form-data" class="admin-user-form">
       @csrf
       <div><label for="student-import-file">CSV-bestand</label><input class="input" id="student-import-file" name="bestand" type="file" accept=".csv,text/csv" required></div>
+      @if (session('importReview'))
+        <label class="admin-import-confirmation">
+          <input type="checkbox" name="bevestig_bijwerken" value="1" required>
+          <span>Ik heb de wijzigingen hierboven gecontroleerd en bevestig het bijwerken van deze studentgegevens.</span>
+        </label>
+      @endif
       <div>
         <label for="student-import-group">Aan groep koppelen</label>
         <select class="input" id="student-import-group" name="groep_id">

@@ -21,11 +21,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [DashboardController::class, 'index'])
     ->middleware(EnforceMaintenanceMode::class)
     ->name('home');
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/inloggen', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/uitloggen', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
 Route::middleware('guest')->group(function (): void {
+    // Een ingelogde gebruiker hoort nooit opnieuw een loginformulier met een
+    // verouderd CSRF-token te zien; de guest-middleware stuurt die naar huis.
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/inloggen', [AuthController::class, 'login'])->name('login.submit');
     Route::get('/wachtwoord-vergeten', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('/wachtwoord-vergeten', [PasswordResetController::class, 'email'])
         ->middleware('throttle:5,1')

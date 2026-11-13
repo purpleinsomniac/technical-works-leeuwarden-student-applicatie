@@ -11,7 +11,7 @@
 
   <div class="teamleader-groups-list">
     @forelse ($roleData['groups'] as $group)
-    <details class="teamleader-group-card">
+    <details id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card">
       <summary class="teamleader-group-summary" aria-labelledby="teamleader-group-{{ $group['id'] }}">
         <span class="teamleader-group-name" id="teamleader-group-{{ $group['id'] }}">{{ $group['name'] }}</span>
         <span class="teamleader-group-summary-item"><span>Schooljaar</span><strong>{{ $group['schoolYear'] ?: 'Niet ingesteld' }}</strong></span>
@@ -112,16 +112,43 @@
   </div>
   <div class="card manager-teachers-table-wrap">
     <table class="manager-teachers-table">
-      <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th></tr></thead>
+      <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Groepen</th></tr></thead>
       <tbody>
         @forelse ($roleData['coaches'] as $coach)
           <tr>
-            <td>{{ $coach->naam }}</td>
-            <td><a href="mailto:{{ $coach->email }}">{{ $coach->email }}</a></td>
-            <td>{{ ucfirst($coach->primaryRole?->naam ?? $coach->rol) }}</td>
+            <td>
+              <button
+                class="teamleader-teacher-toggle"
+                type="button"
+                data-teamleader-teacher-toggle="{{ $coach['id'] }}"
+                aria-controls="teamleader-teacher-groups-{{ $coach['id'] }}"
+                aria-expanded="false"
+              >{{ $coach['name'] }}</button>
+            </td>
+            <td><a href="mailto:{{ $coach['email'] }}">{{ $coach['email'] }}</a></td>
+            <td>{{ $coach['accountType'] }}</td>
+            <td>{{ $coach['groups']->count() }}</td>
+          </tr>
+          <tr id="teamleader-teacher-groups-{{ $coach['id'] }}" class="hidden teamleader-teacher-groups-row">
+            <td colspan="4">
+              @if ($coach['groups']->isNotEmpty())
+                <div class="teamleader-coach-group-list">
+                  @foreach ($coach['groups'] as $group)
+                    <article class="teamleader-coach-group">
+                      <strong>{{ $group['name'] }}</strong>
+                      <span>{{ $group['studentCount'] }} studenten</span>
+                      <span>{{ $group['averagePercentage'] }}% gemiddelde voortgang</span>
+                      <button class="button" type="button" data-teamleader-open-group="{{ $group['id'] }}">Bekijk groep</button>
+                    </article>
+                  @endforeach
+                </div>
+              @else
+                <p class="dim">Deze docent heeft nog geen groepen.</p>
+              @endif
+            </td>
           </tr>
         @empty
-          <tr><td colspan="3">Er zijn nog geen docenten.</td></tr>
+          <tr><td colspan="4">Er zijn nog geen docenten.</td></tr>
         @endforelse
       </tbody>
     </table>

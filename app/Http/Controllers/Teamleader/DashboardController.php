@@ -80,7 +80,23 @@ class DashboardController extends RoleDashboardController
                         });
                 })
                 ->orderBy('naam')
-                ->get(['id', 'naam', 'email', 'rol', 'hoofdrol_id']),
+                ->get(['id', 'naam', 'email', 'rol', 'hoofdrol_id'])
+                ->map(fn (User $coach): array => [
+                    'id' => $coach->id,
+                    'name' => $coach->naam,
+                    'email' => $coach->email,
+                    'accountType' => ucfirst($coach->primaryRole?->naam ?? $coach->rol),
+                    'groups' => $groups
+                        ->where('coachId', $coach->id)
+                        ->map(fn (array $group): array => [
+                            'id' => $group['id'],
+                            'name' => $group['name'],
+                            'studentCount' => $group['studentCount'],
+                            'averagePercentage' => $group['averagePercentage'],
+                        ])
+                        ->values(),
+                ])
+                ->values(),
             'averagePercentage' => (int) round($percentages->avg() ?? 0),
             'attentionCount' => $progress->whereIn('status', ['niet_gestart', 'gestart'])->count(),
             'phases' => $phasePercentages,
@@ -149,6 +165,7 @@ class DashboardController extends RoleDashboardController
 
         return [
             'id' => $group->id,
+            'coachId' => $group->coach_id,
             'name' => $group->naam,
             'schoolYear' => $group->schooljaar,
             'coach' => $group->coach?->naam,

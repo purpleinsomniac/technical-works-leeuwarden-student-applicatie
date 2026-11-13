@@ -9,6 +9,26 @@ window.RoleApp.initializeRole({
 });
 RoleSettings.initialize();
 
+document.querySelectorAll("[data-teamleader-teacher-toggle]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const groupsRow = document.getElementById(button.getAttribute("aria-controls"));
+    const expanded = button.getAttribute("aria-expanded") === "true";
+    button.setAttribute("aria-expanded", String(!expanded));
+    groupsRow.classList.toggle("hidden", expanded);
+  });
+});
+
+document.querySelectorAll("[data-teamleader-open-group]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const group = document.getElementById(`teamleader-group-card-${button.dataset.teamleaderOpenGroup}`);
+    if (!group) return;
+
+    show("managerGroups", true);
+    group.open = true;
+    group.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
 document.querySelectorAll("[data-teamleader-phase-filter]").forEach((filter) => {
   const studentDetails = filter.closest("details");
   const progressRows = studentDetails.querySelectorAll("[data-teamleader-progress-phase]");

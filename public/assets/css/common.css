@@ -410,11 +410,22 @@ p.dim,
 .teamleader-group-summary-item > strong { overflow-wrap: anywhere; color: #233349; font-size: 13px; }
 .teamleader-group-details { padding: 0 18px 18px; }
 .teamleader-group-details > .grid3 { margin-top: 16px; }
+.teamleader-teacher-toggle { padding: 0; border: 0; background: transparent; color: #167e72; font: inherit; font-weight: 700; text-align: left; }
+.teamleader-teacher-toggle:hover { text-decoration: underline; }
+.teamleader-coach-group-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.teamleader-coach-group { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border: 1px solid #dfe8ed; border-radius: 10px; background: #fff; }
+.teamleader-coach-group > strong { color: #17364b; font-size: 15px; }
+.teamleader-coach-group > span { color: #61798a; font-size: 12px; }
+.teamleader-coach-group .button { margin-top: 4px; }
 .theme-dark .teamleader-group-card { border-color: #2c4755; background: #152d38; }
 .theme-dark .teamleader-group-name,
 .theme-dark .teamleader-group-summary-item > strong { color: #eef7f9; }
 .theme-dark .teamleader-group-summary-item > span { color: #c4d2d9; }
 .theme-dark .teamleader-group-summary::after { color: #7cdfcf; }
+.theme-dark .teamleader-teacher-toggle { color: #7cdfcf; }
+.theme-dark .teamleader-coach-group { border-color: #2c4755; background: #152d38; }
+.theme-dark .teamleader-coach-group > strong { color: #eef7f9; }
+.theme-dark .teamleader-coach-group > span { color: #c4d2d9; }
 .theme-dark .manager-teachers-table th,
 .theme-dark .manager-teachers-table td { border-color: #29434f; color: #c4d2d9; }
 .theme-dark .manager-teachers-table th { background: #19333e; color: #9eb1ba; }

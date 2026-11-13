@@ -29,6 +29,18 @@ document.querySelectorAll("[data-teamleader-phase-filter]").forEach((filter) => 
     const selectedPhase = filter.options[filter.selectedIndex].textContent;
     const scope = filter.value === "__all" ? "over alle fases" : `in ${selectedPhase}`;
     phaseAverage.textContent = `Gemiddelde voortgang ${scope}: ${average}%`;
+    phaseAverage.classList.remove(
+      "teamleader-progress-high",
+      "teamleader-progress-medium",
+      "teamleader-progress-low",
+    );
+    phaseAverage.classList.add(
+      average >= 75
+        ? "teamleader-progress-high"
+        : average >= 60
+          ? "teamleader-progress-medium"
+          : "teamleader-progress-low",
+    );
   };
 
   filter.addEventListener("change", updatePhaseProgress);

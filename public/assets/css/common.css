@@ -389,6 +389,32 @@ p.dim,
 .theme-dark #managerGroups h2,
 .theme-dark #managerTeachers h1,
 .theme-dark #managerReports h2 { color: #eef7f9; }
+.teamleader-progress-indicator { display: inline-block; padding: 3px 8px; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 750; }
+.teamleader-progress-high { color: #176b3a; background: #e5f5eb; border-color: #b8e4c5; }
+.teamleader-progress-medium { color: #805d00; background: #fff5d6; border-color: #f0d98a; }
+.teamleader-progress-low { color: #9b3030; background: #fde8e8; border-color: #efbcbc; }
+.theme-dark #managerGroups .teamleader-progress-high { color: #b6efca; background: #1e4935; border-color: #326b4d; }
+.theme-dark #managerGroups .teamleader-progress-medium { color: #f4dc8c; background: #55451d; border-color: #806b2a; }
+.theme-dark #managerGroups .teamleader-progress-low { color: #ffc4c4; background: #512f37; border-color: #78454e; }
+.teamleader-groups-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 16px; }
+.teamleader-group-card { min-width: 0; overflow: hidden; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; box-shadow: 0 3px 10px #16334a08; }
+.teamleader-group-card[open] { grid-column: 1 / -1; }
+.teamleader-group-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; padding: 18px; list-style: none; cursor: pointer; }
+.teamleader-group-summary::-webkit-details-marker { display: none; }
+.teamleader-group-summary::after { content: "＋"; grid-column: 1 / -1; justify-self: end; color: #168b7d; font-size: 19px; line-height: 1; }
+.teamleader-group-card[open] .teamleader-group-summary::after { content: "−"; }
+.teamleader-group-name { grid-column: 1 / -1; font-size: 19px; font-weight: 750; color: #17364b; }
+.teamleader-group-summary-item { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+.teamleader-group-card[open] .teamleader-group-summary-item-extra { display: none; }
+.teamleader-group-summary-item > span { color: #728391; font-size: 11px; }
+.teamleader-group-summary-item > strong { overflow-wrap: anywhere; color: #233349; font-size: 13px; }
+.teamleader-group-details { padding: 0 18px 18px; }
+.teamleader-group-details > .grid3 { margin-top: 16px; }
+.theme-dark .teamleader-group-card { border-color: #2c4755; background: #152d38; }
+.theme-dark .teamleader-group-name,
+.theme-dark .teamleader-group-summary-item > strong { color: #eef7f9; }
+.theme-dark .teamleader-group-summary-item > span { color: #c4d2d9; }
+.theme-dark .teamleader-group-summary::after { color: #7cdfcf; }
 .theme-dark .manager-teachers-table th,
 .theme-dark .manager-teachers-table td { border-color: #29434f; color: #c4d2d9; }
 .theme-dark .manager-teachers-table th { background: #19333e; color: #9eb1ba; }

@@ -22,6 +22,7 @@ class DashboardController extends RoleDashboardController
             user: $user,
             activeRole: 'teamleider',
             view: 'teamleader.dashboard',
+            style: 'css/roles/teamleader.css',
             roleData: $this->overview(),
             scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/teamleider.js'],
         );

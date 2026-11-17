@@ -44,8 +44,8 @@
         <div class="card">
           <h3>Studenten in deze groep</h3>
           @forelse ($group['students'] as $student)
-            @php($studentPhaseProgressClass = $student['displayPercentage'] >= 75 ? 'teamleader-progress-high' : ($student['displayPercentage'] >= 60 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
-            @php($studentOverallProgressClass = $student['percentage'] >= 75 ? 'teamleader-progress-high' : ($student['percentage'] >= 60 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
+            @php($studentPhaseProgressClass = $student['displayPercentage'] >= 75 ? 'teamleader-progress-high' : ($student['displayPercentage'] >= 60 ? 'teamleader-progress-medium' : ($student['displayPercentage'] >= 1 ? 'teamleader-progress-low' : 'teamleader-progress-NVT')))
+            @php($studentOverallProgressClass = $student['percentage'] >= 75 ? 'teamleader-progress-high' : ($student['percentage'] >= 60 ? 'teamleader-progress-medium' : ($student['percentage'] >= 1 ? 'teamleader-progress-low' : 'teamleader-progress-NVT')))
             <details>
               <summary class="name">
                 <strong>{{ $student['name'] }}</strong>
@@ -83,7 +83,7 @@
               @else
                 <div class="teamleader-outcome-grid" data-teamleader-outcome-grid>
                   @foreach ($student['outcomes'] as $outcome)
-                    @php($outcomeProgressClass = $outcome['percentage'] === null ? '' : ($outcome['percentage'] >= 75 ? 'teamleader-progress-high' : ($outcome['percentage'] >= 60 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
+                    @php($outcomeProgressClass = $outcome['percentage'] === null ? '' : ($outcome['percentage'] >= 75 ? 'teamleader-progress-high' : ($outcome['percentage'] >= 60 ? 'teamleader-progress-medium' : ($outcome['percentage'] >= 1 ? 'teamleader-progress-low' : 'teamleader-progress-NVT'))))
                     <article
                       class="teamleader-outcome-card"
                       data-teamleader-outcome

@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $roles = collect(['student', 'coach', 'teamleider', 'beheerder'])
+        $roles = collect(['student', 'coach', 'teamleider', 'beheerder', 'admin'])
             ->mapWithKeys(function (string $naam): array {
                 $rol = Role::updateOrCreate(['naam' => $naam]);
 

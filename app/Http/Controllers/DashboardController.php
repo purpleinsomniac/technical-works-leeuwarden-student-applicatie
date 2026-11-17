@@ -21,6 +21,7 @@ class DashboardController extends Controller
             'coach' => 'coach.dashboard',
             'teamleider' => 'teamleader.dashboard',
             'beheerder' => 'admin.dashboard',
+            'admin' => 'admin.dashboard',
             default => 'login',
         };
 

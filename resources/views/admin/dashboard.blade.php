@@ -182,64 +182,70 @@
         <tbody>
           {{-- Show a data-driven row for each account so its existing role is available to the filter. --}}
           @forelse ($roleData['users'] as $managedUser)
-            <tr data-user-role="{{ $managedUser->primaryRole?->naam ?? $managedUser->rol }}">
+            @php($managedUserRole = $managedUser->primaryRole?->naam ?? $managedUser->rol)
+            <tr data-user-role="{{ $managedUserRole }}">
               <td>{{ $managedUser->naam }}</td>
               <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
-              <td>{{ ucfirst($managedUser->primaryRole?->naam ?? $managedUser->rol) }}</td>
+              <td>{{ ucfirst($managedUserRole) }}</td>
               <td>
-                @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) === 'student')
+                @if ($managedUserRole === 'student')
                   <strong>{{ $managedUser->studentnummer ?: 'Niet ingesteld' }}</strong><br><small>{{ $managedUser->leerjaar ? 'Leerjaar '.$managedUser->leerjaar : 'Leerjaar niet ingesteld' }}</small>
                 @else
                   —
                 @endif
               </td>
               <td>
-                {{-- Keep each edit form beside its user to avoid mixing account identifiers. --}}
-                <details class="admin-user-edit">
-                  <summary class="button">Wijzigen</summary>
-                  <form action="{{ route('admin.users.update', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+                @if ($managedUserRole === 'admin')
+                  <button class="button admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden gewijzigd.">Wijzigen</button>
+                  <button class="button admin-user-delete admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden verwijderd.">Verwijderen</button>
+                @else
+                  {{-- Keep each edit form beside its user to avoid mixing account identifiers. --}}
+                  <details class="admin-user-edit">
+                    <summary class="button">Wijzigen</summary>
+                    <form action="{{ route('admin.users.update', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+                      @csrf
+                      {{-- Laravel interprets this form as an update while the browser submits POST. --}}
+                      @method('PUT')
+                      <input type="hidden" name="_account_user_id" value="{{ $managedUser->id }}">
+                      <div class="admin-user-fields">
+                        <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
+                        <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
+                        <div>
+                          <label for="user-{{ $managedUser->id }}-role">Accounttype</label>
+                          <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" data-admin-user-role-selector required>
+                            @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(($managedUser->primaryRole?->naam ?? $managedUser->rol) === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
+                          </select>
+                        </div>
+                        <div data-admin-student-fields @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student') hidden @endif>
+                          <p>Studentnummer: <strong>{{ $managedUser->studentnummer ?: 'Wordt aangemaakt bij de eerste opslag als student' }}</strong></p>
+                          <label for="user-{{ $managedUser->id }}-year">Leerjaar</label>
+                          <select class="input" id="user-{{ $managedUser->id }}-year" name="leerjaar" @disabled(($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student')>
+                            <option value="">Niet ingesteld</option>
+                            @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) $managedUser->leerjaar === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
+                          </select>
+                          <fieldset class="admin-user-group-fields">
+                            <legend>Groep(en) voor deze student</legend>
+                            @forelse ($roleData['groups'] as $group)
+                              @php($selectedGroupsAfterError = (string) old('_account_user_id') === (string) $managedUser->id ? $selectedUserGroupIds : null)
+                              <label><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked($selectedGroupsAfterError !== null ? in_array($group->id, $selectedGroupsAfterError) : $managedUser->groups->contains('id', $group->id))><span>{{ $group->naam }}<small>{{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</small></span></label>
+                            @empty
+                              <small>Maak eerst een groep aan om deze student aan een docent te koppelen.</small>
+                            @endforelse
+                          </fieldset>
+                        </div>
+                        <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
+                        <div><label for="user-{{ $managedUser->id }}-password-confirmation">Herhaal nieuw wachtwoord</label><input class="input" id="user-{{ $managedUser->id }}-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8"></div>
+                      </div>
+                      <button class="button dark" type="submit">Wijzigingen opslaan</button>
+                    </form>
+                  </details>
+                  {{-- Warn that deleting a user also removes their linked learning records. --}}
+                  <form action="{{ route('admin.users.destroy', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je dit account wilt verwijderen? Gekoppelde voortgang, opdrachten, reflecties en feedback worden ook verwijderd.')">
                     @csrf
-                    {{-- Laravel interprets this form as an update while the browser submits POST. --}}
-                    @method('PUT')
-                    <input type="hidden" name="_account_user_id" value="{{ $managedUser->id }}">
-                    <div class="admin-user-fields">
-                      <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
-                      <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
-                      <div>
-                        <label for="user-{{ $managedUser->id }}-role">Accounttype</label>
-                        <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" data-admin-user-role-selector required>
-                          @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(($managedUser->primaryRole?->naam ?? $managedUser->rol) === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
-                        </select>
-                      </div>
-                      <div data-admin-student-fields @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student') hidden @endif>
-                        <p>Studentnummer: <strong>{{ $managedUser->studentnummer ?: 'Wordt aangemaakt bij de eerste opslag als student' }}</strong></p>
-                        <label for="user-{{ $managedUser->id }}-year">Leerjaar</label>
-                        <select class="input" id="user-{{ $managedUser->id }}-year" name="leerjaar" @disabled(($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student')>
-                          <option value="">Niet ingesteld</option>
-                          @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) $managedUser->leerjaar === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
-                        </select>
-                        <fieldset class="admin-user-group-fields">
-                          <legend>Groep(en) voor deze student</legend>
-                          @forelse ($roleData['groups'] as $group)
-                            @php($selectedGroupsAfterError = (string) old('_account_user_id') === (string) $managedUser->id ? $selectedUserGroupIds : null)
-                            <label><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked($selectedGroupsAfterError !== null ? in_array($group->id, $selectedGroupsAfterError) : $managedUser->groups->contains('id', $group->id))><span>{{ $group->naam }}<small>{{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</small></span></label>
-                          @empty
-                            <small>Maak eerst een groep aan om deze student aan een docent te koppelen.</small>
-                          @endforelse
-                        </fieldset>
-                      </div>
-                      <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
-                      <div><label for="user-{{ $managedUser->id }}-password-confirmation">Herhaal nieuw wachtwoord</label><input class="input" id="user-{{ $managedUser->id }}-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8"></div>
-                    </div>
-                    <button class="button dark" type="submit">Wijzigingen opslaan</button>
+                    @method('DELETE')
+                    <button class="button admin-user-delete" type="submit">Verwijderen</button>
                   </form>
-                </details>
-                {{-- Warn that deleting a user also removes their linked learning records. --}}
-                <form action="{{ route('admin.users.destroy', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je dit account wilt verwijderen? Gekoppelde voortgang, opdrachten, reflecties en feedback worden ook verwijderd.')">
-                  @csrf
-                  @method('DELETE')
-                  <button class="button admin-user-delete" type="submit">Verwijderen</button>
-                </form>
+                @endif
               </td>
             </tr>
           @empty

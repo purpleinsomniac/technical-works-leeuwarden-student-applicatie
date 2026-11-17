@@ -72,7 +72,7 @@
   @endif
 
   @if (session('importReview'))
-    <div class="notice" role="status">
+    <div class="notice admin-import-warning" role="status">
       <p><strong>Controleer de wijzigingen voor bestaande studenten</strong></p>
       <p>Er is nog niets opgeslagen. Selecteer hetzelfde CSV-bestand opnieuw en bevestig de wijzigingen om de import uit te voeren.</p>
       <ul>

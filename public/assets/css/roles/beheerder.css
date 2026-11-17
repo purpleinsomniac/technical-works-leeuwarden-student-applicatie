@@ -70,6 +70,7 @@
 .admin-user-fields .input { margin: 6px 0 15px; }
 .admin-import-confirmation { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 15px; color: #405b6a; font-size: 12px; }
 .admin-import-confirmation input { flex: none; margin-top: 3px; accent-color: #168479; }
+.notice.admin-import-warning { border-color: #a61f1f; background: #c62828; color: #fff; }
 .admin-user-filter { display: flex; max-width: 290px; flex-direction: column; gap: 3px; margin-bottom: 12px; }
 .admin-user-filter label { color: #405b6a; font-size: 12px; font-weight: 650; }
 .admin-user-filter .input { margin: 4px 0 0; }

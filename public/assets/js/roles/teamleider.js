@@ -31,16 +31,19 @@ document.querySelectorAll("[data-teamleader-open-group]").forEach((button) => {
 
 document.querySelectorAll("[data-teamleader-phase-filter]").forEach((filter) => {
   const studentDetails = filter.closest("details");
-  const progressRows = studentDetails.querySelectorAll("[data-teamleader-progress-phase]");
+  const outcomeGrid = studentDetails.querySelector("[data-teamleader-outcome-grid]");
+  const outcomes = [...outcomeGrid.querySelectorAll("[data-teamleader-outcome]")];
+  const originalOrder = new Map(outcomes.map((outcome, index) => [outcome, index]));
+  const sortFilter = studentDetails.querySelector("[data-teamleader-outcome-sort]");
   const phaseAverage = studentDetails.querySelector("[data-teamleader-phase-average]");
 
   const updatePhaseProgress = () => {
     let percentages = [];
-    progressRows.forEach((row) => {
-      const visible = filter.value === "__all" || row.dataset.teamleaderProgressPhase === filter.value;
-      row.classList.toggle("hidden", !visible);
+    outcomes.forEach((outcome) => {
+      const visible = filter.value === "__all" || outcome.dataset.teamleaderProgressPhase === filter.value;
+      outcome.classList.toggle("hidden", !visible);
 
-      const percentage = row.dataset.teamleaderProgressPercentage;
+      const percentage = outcome.dataset.teamleaderProgressPercentage;
       if (visible && percentage !== "") percentages.push(Number(percentage));
     });
     const average = percentages.length
@@ -61,7 +64,25 @@ document.querySelectorAll("[data-teamleader-phase-filter]").forEach((filter) => 
           ? "teamleader-progress-medium"
           : "teamleader-progress-low",
     );
+
+    const sortedOutcomes = [...outcomes];
+    if (sortFilter.value !== "default") {
+      const direction = sortFilter.value === "ascending" ? 1 : -1;
+      sortedOutcomes.sort((first, second) => {
+        const firstValue = first.dataset.teamleaderProgressPercentage;
+        const secondValue = second.dataset.teamleaderProgressPercentage;
+        if (firstValue === "" || secondValue === "") {
+          if (firstValue === secondValue) return originalOrder.get(first) - originalOrder.get(second);
+          return firstValue === "" ? 1 : -1;
+        }
+
+        return direction * (Number(firstValue) - Number(secondValue))
+          || originalOrder.get(first) - originalOrder.get(second);
+      });
+    }
+    sortedOutcomes.forEach((outcome) => outcomeGrid.append(outcome));
   };
 
   filter.addEventListener("change", updatePhaseProgress);
+  sortFilter.addEventListener("change", updatePhaseProgress);
 });

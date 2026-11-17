@@ -47,17 +47,14 @@
             @php($studentPhaseProgressClass = $student['displayPercentage'] >= 75 ? 'teamleader-progress-high' : ($student['displayPercentage'] >= 60 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
             @php($studentOverallProgressClass = $student['percentage'] >= 75 ? 'teamleader-progress-high' : ($student['percentage'] >= 60 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
             <details>
-              <summary>
+              <summary class="name">
                 <strong>{{ $student['name'] }}</strong>
                 <span class="dim">{{ $student['studyPhase'] ?: 'Geen studiefase ingesteld' }}</span>
                 <span><span class="teamleader-progress-indicator {{ $studentPhaseProgressClass }}">{{ $student['displayPercentage'] }}%</span> gemiddelde voortgang{{ $student['studyPhase'] ? ' in '.$student['studyPhase'] : '' }}</span>
               </summary>
-              <div class="bar" role="progressbar" aria-label="Voortgang van {{ $student['name'] }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $student['percentage'] }}">
-                <span style="width: {{ $student['percentage'] }}%"></span>
-              </div>
               <h4>Voortgang per leeruitkomst</h4>
               @if ($student['outcomes']->isNotEmpty())
-                <div class="actions">
+                <div class="actions card">
                   <label class="label">
                     Filter voortgang op fase
                     <select data-teamleader-phase-filter aria-label="Filter voortgang van {{ $student['name'] }} op fase">
@@ -70,24 +67,42 @@
                       @endif
                     </select>
                   </label>
+                  <label class="label">
+                    Sorteer leeruitkomsten op percentage
+                    <select data-teamleader-outcome-sort aria-label="Sorteer leeruitkomsten van {{ $student['name'] }} op percentage">
+                      <option value="default">Oorspronkelijke volgorde</option>
+                      <option value="ascending">Laag naar hoog</option>
+                      <option value="descending">Hoog naar laag</option>
+                    </select>
+                  </label>
                   <span class="teamleader-progress-indicator {{ $studentOverallProgressClass }}" data-teamleader-phase-average aria-live="polite">Gemiddelde voortgang over alle fases: {{ $student['percentage'] }}%</span>
                 </div>
               @endif
-              @forelse ($student['outcomes'] as $outcome)
-                <div
-                  class="row"
-                  data-teamleader-progress-phase="{{ $outcome['phase'] ?? '' }}"
-                  data-teamleader-progress-percentage="{{ $outcome['percentage'] ?? '' }}"
-                >
-                  <b>{{ $outcome['code'] }} — {{ $outcome['title'] }}</b>
-                  <span>{{ $outcome['phase'] ?: 'Geen fase' }}</span>
-                  <span>{{ $outcome['hours'] }}{{ $outcome['target'] ? ' / '.$outcome['target'] : '' }} uur</span>
-                  <span>{{ $outcome['percentage'] === null ? 'Geen norm' : $outcome['percentage'].'%' }}</span>
-                  <span>{{ str_replace('_', ' ', ucfirst($outcome['status'])) }}</span>
-                </div>
-              @empty
+              @if ($student['outcomes']->isEmpty())
                 <p class="dim">Er is nog geen voortgang geregistreerd.</p>
-              @endforelse
+              @else
+                <div class="teamleader-outcome-grid" data-teamleader-outcome-grid>
+                  @foreach ($student['outcomes'] as $outcome)
+                    @php($outcomeProgressClass = $outcome['percentage'] === null ? '' : ($outcome['percentage'] >= 75 ? 'teamleader-progress-high' : ($outcome['percentage'] >= 60 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
+                    <article
+                      class="teamleader-outcome-card"
+                      data-teamleader-outcome
+                      data-teamleader-progress-phase="{{ $outcome['phase'] ?? '' }}"
+                      data-teamleader-progress-percentage="{{ $outcome['percentage'] ?? '' }}"
+                    >
+                      <div class="teamleader-outcome-heading">
+                        <strong>{{ $outcome['code'] }} — {{ $outcome['title'] }}</strong>
+                      </div>
+                      <span class="teamleader-outcome-meta">{{ $outcome['phase'] ?: 'Geen fase' }}</span>
+                      <div class="teamleader-progress-indicator {{ $outcomeProgressClass }}">
+                        <span>{{ $outcome['hours'] }}{{ $outcome['target'] ? ' / '.$outcome['target'] : '' }} uur - </span>
+                        <span>{{ $outcome['percentage'] === null ? 'Geen norm' : $outcome['percentage'].'%' }}</span>
+                      </div>
+                      <span class="teamleader-outcome-status">{{ str_replace('_', ' ', ucfirst($outcome['status'])) }}</span>
+                    </article>
+                  @endforeach
+                </div>
+              @endif
             </details>
           @empty
             <p class="dim">Er zijn nog geen studenten aan deze groep gekoppeld.</p>

@@ -374,13 +374,13 @@
     <article><span class="coach-insight-icon" aria-hidden="true">LINK</span><div><strong>{{ $linkedGoalCount }}</strong><span>gekoppeld aan leeruitkomsten</span></div></article>
   </section>
 
-  @if (count($frontendData['goals']))
+  @if (count($frontendData['goalStudents']))
     <div class="coach-directory-tools">
       <label class="coach-search">
         <span class="coach-control-label">Leerdoel zoeken</span>
         <span class="coach-search-field">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
-          <input id="coachGoalSearch" type="search" autocomplete="off" placeholder="Zoek op doel, student of leeruitkomst">
+          <input id="coachGoalSearch" type="search" autocomplete="off" placeholder="Zoek op student, doel of leeruitkomst">
         </span>
       </label>
       <label class="coach-directory-select">
@@ -392,25 +392,47 @@
         </select>
       </label>
     </div>
-    <p class="coach-no-results hidden" id="coachGoalNoResults" role="status">Geen leerdoelen gevonden.</p>
+    <p class="coach-no-results hidden" id="coachGoalNoResults" role="status">Geen studenten of leerdoelen gevonden.</p>
     <div class="coach-directory-grid">
-      @foreach ($frontendData['goals'] as $goal)
-        <article class="coach-directory-card coach-goal-card" data-directory-status="{{ $goal['status'] }}" data-directory-search="{{ mb_strtolower($goal['student'].' '.$goal['title'].' '.$goal['description'].' '.$goal['outcome'].' '.$goal['status']) }}">
-          <div class="coach-directory-card-head">
-            <span class="coach-directory-person">
-              <span class="coach-directory-person-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($goal['student'], 0, 1)) }}</span>
-              <a class="coach-directory-owner coach-directory-owner-link" href="{{ route('coach.student', $goal['studentId']) }}">{{ $goal['student'] }}</a>
-            </span>
-            <span class="coach-status-badge coach-goal-status coach-goal-status-{{ $goal['status'] }}">{{ str_replace('_', ' ', ucfirst($goal['status'])) }}</span>
+      @foreach ($frontendData['goalStudents'] as $goalStudent)
+        <details
+          class="coach-directory-card coach-goal-student-card"
+          data-student-name="{{ mb_strtolower($goalStudent['name']) }}"
+        >
+          <summary class="coach-goal-student-summary">
+            <span class="coach-directory-person-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($goalStudent['name'], 0, 1)) }}</span>
+            <span class="coach-goal-student-name">{{ $goalStudent['name'] }}</span>
+            <span class="coach-goal-student-count">{{ count($goalStudent['goals']) }} {{ count($goalStudent['goals']) === 1 ? 'leerdoel' : 'leerdoelen' }}</span>
+            <span class="coach-goal-student-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          <div class="coach-goal-list">
+            @forelse ($goalStudent['goals'] as $goal)
+              <article
+                class="coach-goal-item"
+                data-directory-status="{{ $goal['status'] }}"
+                data-directory-search="{{ mb_strtolower($goal['title'].' '.$goal['description'].' '.$goal['outcome'].' '.$goal['status']) }}"
+              >
+                <header class="coach-goal-item-head">
+                  <h2>{{ $goal['title'] }}</h2>
+                  <span class="coach-status-badge coach-goal-status coach-goal-status-{{ $goal['status'] }}">{{ str_replace('_', ' ', ucfirst($goal['status'])) }}</span>
+                </header>
+                <p class="coach-directory-description">{{ $goal['description'] }}</p>
+                @if ($goal['outcome'])
+                  <div class="coach-directory-link"><span aria-hidden="true">◎</span><span><small>Gekoppeld aan</small><strong>{{ $goal['outcome'] }}</strong></span></div>
+                @else
+                  <div class="coach-directory-link coach-directory-link-muted"><span aria-hidden="true">◎</span><span><small>Nog niet gekoppeld</small><strong>Geen leeruitkomst geselecteerd</strong></span></div>
+                @endif
+              </article>
+            @empty
+              <p class="coach-goal-empty">Deze student heeft nog geen leerdoelen.</p>
+            @endforelse
+            @if ($goalStudent['canViewProgress'])
+              <a class="coach-goal-student-profile coach-directory-owner-link" href="{{ route('coach.student', $goalStudent['id']) }}">
+                Bekijk voortgang van {{ $goalStudent['name'] }} →
+              </a>
+            @endif
           </div>
-          <h2>{{ $goal['title'] }}</h2>
-          <p class="coach-directory-description">{{ $goal['description'] }}</p>
-          @if ($goal['outcome'])
-            <div class="coach-directory-link"><span aria-hidden="true">◎</span><span><small>Gekoppeld aan</small><strong>{{ $goal['outcome'] }}</strong></span></div>
-          @else
-            <div class="coach-directory-link coach-directory-link-muted"><span aria-hidden="true">◎</span><span><small>Nog niet gekoppeld</small><strong>Geen leeruitkomst geselecteerd</strong></span></div>
-          @endif
-        </article>
+        </details>
       @endforeach
     </div>
   @else

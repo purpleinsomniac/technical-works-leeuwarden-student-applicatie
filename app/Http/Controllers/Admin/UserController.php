@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
-    private const ROLES = ['student', 'coach', 'teamleider', 'beheerder'];
+    private const ROLES = ['student', 'coach', 'teamleider', 'beheerder', 'admin'];
 
     public function downloadImportTemplate(): StreamedResponse
     {
@@ -263,6 +263,12 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        if ($this->isProtectedAdmin($user)) {
+            throw ValidationException::withMessages([
+                'account' => 'Adminaccounts kunnen niet worden gewijzigd.',
+            ]);
+        }
+
         $data = $this->validatedUser($request, $user);
         $role = Role::where('naam', $data['rol'])->firstOrFail();
         $currentRole = $user->primaryRole?->naam ?? $user->rol;
@@ -315,6 +321,12 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
+        if ($this->isProtectedAdmin($user)) {
+            throw ValidationException::withMessages([
+                'account' => 'Adminaccounts kunnen niet worden verwijderd.',
+            ]);
+        }
+
         if ($request->user()->is($user)) {
             throw ValidationException::withMessages([
                 'account' => 'Je kunt je eigen account niet verwijderen.',
@@ -376,20 +388,25 @@ class UserController extends Controller
 
     private function administratorCount(): int
     {
-        $administratorRoleId = Role::where('naam', 'beheerder')->value('id');
+        $administratorRoleIds = Role::whereIn('naam', ['beheerder', 'admin'])->pluck('id');
 
         return User::query()
-            ->where(function ($query) use ($administratorRoleId): void {
-                if ($administratorRoleId !== null) {
-                    $query->where('hoofdrol_id', $administratorRoleId)
+            ->where(function ($query) use ($administratorRoleIds): void {
+                if ($administratorRoleIds->isNotEmpty()) {
+                    $query->whereIn('hoofdrol_id', $administratorRoleIds)
                         ->orWhere(fn ($fallback) => $fallback
                             ->whereNull('hoofdrol_id')
-                            ->where('rol', 'beheerder'));
+                            ->whereIn('rol', ['beheerder', 'admin']));
                 } else {
-                    $query->where('rol', 'beheerder');
+                    $query->whereIn('rol', ['beheerder', 'admin']);
                 }
             })
             ->count();
+    }
+
+    private function isProtectedAdmin(User $user): bool
+    {
+        return ($user->primaryRole?->naam ?? $user->rol) === 'admin';
     }
 
     private function usersPage(array $query = []): RedirectResponse

@@ -119,19 +119,32 @@ class DashboardController extends RoleDashboardController
             ])
             ->all();
 
-        $goals = LearningGoal::query()
-            ->whereIn('gebruiker_id', $studentIds)
-            ->with(['user', 'learningOutcome'])
-            ->latest()
-            ->get()
-            ->map(fn (LearningGoal $goal): array => [
-                'studentId' => $goal->user->id,
-                'student' => $goal->user->naam,
-                'title' => $goal->onderwerp,
-                'description' => $goal->omschrijving,
-                'status' => $goal->status,
-                'outcome' => $goal->learningOutcome?->titel,
-            ])
+        $coachStudentIds = $students->pluck('id')->flip();
+        $goalStudents = User::query()
+            ->where('rol', 'student')
+            ->with(['learningGoals' => fn ($query) => $query->with('learningOutcome')->latest()])
+            ->orderBy('naam')
+            ->get(['id', 'naam'])
+            ->map(function (User $student) use ($coachStudentIds): array {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->naam,
+                    'canViewProgress' => $coachStudentIds->has($student->id),
+                    'goals' => $student->learningGoals
+                        ->map(fn (LearningGoal $goal): array => [
+                            'studentId' => $student->id,
+                            'student' => $student->naam,
+                            'title' => $goal->onderwerp,
+                            'description' => $goal->omschrijving,
+                            'status' => $goal->status,
+                            'outcome' => $goal->learningOutcome?->titel,
+                        ])
+                        ->all(),
+                ];
+            })
+            ->all();
+        $goals = collect($goalStudents)
+            ->flatMap(fn (array $goalStudent): array => $goalStudent['goals'])
             ->all();
 
         $projectRecords = Assignment::query()
@@ -192,6 +205,7 @@ class DashboardController extends RoleDashboardController
         return [
             'activities' => $activities,
             'goals' => $goals,
+            'goalStudents' => $goalStudents,
             'projects' => $projects,
             'pendingProjects' => $pendingProjects,
             'pendingFeedback' => $pendingFeedback,

@@ -82,6 +82,10 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($primaryRole === 'admin' && $roleName === 'beheerder') {
+            return true;
+        }
+
         return $primaryRole === 'beheerder'
             && $this->extraRoles()->where('naam', $roleName)->exists();
     }

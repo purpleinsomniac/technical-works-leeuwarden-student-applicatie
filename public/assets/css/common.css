@@ -255,6 +255,7 @@ body.account-modal-open { overflow: hidden; }
 .account-modal-data dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #294a5d; font-size: 11px; font-weight: 750; }
 .account-modal-data a { color: #167f74; text-decoration: none; }
 .account-modal-data a:hover { text-decoration: underline; }
+.theme-dark .name { border: solid #29434f; background: #ffffff00; }
 .theme-dark .account-modal-dialog { border-color: #2a4855; background: #132833; }
 .theme-dark .account-modal-header,
 .theme-dark .account-modal-data > div { border-color: #29434f; }
@@ -315,9 +316,6 @@ p.dim,
 .card { border: 1px solid #e1e8ef; border-radius: 14px; box-shadow: 0 3px 10px #16334a03; padding: 23px; }
 .grid3 { gap: 20px; }
 .grid3 .card { position: relative; overflow: hidden; }
-.grid3 .card:first-child { background: #e5f4ef; border-color: #c9e5da; }
-.grid3 .card:nth-child(2) { background: #eef0fc; border-color: #e0e3f5; }
-.grid3 .card:nth-child(3) { background: #fff8eb; border-color: #f0e7d4; }
 .metric-label { font-weight: 650; font-size: 12px; }
 .big { font-size: 37px; line-height: 1.35; letter-spacing: -1.5px; margin: 13px 0 4px; color: #193b48; }
 .grid3 .bar { margin-top: 18px; }

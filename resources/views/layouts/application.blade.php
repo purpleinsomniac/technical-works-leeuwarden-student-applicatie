@@ -16,7 +16,9 @@
     @include('components.sidebar')
 
     <main class="main">
-      @include('components.topbar')
+      @unless ($frontendUser['role'] === 'coach')
+        @include('components.topbar')
+      @endunless
 
       @yield('role-content')
 
@@ -41,10 +43,12 @@
     window.LARAVEL_COACH_ROUTES = {{ Illuminate\Support\Js::from([
         'overview' => route('coach.dashboard'),
         'groups' => route('coach.groups'),
+        'group' => route('coach.group', ['group' => '__ID__']),
         'activities' => route('coach.activities'),
         'goals' => route('coach.goals'),
         'projects' => route('coach.projects'),
         'feedback' => route('coach.feedback'),
+        'settings' => route('coach.settings'),
         'student' => route('coach.student', ['student' => '__ID__']),
     ]) }};
     window.LARAVEL_COACH_PAGE = {{ Illuminate\Support\Js::from($coachPage ?? 'overview') }};

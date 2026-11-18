@@ -93,7 +93,11 @@ class DataController extends Controller
     public function destroyFeedback(Request $request, Feedback $feedback): JsonResponse
     {
         abort_unless($feedback->student_id === $request->user()->id, 403);
-        $feedback->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($feedback): void {
+            $record = Feedback::whereKey($feedback->id)->lockForUpdate()->firstOrFail();
+            abort_if($record->processed_confirmed_at !== null, 422, 'Beoordeelde feedback kan niet worden verwijderd omdat er uren of XP aan gekoppeld zijn.');
+            $record->delete();
+        });
 
         return response()->json(['deleted' => true]);
     }
@@ -245,6 +249,8 @@ class DataController extends Controller
             'positive' => $feedback->wat_ging_goed,
             'improve' => $feedback->wat_kan_beter,
             'action' => $feedback->volgende_stap,
+            'awardedHours' => $feedback->awarded_hours,
+            'confirmedAt' => $feedback->processed_confirmed_at?->toIso8601String(),
             'date' => $feedback->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
         ];
     }

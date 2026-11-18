@@ -1,4 +1,5 @@
 <header class="topbar">
+  @unless ($frontendUser['role'] === 'coach')
   <div class="topbar-context">
     <span class="topbar-mark" aria-hidden="true">◈</span>
     <div class="topbar-title">
@@ -6,6 +7,7 @@
       <strong>Mijn leeromgeving</strong>
     </div>
   </div>
+  @endunless
 
   <div class="topbar-actions">
     <time class="topbar-date" datetime="{{ now()->toDateString() }}">

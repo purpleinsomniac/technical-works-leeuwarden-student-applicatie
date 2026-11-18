@@ -8,14 +8,13 @@
 .manager-teachers-table th { color: #728391; font-size: 12px; font-weight: 700; }
 .manager-teachers-table td a { color: #167e72; }
 
-.teamleader-progress-indicator { display: inline-block; padding: 3px 8px; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 750; }
-.teamleader-progress-high { color: #176b3a; background: #e5f5eb; border-color: #b8e4c5; }
-.teamleader-progress-medium { color: #805d00; background: #fff5d6; border-color: #f0d98a; }
-.teamleader-progress-low { color: #9b3030; background: #fde8e8; border-color: #efbcbc; }
-.teamleader-progress-NVT { color: #575757; background: #bdbdbd; border-color: #646464; }
+
 .theme-dark #managerGroups .teamleader-progress-high { color: #b6efca; background: #1e4935; border-color: #326b4d; }
 .theme-dark #managerGroups .teamleader-progress-medium { color: #f4dc8c; background: #55451d; border-color: #806b2a; }
 .theme-dark #managerGroups .teamleader-progress-low { color: #ffc4c4; background: #512f37; border-color: #78454e; }
+.theme-dark #managerGroups .teamleader-progress-purple { color: #dfb9f7; background: #4a315e; border-color: #765094; }
+.theme-dark #managerGroups .teamleader-progress-blue { color: #b8d9fa; background: #29455f; border-color: #426b8d; }
+.theme-dark #managerGroups .teamleader-progress-NVT { color: #000000; background: #8a8a8a; border-color: #cccccc; }
 .teamleader-outcome-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
 .teamleader-outcome-card { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border: 1px solid #dfe8ed; border-radius: 10px; background: #fff; }
 .teamleader-outcome-heading { display: flex; width: 100%; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 10px; }
@@ -65,6 +64,13 @@
 .theme-dark #managerGroups h1,
 .theme-dark #managerGroups h2 { color: #eef7f9; }
 .theme-dark #managerGroups .dim { color: #c4d2d9; }
+.teamleader-progress-indicator {padding: 3px 8px; border: 1px solid transparent; border-radius: 999px; font-weight: 750; }
+.teamleader-progress-high { color: #176b3a; background: #e5f5eb; border-color: #b8e4c5; }
+.teamleader-progress-medium { color: #805d00; background: #fff5d6; border-color: #f0d98a; }
+.teamleader-progress-low {color: #9b3030; background: #fde8e8; border-color: #efbcbc; }
+.teamleader-progress-purple { color: #65378b; background: #f1e8f8; border-color: #d5bde8; }
+.teamleader-progress-blue { color: #245d91; background: #e7f1fa; border-color: #b5d3ee; }
+.teamleader-progress-NVT { color: #ffffff; background: #838383; border-color: #535353; }
 .app.dashboard-compact #managerGroups .card { padding: 14px; }
 
 @media (max-width: 680px) {

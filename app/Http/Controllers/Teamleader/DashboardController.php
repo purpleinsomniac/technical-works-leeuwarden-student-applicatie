@@ -60,6 +60,7 @@ class DashboardController extends RoleDashboardController
         $groups = Group::query()
             ->with([
                 'coach:id,naam',
+                'studyPhase',
                 'students' => fn ($query) => $query
                     ->where('rol', 'student')
                     ->with(['studyPhase', 'progress.learningOutcome.studyPhase']),
@@ -94,6 +95,9 @@ class DashboardController extends RoleDashboardController
                             'name' => $group['name'],
                             'studentCount' => $group['studentCount'],
                             'averagePercentage' => $group['averagePercentage'],
+                            'displayAveragePercentage' => $group['displayAveragePercentage'],
+                            'studyPhase' => $group['studyPhase'],
+                            'goal' => $group['goal'],
                         ])
                         ->values(),
                 ])
@@ -121,6 +125,26 @@ class DashboardController extends RoleDashboardController
 
             return [$phase => (int) round($values->avg() ?? 0)];
         });
+        $groupAveragePercentage = (int) round($group->students
+            ->map(function (User $student): int {
+                $percentages = $student->progress
+                    ->map(function (Progress $item): ?int {
+                        $target = $this->numericTarget($item);
+
+                        return $target === null
+                            ? null
+                            : min(100, (int) round(($item->gevalideerde_uren / $target) * 100));
+                    })
+                    ->filter(fn ($value): bool => $value !== null);
+
+                return (int) round($percentages->avg() ?? 0);
+            })
+            ->avg() ?? 0);
+        $studyPhase = $group->studyPhase?->naam;
+        $studyPhaseOrder = $this->phaseRank($studyPhase);
+        $displayAveragePercentage = $studyPhase === null
+            ? $groupAveragePercentage
+            : (int) ($phasePercentages[$studyPhase] ?? $groupAveragePercentage);
 
         $students = $group->students->map(function (User $student): array {
             $outcomes = $student->progress
@@ -134,6 +158,7 @@ class DashboardController extends RoleDashboardController
                         'code' => $item->learningOutcome->code,
                         'title' => $item->learningOutcome->titel,
                         'phase' => $item->learningOutcome->studyPhase?->naam,
+                        'phaseOrder' => $this->phaseRank($item->learningOutcome->studyPhase?->naam),
                         'hours' => $item->gevalideerde_uren,
                         'target' => $target,
                         'percentage' => $percentage,
@@ -171,8 +196,12 @@ class DashboardController extends RoleDashboardController
             'schoolYear' => $group->schooljaar,
             'coach' => $group->coach?->naam,
             'description' => $group->omschrijving,
+            'studyPhase' => $studyPhase,
+            'studyPhaseOrder' => $studyPhaseOrder,
+            'goal' => $group->doel,
             'studentCount' => $students->count(),
             'averagePercentage' => (int) round($students->avg('percentage') ?? 0),
+            'displayAveragePercentage' => $displayAveragePercentage,
             'attentionCount' => $progressItems->whereIn('status', ['niet_gestart', 'gestart'])->count(),
             'phases' => $phasePercentages,
             'students' => $students,
@@ -184,5 +213,15 @@ class DashboardController extends RoleDashboardController
         $target = $progress->normwaarden ?? $progress->learningOutcome?->normwaarden;
 
         return is_numeric($target) && (float) $target > 0 ? (float) $target : null;
+    }
+
+    private function phaseRank(?string $phase): int
+    {
+        return match ($phase) {
+            'Oriëntatiefase' => 1,
+            'Verdiepingsfase' => 2,
+            'Afrondingsfase' => 3,
+            default => 4,
+        };
     }
 }

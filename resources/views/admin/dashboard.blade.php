@@ -298,6 +298,15 @@
         <div><label for="new-group-name">Groepsnaam</label><input class="input" id="new-group-name" name="naam" value="{{ $groupForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
         <div><label for="new-group-schoolyear">Schooljaar</label><input class="input" id="new-group-schoolyear" name="schooljaar" value="{{ $groupForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
         <div>
+          <label for="new-group-phase">Fase</label>
+          <select class="input" id="new-group-phase" name="studiefases_id">
+            <option value="">Geen fase ingesteld</option>
+            @foreach ($roleData['studyPhases'] as $phase)
+              <option value="{{ $phase->id }}" @selected($groupForm === 'create' && (string) old('studiefases_id') === (string) $phase->id)>{{ $phase->naam }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div>
           <label for="new-group-coach">Docent / SLB'er</label>
           <select class="input" id="new-group-coach" name="coach_id" required>
             <option value="">Kies een docent — die ziet deze groep</option>
@@ -306,6 +315,7 @@
             @endforeach
           </select>
         </div>
+        <div><label for="new-group-goal">Doel (procent)</label><input class="input" id="new-group-goal" name="doel" type="number" min="0" max="100" value="{{ $groupForm === 'create' ? old('doel') : '' }}" placeholder="Bijv. 100"></div>
         <div class="admin-class-description-field"><label for="new-group-description">Omschrijving (optioneel)</label><textarea class="input" id="new-group-description" name="omschrijving" rows="2" maxlength="2000">{{ $groupForm === 'create' ? old('omschrijving') : '' }}</textarea></div>
       </div>
       <fieldset class="admin-class-members">
@@ -337,7 +347,7 @@
     @forelse ($roleData['groups'] as $group)
       <article class="admin-panel admin-class-card">
         <div class="admin-class-card-heading">
-          <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
+          <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p><p>Fase: {{ $group->studyPhase?->naam ?: 'Niet ingesteld' }} · Doel: {{ $group->doel !== null ? $group->doel.'%' : 'Niet ingesteld' }}</p></div>
           <div class="admin-class-actions">
             <details class="admin-class-edit" @if ($groupForm === 'update' && (string) old('_group_id') === (string) $group->id) open @endif>
               <summary class="button">Groep beheren</summary>
@@ -350,6 +360,15 @@
                   <div><label for="group-{{ $group->id }}-name">Groepsnaam</label><input class="input" id="group-{{ $group->id }}-name" name="naam" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('naam', $group->naam) : $group->naam }}" maxlength="120" required></div>
                   <div><label for="group-{{ $group->id }}-schoolyear">Schooljaar</label><input class="input" id="group-{{ $group->id }}-schoolyear" name="schooljaar" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('schooljaar', $group->schooljaar) : $group->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
                   <div>
+                    <label for="group-{{ $group->id }}-phase">Fase</label>
+                    <select class="input" id="group-{{ $group->id }}-phase" name="studiefases_id">
+                      <option value="">Geen fase ingesteld</option>
+                      @foreach ($roleData['studyPhases'] as $phase)
+                        <option value="{{ $phase->id }}" @selected($groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? (string) old('studiefases_id') === (string) $phase->id : $group->studiefases_id === $phase->id)>{{ $phase->naam }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div>
                     <label for="group-{{ $group->id }}-coach">Docent / SLB'er</label>
                     <select class="input" id="group-{{ $group->id }}-coach" name="coach_id" required>
                       <option value="">Kies een docent — die ziet deze groep</option>
@@ -358,6 +377,7 @@
                       @endforeach
                     </select>
                   </div>
+                  <div><label for="group-{{ $group->id }}-goal">Doel (procent)</label><input class="input" id="group-{{ $group->id }}-goal" name="doel" type="number" min="0" max="100" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('doel', $group->doel) : $group->doel }}"></div>
                   <div class="admin-class-description-field"><label for="group-{{ $group->id }}-description">Omschrijving</label><textarea class="input" id="group-{{ $group->id }}-description" name="omschrijving" rows="2" maxlength="2000">{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('omschrijving', $group->omschrijving) : $group->omschrijving }}</textarea></div>
                 </div>
                 <fieldset class="admin-class-members">

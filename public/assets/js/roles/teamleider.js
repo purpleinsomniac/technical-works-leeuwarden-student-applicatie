@@ -56,14 +56,35 @@ document.querySelectorAll("[data-teamleader-phase-filter]").forEach((filter) => 
       "teamleader-progress-high",
       "teamleader-progress-medium",
       "teamleader-progress-low",
+      "teamleader-progress-NVT",
+      "teamleader-progress-purple",
+      "teamleader-progress-blue",
     );
-    phaseAverage.classList.add(
-      average >= 75
+    const groupPhase = phaseAverage.dataset.teamleaderGroupPhase || "";
+    const groupGoalValue = Number(phaseAverage.dataset.teamleaderGroupGoal);
+    const phaseRanks = {
+      "Oriëntatiefase": 1,
+      "Verdiepingsfase": 2,
+      "Afrondingsfase": 3,
+    };
+    const groupPhaseRank = phaseRanks[groupPhase] || 4;
+    const selectedPhaseRank = phaseRanks[selectedPhase] || 4;
+    const previousPhase = Boolean(groupPhaseRank && selectedPhaseRank < groupPhaseRank);
+    const nextPhase = Boolean(groupPhaseRank && selectedPhaseRank > groupPhaseRank);
+    const outsideGroupPhase = Boolean(groupPhase && filter.value !== "__all" && filter.value !== groupPhase);
+    let progressClass = "teamleader-progress-NVT";
+    if (filter.value !== "__all" && previousPhase && average < 100) {
+      progressClass = "teamleader-progress-purple";
+    } else if (filter.value !== "__all" && nextPhase && average > 10) {
+      progressClass = "teamleader-progress-blue";
+    } else if (!outsideGroupPhase && phaseAverage.dataset.teamleaderGroupGoal !== "") {
+      progressClass = average >= groupGoalValue
         ? "teamleader-progress-high"
-        : average >= 60
+        : average >= groupGoalValue - 15
           ? "teamleader-progress-medium"
-          : "teamleader-progress-low",
-    );
+          : "teamleader-progress-low";
+    }
+    phaseAverage.classList.add(progressClass);
 
     const sortedOutcomes = [...outcomes];
     if (sortFilter.value !== "default") {

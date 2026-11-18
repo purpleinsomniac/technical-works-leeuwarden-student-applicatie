@@ -17,6 +17,11 @@ class Group extends Model
         return $this->belongsTo(User::class, 'coach_id');
     }
 
+    public function studyPhase(): BelongsTo
+    {
+        return $this->belongsTo(StudyPhase::class, 'studiefases_id');
+    }
+
     public function students(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'groep_student', 'groep_id', 'student_id')

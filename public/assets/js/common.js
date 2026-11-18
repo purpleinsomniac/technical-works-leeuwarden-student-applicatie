@@ -8,28 +8,16 @@ function show(page, force = false) {
   document.querySelectorAll(".view").forEach((view) => {
     const active = view.id === page;
     view.classList.toggle("hidden", !active);
-    view.classList.remove("is-accenting");
     if (active) activeView = view;
   });
 
+  const activeRoute = activeView?.dataset.roleSection || page;
   document.querySelectorAll("[data-route]").forEach((button) => {
-    const active = button.dataset.route === page;
+    const active = button.dataset.route === activeRoute;
     button.classList.toggle("active", active);
     if (active) button.setAttribute("aria-current", "page");
     else button.removeAttribute("aria-current");
   });
-
-  if (activeView && app.classList.contains("role-coach")) {
-    window.requestAnimationFrame(() => {
-      if (activeView.classList.contains("hidden")) return;
-      if (activeView.coachAccentTimer) window.clearTimeout(activeView.coachAccentTimer);
-      activeView.classList.add("is-accenting");
-      activeView.coachAccentTimer = window.setTimeout(() => {
-        activeView.classList.remove("is-accenting");
-        activeView.coachAccentTimer = null;
-      }, 760);
-    });
-  }
 
   window.scrollTo(0, 0);
 }
@@ -105,7 +93,7 @@ function initializeSidebarAccount() {
 function initializeRole({ label, routes }) {
   document.getElementById("roleLabel").textContent = label;
   document.getElementById("actor").textContent = window.LARAVEL_USER.name;
-  document.getElementById("processingNotification").classList.add("hidden");
+  document.getElementById("processingNotification")?.classList.add("hidden");
   initializeSidebarAccount();
 
   document.getElementById("nav").innerHTML = routes

@@ -1,5 +1,6 @@
 (() => {
   const key = "ontwikkeling-dashboard-instellingen";
+  const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
   const sectionInputs = [...document.querySelectorAll("[data-role-section-setting]")];
   const sectionKeys = [...new Set(sectionInputs.map((input) => input.dataset.roleSectionSetting))];
   const storageKey = "laravel-" + window.LARAVEL_USER.id + "-" + key;
@@ -117,11 +118,14 @@
   function apply() {
     const root = document.documentElement;
     document.getElementById("app")?.style.setProperty("--application-accent", preferences.accent);
-    const systemDark = preferences.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const systemDark = preferences.theme === "system" && colorScheme.matches;
     root.classList.toggle("theme-dark", preferences.theme === "dark" || systemDark);
     root.dataset.density = preferences.density;
     root.dataset.accent = preferences.accent;
     root.style.setProperty("--student-accent", preferences.accent);
+    if (window.LARAVEL_USER.role === "coach") {
+      document.getElementById("app")?.style.setProperty("--application-accent", preferences.accent);
+    }
     document.getElementById("app")?.classList.toggle("dashboard-compact", preferences.density === "compact");
 
     document.querySelectorAll('[data-role-setting="compact"]').forEach((input) => { input.checked = preferences.density === "compact"; });
@@ -451,8 +455,10 @@
       scheduleNotificationSave();
     }));
 
-    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
     colorScheme.addEventListener?.("change", () => {
+      if (preferences.theme === "system") apply();
+    });
+    window.addEventListener("focus", () => {
       if (preferences.theme === "system") apply();
     });
   }

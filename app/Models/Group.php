@@ -10,7 +10,7 @@ class Group extends Model
 {
     protected $table = 'groepen';
 
-    protected $fillable = ['naam', 'schooljaar', 'omschrijving', 'coach_id'];
+    protected $fillable = ['naam', 'schooljaar', 'omschrijving', 'coach_id', 'studiefases_id', 'doel'];
 
     public function coach(): BelongsTo
     {

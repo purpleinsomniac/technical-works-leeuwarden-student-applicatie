@@ -58,6 +58,13 @@ function openOutcomeFeedbackDetail(id, fromList = false) {
     esc(item.action) +
     "</p></div></section>";
   const modal = document.getElementById('outcomeFeedbackDetailModal');
+  if (item.type === 'received') {
+    const reviewText = item.confirmedAt
+      ? (item.awardedHours == null ? 'Bevestigd door de coach.' : `${Number(item.awardedHours)} extra uur toegekend aan deze leeruitkomst.`)
+      : 'Wacht op beoordeling door je coach.';
+    document.getElementById('feedbackDetailContent').innerHTML +=
+      '<section><span aria-hidden="true">&#9201;</span><div><h3>Beoordeling en uren</h3><p>' + esc(reviewText) + '</p></div></section>';
+  }
   if (!modal.querySelector('.feedback-detail-art')) {
     const art = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     art.setAttribute('class', 'feedback-detail-art');
@@ -70,7 +77,7 @@ function openOutcomeFeedbackDetail(id, fromList = false) {
   document.body.appendChild(modal);
   modal.querySelector('.reflection-modal-actions')?.remove();
   modal.querySelector('.reflection-detail-footer .dark').classList.toggle('hidden', fromList);
-  if (fromList) {
+  if (fromList && !item.confirmedAt) {
     const actions = document.createElement('div');
     actions.className = 'reflection-modal-actions';
     const button = document.createElement('button');

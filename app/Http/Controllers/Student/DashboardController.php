@@ -160,6 +160,8 @@ class DashboardController extends RoleDashboardController
                 'positive' => $item->wat_ging_goed,
                 'improve' => $item->wat_kan_beter,
                 'action' => $item->volgende_stap,
+                'awardedHours' => $item->awarded_hours,
+                'confirmedAt' => $item->processed_confirmed_at?->toIso8601String(),
                 'date' => $item->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
             ])
             ->values();

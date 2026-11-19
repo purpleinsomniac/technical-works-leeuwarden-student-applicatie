@@ -168,12 +168,21 @@
       <div><h2>Alle accounts</h2><p id="adminUsersCount" aria-live="polite">{{ $roleData['users']->count() }} gebruikers</p></div>
     </div>
     {{-- Option values match each row's data-user-role attribute for the JavaScript filter. --}}
-    <div class="admin-user-filter">
-      <label for="adminUserRoleFilter">Filter op accounttype</label>
-      <select class="input" id="adminUserRoleFilter">
-        <option value="all">Alle accounttypen</option>
-        @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}">{{ ucfirst($role->naam) }}</option>@endforeach
-      </select>
+    <div class="admin-user-filters">
+      <div class="admin-user-filter-search">
+        <label for="adminUserSearch">Zoek op naam of e-mailadres</label>
+        <div class="admin-user-search-tools">
+          <input class="input" id="adminUserSearch" type="search" autocomplete="off" placeholder="Bijvoorbeeld: Sam of sam@school.nl">
+          <button class="button admin-user-search-clear" type="button" id="adminUserSearchClear" hidden>Wissen</button>
+        </div>
+      </div>
+      <div class="admin-user-filter">
+        <label for="adminUserRoleFilter">Filter op accounttype</label>
+        <select class="input" id="adminUserRoleFilter">
+          <option value="all">Alle accounttypen</option>
+          @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}">{{ ucfirst($role->naam) }}</option>@endforeach
+        </select>
+      </div>
     </div>
     <div class="admin-users-table-wrap">
       <table class="admin-users-table">
@@ -182,7 +191,7 @@
           {{-- Show a data-driven row for each account so its existing role is available to the filter. --}}
           @forelse ($roleData['users'] as $managedUser)
             @php($managedUserRole = $managedUser->primaryRole?->naam ?? $managedUser->rol)
-            <tr data-user-role="{{ $managedUserRole }}">
+            <tr data-user-role="{{ $managedUserRole }}" data-user-search="{{ mb_strtolower($managedUser->naam.' '.$managedUser->email.' '.($managedUser->studentnummer ?? '')) }}">
               <td>{{ $managedUser->naam }}</td>
               <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
               <td>{{ ucfirst($managedUserRole) }}</td>
@@ -251,7 +260,7 @@
             <tr data-user-empty><td colspan="5">Er zijn nog geen accounts.</td></tr>
           @endforelse
           {{-- The filter reveals this row when accounts exist but none match the chosen role. --}}
-          <tr id="adminUsersNoMatches" hidden><td colspan="5">Geen gebruikers gevonden voor dit accounttype.</td></tr>
+          <tr id="adminUsersNoMatches" hidden><td colspan="5">Geen gebruikers gevonden. Pas je zoekopdracht of filter aan.</td></tr>
         </tbody>
       </table>
     </div>
@@ -301,7 +310,11 @@
       <fieldset class="admin-class-members">
         <legend>Studenten in deze groep <span>({{ $roleData['students']->count() }} beschikbaar)</span></legend>
         @if ($roleData['students']->isNotEmpty())
-          <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
+          <div class="admin-class-search-tools">
+            <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam, e-mailadres of studentnummer"></label>
+            <button class="button admin-class-search-clear" type="button" data-class-student-clear hidden>Zoekopdracht wissen</button>
+          </div>
+          <p class="admin-class-student-summary" data-class-student-summary role="status" aria-live="polite"></p>
           <div class="admin-class-student-list">
             @foreach ($roleData['students'] as $student)
               <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
@@ -309,6 +322,7 @@
                 <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
               </label>
             @endforeach
+            <p class="admin-class-student-empty" data-class-student-empty hidden>Geen studenten gevonden met deze zoekopdracht.</p>
           </div>
         @else
           <p class="dim">Maak eerst studentaccounts aan via Gebruikers.</p>
@@ -347,7 +361,11 @@
                 </div>
                 <fieldset class="admin-class-members">
                   <legend>Studenten in deze groep</legend>
-                  <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
+                  <div class="admin-class-search-tools">
+                    <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam, e-mailadres of studentnummer"></label>
+                    <button class="button admin-class-search-clear" type="button" data-class-student-clear hidden>Zoekopdracht wissen</button>
+                  </div>
+                  <p class="admin-class-student-summary" data-class-student-summary role="status" aria-live="polite"></p>
                   <div class="admin-class-student-list">
                     @foreach ($roleData['students'] as $student)
                       <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
@@ -355,6 +373,7 @@
                         <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
                       </label>
                     @endforeach
+                    <p class="admin-class-student-empty" data-class-student-empty hidden>Geen studenten gevonden met deze zoekopdracht.</p>
                   </div>
                 </fieldset>
                 <div class="admin-class-form-actions"><button class="button dark" type="submit">Groep opslaan</button></div>

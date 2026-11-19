@@ -83,11 +83,6 @@
       @endif
     </dl>
     </section>
-    @if ($frontendUser['role'] === 'coach')
-      <section class="profile-card profile-dashboard-settings">
-        @include('components.account-dashboard-settings')
-      </section>
-    @endif
     <section class="profile-card"><header><span aria-hidden="true">♧</span><div><h3>Accountbeveiliging</h3><p>Beheer je wachtwoord en accounttoegang.</p></div></header><div class="profile-card-body">
       <p id="profilePasswordChanged" class="profile-password-date">◷ {{ isset($profileSettings['password_changed_at']) ? 'Laatste wijziging: '.\Carbon\Carbon::parse($profileSettings['password_changed_at'])->locale('nl')->diffForHumans() : 'Nog geen wachtwoordwijziging geregistreerd' }}</p>
       <details id="profilePasswordEditor"><summary class="profile-action">⚿ <strong>Wachtwoord wijzigen</strong><span>›</span></summary><div class="profile-password-fields">

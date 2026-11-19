@@ -34,6 +34,7 @@ class UserController extends Controller
             'bestand' => ['required', 'file', 'extensions:csv', 'max:2048'],
             'groep_id' => ['nullable', 'integer', Rule::exists('groepen', 'id')],
         ]);
+        $request->session()->forget('pendingUserImport');
 
         $handle = fopen($request->file('bestand')->getRealPath(), 'rb');
         if ($handle === false) {
@@ -169,11 +170,68 @@ class UserController extends Controller
                 $updates,
             );
 
-            return $this->usersPage(['import' => 1])
-                ->with('importReview', $review)
-                ->with('importReviewNewCount', count($newStudents));
+            $request->session()->put('pendingUserImport', [
+                'new_students' => $newStudents,
+                'updates' => $updates,
+                'unchanged_count' => $unchangedCount,
+                'import_options' => $importOptions,
+                'review' => $review,
+                'new_count' => count($newStudents),
+                'expires_at' => now()->addMinutes(30)->timestamp,
+            ]);
+
+            return $this->usersPage(['import' => 1]);
         }
 
+        $this->applyImport($newStudents, $updates, $importOptions);
+
+        return $this->usersPage()->with('status', $this->importStatus(count($newStudents), count($updates), $unchangedCount));
+    }
+
+    public function confirmImport(Request $request): RedirectResponse
+    {
+        $pendingImport = $request->session()->get('pendingUserImport');
+        if (
+            ! is_array($pendingImport)
+            || ! isset($pendingImport['expires_at'])
+            || $pendingImport['expires_at'] < now()->timestamp
+        ) {
+            $request->session()->forget('pendingUserImport');
+
+            throw ValidationException::withMessages([
+                'bestand' => 'De importbevestiging is verlopen. Upload het bestand opnieuw om de actuele wijzigingen te controleren.',
+            ]);
+        }
+
+        try {
+            $this->applyImport(
+                $pendingImport['new_students'],
+                $pendingImport['updates'],
+                $pendingImport['import_options'],
+            );
+        } catch (ValidationException $exception) {
+            $request->session()->forget('pendingUserImport');
+
+            throw $exception;
+        }
+        $request->session()->forget('pendingUserImport');
+
+        return $this->usersPage()->with('status', $this->importStatus(
+            count($pendingImport['new_students']),
+            count($pendingImport['updates']),
+            $pendingImport['unchanged_count'],
+        ));
+    }
+
+    public function cancelImport(Request $request): RedirectResponse
+    {
+        $request->session()->forget('pendingUserImport');
+
+        return $this->usersPage(['import' => 1])->with('status', 'De import is geannuleerd.');
+    }
+
+    private function applyImport(array $newStudents, array $updates, array $importOptions): void
+    {
         // Validate every row before writing so an invalid file cannot create a partial batch.
         DB::transaction(function () use ($newStudents, $updates, $importOptions): void {
             foreach ($updates as $update) {
@@ -213,9 +271,10 @@ class UserController extends Controller
                 }
             }
         });
+    }
 
-        $createdCount = count($newStudents);
-        $updatedCount = count($updates);
+    private function importStatus(int $createdCount, int $updatedCount, int $unchangedCount): string
+    {
         $status = [];
         if ($createdCount > 0) {
             $status[] = $createdCount.' '.($createdCount === 1 ? 'nieuwe student geïmporteerd' : 'nieuwe studenten geïmporteerd');
@@ -227,7 +286,7 @@ class UserController extends Controller
             $status[] = $unchangedCount.' '.($unchangedCount === 1 ? 'student ongewijzigd gelaten' : 'studenten ongewijzigd gelaten');
         }
 
-        return $this->usersPage()->with('status', implode('; ', $status).'.');
+        return implode('; ', $status).'.';
     }
 
     public function store(Request $request): RedirectResponse

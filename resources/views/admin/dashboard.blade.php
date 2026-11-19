@@ -58,7 +58,7 @@
     </div>
     <div class="admin-hero-actions">
       <button class="button admin-hero-action" id="toggleAdminUserForm" type="button" aria-controls="createAdminUser" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleAdminUserForm()">Account aanmaken <span aria-hidden="true">+</span></button>
-      <button class="button admin-hero-action" id="toggleStudentImportForm" type="button" aria-controls="studentImportForm" aria-expanded="{{ request()->boolean('import') || session('importReview') ? 'true' : 'false' }}" onclick="toggleStudentImportForm()">Studenten importeren <span aria-hidden="true">↓</span></button>
+      <button class="button admin-hero-action" id="toggleStudentImportForm" type="button" aria-controls="studentImportForm" aria-expanded="{{ request()->boolean('import') || session('pendingUserImport') ? 'true' : 'false' }}" onclick="toggleStudentImportForm()">Studenten importeren <span aria-hidden="true">↓</span></button>
     </div>
   </header>
 
@@ -71,12 +71,12 @@
     </div>
   @endif
 
-  @if (session('importReview'))
+  @if (session('pendingUserImport'))
     <div class="notice admin-import-warning" role="status">
       <p><strong>Controleer de wijzigingen voor bestaande studenten</strong></p>
-      <p>Er is nog niets opgeslagen. Selecteer hetzelfde CSV-bestand opnieuw en bevestig de wijzigingen om de import uit te voeren.</p>
+      <p>Er is nog niets opgeslagen. Accepteer de gecontroleerde wijzigingen om de import uit te voeren.</p>
       <ul>
-        @foreach (session('importReview') as $change)
+        @foreach (session('pendingUserImport.review') as $change)
           <li>
             {{ $change['email'] }} —
             naam: {{ $change['current']['naam'] }} → {{ $change['incoming']['naam'] }};
@@ -84,14 +84,19 @@
           </li>
         @endforeach
       </ul>
-      @if (session('importReviewNewCount') > 0)
-        <p>Na bevestiging worden ook {{ session('importReviewNewCount') }} nieuwe studenten uit dit bestand toegevoegd.</p>
+      @if (session('pendingUserImport.new_count') > 0)
+        <p>Na bevestiging worden ook {{ session('pendingUserImport.new_count') }} nieuwe studenten uit dit bestand toegevoegd.</p>
       @endif
       <p>Bij bestaande accounts blijven wachtwoord, studentnummer en groepskoppelingen ongewijzigd.</p>
+      <form action="{{ route('admin.users.import.confirm', ['page' => 'gebruikers']) }}" method="post">
+        @csrf
+        <button class="button dark" type="submit">Accepteren en importeren</button>
+        <button class="button" type="submit" formaction="{{ route('admin.users.import.cancel', ['page' => 'gebruikers']) }}">Annuleren</button>
+      </form>
     </div>
   @endif
 
-  <section class="admin-panel admin-user-create" id="studentImportForm" @if (!request()->boolean('import') && !session('importReview') && !$errors->has('bestand')) hidden @endif>
+  <section class="admin-panel admin-user-create" id="studentImportForm" @if (!request()->boolean('import') && !session('pendingUserImport') && !$errors->has('bestand')) hidden @endif>
     <div class="admin-panel-heading">
       <div><h2>Studenten importeren</h2><p>Importeer meerdere studentaccounts tegelijk vanuit een CSV-bestand dat je met Excel kunt bewerken.</p></div>
     </div>
@@ -101,12 +106,6 @@
     <form action="{{ route('admin.users.import', ['page' => 'gebruikers']) }}" method="post" enctype="multipart/form-data" class="admin-user-form">
       @csrf
       <div><label for="student-import-file">CSV-bestand</label><input class="input" id="student-import-file" name="bestand" type="file" accept=".csv,text/csv" required></div>
-      @if (session('importReview'))
-        <label class="admin-import-confirmation">
-          <input type="checkbox" name="bevestig_bijwerken" value="1" required>
-          <span>Ik heb de wijzigingen hierboven gecontroleerd en bevestig het bijwerken van deze studentgegevens.</span>
-        </label>
-      @endif
       <div>
         <label for="student-import-group">Aan groep koppelen</label>
         <select class="input" id="student-import-group" name="groep_id">
@@ -326,7 +325,7 @@
           <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
           <div class="admin-class-actions">
             <details class="admin-class-edit" @if ($groupForm === 'update' && (string) old('_group_id') === (string) $group->id) open @endif>
-              <summary class="button">Groep beheren</summary>
+              <summary class="button">Wijzigen</summary>
               <form action="{{ route('admin.groups.update', ['group' => $group, 'page' => 'groepen']) }}" method="post" class="admin-class-form">
                 @csrf
                 @method('PUT')

@@ -67,10 +67,10 @@ document.querySelectorAll("[data-teamleader-phase-filter]").forEach((filter) => 
       "Verdiepingsfase": 2,
       "Afrondingsfase": 3,
     };
-    const groupPhaseRank = phaseRanks[groupPhase] || 4;
-    const selectedPhaseRank = phaseRanks[selectedPhase] || 4;
-    const previousPhase = Boolean(groupPhaseRank && selectedPhaseRank < groupPhaseRank);
-    const nextPhase = Boolean(groupPhaseRank && selectedPhaseRank > groupPhaseRank);
+    const groupPhaseRank = phaseRanks[groupPhase] || 0;
+    const selectedPhaseRank = phaseRanks[selectedPhase] || 0;
+    const previousPhase = Boolean(groupPhaseRank && selectedPhaseRank && selectedPhaseRank < groupPhaseRank);
+    const nextPhase = Boolean(groupPhaseRank && selectedPhaseRank && selectedPhaseRank > groupPhaseRank);
     const outsideGroupPhase = Boolean(groupPhase && filter.value !== "__all" && filter.value !== groupPhase);
     let progressClass = "teamleader-progress-NVT";
     if (filter.value !== "__all" && previousPhase && average < 100) {

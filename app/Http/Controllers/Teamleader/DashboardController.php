@@ -94,6 +94,8 @@ class DashboardController extends RoleDashboardController
                             'id' => $group['id'],
                             'name' => $group['name'],
                             'studentCount' => $group['studentCount'],
+                            'redStudentCount' => $group['redStudentCount'],
+                            'redOrPurpleOutcomeCount' => $group['redOrPurpleOutcomeCount'],
                             'averagePercentage' => $group['averagePercentage'],
                             'displayAveragePercentage' => $group['displayAveragePercentage'],
                             'studyPhase' => $group['studyPhase'],
@@ -146,9 +148,9 @@ class DashboardController extends RoleDashboardController
             ? $groupAveragePercentage
             : (int) ($phasePercentages[$studyPhase] ?? $groupAveragePercentage);
 
-        $students = $group->students->map(function (User $student): array {
+        $students = $group->students->map(function (User $student) use ($group): array {
             $outcomes = $student->progress
-                ->map(function (Progress $item): array {
+                ->map(function (Progress $item) use ($group): array {
                     $target = $this->numericTarget($item);
                     $percentage = $target === null
                         ? null
@@ -158,10 +160,16 @@ class DashboardController extends RoleDashboardController
                         'code' => $item->learningOutcome->code,
                         'title' => $item->learningOutcome->titel,
                         'phase' => $item->learningOutcome->studyPhase?->naam,
-                        'phaseOrder' => $this->phaseRank($item->learningOutcome->studyPhase?->naam),
+                        'phaseOrder' => $this->phaseRank($item->learningOutcome->studyPhase?->naam) ?? 4,
                         'hours' => $item->gevalideerde_uren,
                         'target' => $target,
                         'percentage' => $percentage,
+                        'progressClass' => $this->progressColorClass(
+                            $percentage,
+                            $item->learningOutcome->studyPhase?->naam,
+                            $group->studyPhase?->naam,
+                            $group->doel,
+                        ),
                         'status' => $item->status,
                     ];
                 })
@@ -185,9 +193,23 @@ class DashboardController extends RoleDashboardController
                 'studyPhase' => $studyPhase,
                 'percentage' => $percentage,
                 'displayPercentage' => $studyPhasePercentage,
+                'progressClass' => $this->progressColorClass(
+                    $studyPhasePercentage,
+                    $studyPhase,
+                    $group->studyPhase?->naam,
+                    $group->doel,
+                ),
                 'outcomes' => $outcomes,
             ];
         });
+        $redStudentCount = $students->where('progressClass', 'teamleader-progress-low')->count();
+        $redOrPurpleOutcomeCount = $students
+            ->flatMap(fn (array $student) => $student['outcomes'])
+            ->filter(fn (array $outcome): bool => in_array($outcome['progressClass'], [
+                'teamleader-progress-low',
+                'teamleader-progress-purple',
+            ], true))
+            ->count();
 
         return [
             'id' => $group->id,
@@ -200,9 +222,10 @@ class DashboardController extends RoleDashboardController
             'studyPhaseOrder' => $studyPhaseOrder,
             'goal' => $group->doel,
             'studentCount' => $students->count(),
+            'redStudentCount' => $redStudentCount,
+            'redOrPurpleOutcomeCount' => $redOrPurpleOutcomeCount,
             'averagePercentage' => (int) round($students->avg('percentage') ?? 0),
             'displayAveragePercentage' => $displayAveragePercentage,
-            'attentionCount' => $progressItems->whereIn('status', ['niet_gestart', 'gestart'])->count(),
             'phases' => $phasePercentages,
             'students' => $students,
         ];
@@ -215,13 +238,49 @@ class DashboardController extends RoleDashboardController
         return is_numeric($target) && (float) $target > 0 ? (float) $target : null;
     }
 
-    private function phaseRank(?string $phase): int
+    private function phaseRank(?string $phase): ?int
     {
         return match ($phase) {
             'Oriëntatiefase' => 1,
             'Verdiepingsfase' => 2,
             'Afrondingsfase' => 3,
-            default => 4,
+            default => null,
         };
+    }
+
+    private function progressColorClass(?int $percentage, ?string $phase, ?string $groupPhase, ?int $goal): string
+    {
+        if ($percentage === null) {
+            return 'teamleader-progress-NVT';
+        }
+
+        $phaseRank = $this->phaseRank($phase);
+        $groupPhaseRank = $this->phaseRank($groupPhase);
+
+        if ($groupPhase !== null) {
+            if ($phaseRank === null || $groupPhaseRank === null) {
+                return 'teamleader-progress-NVT';
+            }
+
+            if ($phaseRank < $groupPhaseRank && $percentage < 100) {
+                return 'teamleader-progress-purple';
+            }
+
+            if ($phaseRank > $groupPhaseRank && $percentage > 10) {
+                return 'teamleader-progress-blue';
+            }
+
+            if ($phaseRank !== $groupPhaseRank) {
+                return 'teamleader-progress-NVT';
+            }
+        }
+
+        if ($goal === null) {
+            return 'teamleader-progress-NVT';
+        }
+
+        return $percentage >= $goal
+            ? 'teamleader-progress-high'
+            : ($percentage >= $goal - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low');
     }
 }

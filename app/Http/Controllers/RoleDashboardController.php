@@ -28,6 +28,11 @@ abstract class RoleDashboardController extends Controller
             ? ($personalSettings['ontwikkeling-dashboard-instellingen'] ?? [])
             : [];
         $personalAccent = is_array($personalAppearance) ? ($personalAppearance['accent'] ?? null) : null;
+        $globalAccentUpdatedAt = (int) ($applicationSettings->application_accent_updated_at ?? 0);
+        $personalAccentUpdatedAt = is_array($personalAppearance)
+            ? (int) ($personalAppearance['accent_updated_at'] ?? 0)
+            : 0;
+        // Een persoonlijke kleur geldt alleen als die na de globale kleur is gewijzigd.
         $accentColors = [
             'teal' => '#009b87',
             'blue' => '#168bed',
@@ -40,7 +45,8 @@ abstract class RoleDashboardController extends Controller
         if (is_string($personalAccent) && isset($accentColors[$personalAccent])) {
             $personalAccent = $accentColors[$personalAccent];
         }
-        $applicationAccentColor = is_string($personalAccent)
+        $applicationAccentColor = $personalAccentUpdatedAt > $globalAccentUpdatedAt
+            && is_string($personalAccent)
             && preg_match('/^#[0-9A-Fa-f]{6}$/D', $personalAccent) === 1
             ? strtolower($personalAccent)
             : $applicationSettings->application_accent_color;
@@ -55,6 +61,7 @@ abstract class RoleDashboardController extends Controller
             'user' => $user,
             'applicationSettings' => $applicationSettings,
             'applicationAccentColor' => $applicationAccentColor,
+            'applicationAccentUpdatedAt' => $globalAccentUpdatedAt,
             'frontendUser' => [
                 'id' => $user->id,
                 'name' => $user->naam,

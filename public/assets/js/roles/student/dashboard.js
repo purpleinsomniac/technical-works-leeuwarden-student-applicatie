@@ -153,7 +153,7 @@ function getDashboardPreferences() {
     const preferences = { ...defaultDashboardPreferences, ...(saved && typeof saved === "object" ? saved : {}) };
     if (!saved?.theme) preferences.theme = saved?.darkMode ? 'dark' : 'light';
     if (!saved?.density) preferences.density = saved?.compact ? 'compact' : 'standard';
-    preferences.accent = normalizeAccentColor(preferences.accent);
+    preferences.accent = normalizeAccentColor(preferences.accent, preferences.accent_updated_at);
     return preferences;
   } catch {
     return { ...defaultDashboardPreferences };
@@ -195,9 +195,15 @@ function renderDashboardSettings() {
 }
 
 const settingsAccentColors = {teal:'#009b87', blue:'#168bed', purple:'#6840e8', pink:'#df238b', orange:'#fa7900', amber:'#efb014', green:'#78b915'};
-function normalizeAccentColor(value) {
-  if (Object.prototype.hasOwnProperty.call(settingsAccentColors, value)) return settingsAccentColors[value];
-  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : defaultDashboardPreferences.accent;
+function normalizeAccentColor(value, updatedAt) {
+  const globalAccentUpdatedAt = Number(window.LARAVEL_APPLICATION_THEME?.globalAccentUpdatedAt || 0);
+  const accent = Object.prototype.hasOwnProperty.call(settingsAccentColors, value)
+    ? settingsAccentColors[value]
+    : typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+  // Persoonlijke kleuren gelden alleen zolang ze nieuwer zijn dan de globale kleur.
+  return accent && Number(updatedAt || 0) > globalAccentUpdatedAt
+    ? accent
+    : window.LARAVEL_APPLICATION_THEME?.accentColor || defaultDashboardPreferences.accent;
 }
 let settingsActiveTab = 'appearance';
 function selectSettingsTab(tab) {
@@ -211,6 +217,7 @@ function selectSettingsTab(tab) {
 }
 function updateAppearanceSetting(key, value) {
   const preferences = {...getDashboardPreferences(), [key]:value};
+  if (key === 'accent') preferences.accent_changed = true;
   preferences.darkMode = preferences.theme === 'dark';
   preferences.compact = preferences.density === 'compact';
   saveLocalState(dashboardSettingsKey, JSON.stringify(preferences));

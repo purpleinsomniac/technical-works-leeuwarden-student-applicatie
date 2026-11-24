@@ -37,12 +37,22 @@
   let notificationSaveError = null;
   let settingsRevision = 0;
   let notificationRevision = 0;
+  let accentChanged = false;
 
   function readPreferences() {
-    let saved = window.LARAVEL_STATE?.[key];
+    const serverSaved = window.LARAVEL_STATE?.[key];
+    let saved = serverSaved;
     try {
       const local = localStorage.getItem(storageKey);
-      if (local) saved = JSON.parse(local);
+      if (local) {
+        const localSaved = JSON.parse(local);
+        saved = { ...serverSaved, ...localSaved };
+        // Een opslag uit een andere sessie kan recenter zijn dan de lokale kopie.
+        if (Number(serverSaved?.accent_updated_at || 0) > Number(localSaved?.accent_updated_at || 0)) {
+          saved.accent = serverSaved.accent;
+          saved.accent_updated_at = serverSaved.accent_updated_at;
+        }
+      }
     } catch (error) {
       console.error("Could not read dashboard settings from local storage.", error);
     }
@@ -73,7 +83,8 @@
       density: ["compact", "standard", "spacious"].includes(saved?.density)
         ? saved.density
         : saved?.compact === true ? "compact" : "standard",
-      accent: normalizeAccentColor(saved?.accent),
+      accent: normalizeAccentColor(saved?.accent, saved?.accent_updated_at),
+      accent_updated_at: Number(saved?.accent_updated_at || 0),
       sections: sectionKeys.length
         ? (savedSections.length ? savedSections : [...sectionKeys])
         : [],
@@ -91,10 +102,14 @@
     return { ...defaultNotificationPreferences, ...saved };
   }
 
-  function normalizeAccentColor(value) {
-    if (Object.prototype.hasOwnProperty.call(accentColors, value)) return accentColors[value];
-    return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
-      ? value.toLowerCase()
+  function normalizeAccentColor(value, updatedAt) {
+    const globalAccentUpdatedAt = Number(window.LARAVEL_APPLICATION_THEME?.globalAccentUpdatedAt || 0);
+    const accent = Object.prototype.hasOwnProperty.call(accentColors, value)
+      ? accentColors[value]
+      : typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+    // De globale kleur is de fallback, tenzij deze account een nieuwere kleur heeft.
+    return accent && Number(updatedAt || 0) > globalAccentUpdatedAt
+      ? accent
       : window.LARAVEL_APPLICATION_THEME?.accentColor || accentColors.teal;
   }
 
@@ -213,7 +228,7 @@
     settingsSaveBusy = true;
     const revision = settingsRevision;
     const savedPreferences = { ...preferences, compact: preferences.density === "compact", darkMode: preferences.theme === "dark" };
-    const requestPreferences = { ...savedPreferences, role: window.LARAVEL_USER.role };
+    const requestPreferences = { ...savedPreferences, role: window.LARAVEL_USER.role, accent_changed: accentChanged };
     if (sectionKeys.length) {
       requestPreferences.sections = preferences.sections;
     } else {
@@ -233,6 +248,11 @@
       });
       const body = await responseBody(response);
       if (!response.ok) throw new Error(errorMessage(body, "Instellingen opslaan is mislukt."));
+      if (accentChanged && savedPreferences.accent === preferences.accent) {
+        preferences.accent_updated_at = Number(body.accent_updated_at || 0);
+        accentChanged = false;
+        saveLocally();
+      }
       settingsSaveError = null;
       if (revision === settingsRevision) {
         setStatus(notificationSaveError || "Laatst opgeslagen: zojuist", notificationSaveError ? "error" : "saved");
@@ -315,6 +335,7 @@
           ? changedInput.value.toLowerCase()
           : changedInput.value;
       }
+      if (["accent", "accent-hex"].includes(changedInput.dataset.roleAppearance)) accentChanged = true;
       if (changedInput.dataset.roleAppearance === "theme") preferences.darkMode = changedInput.value === "dark";
       if (changedInput.dataset.roleAppearance === "density") preferences.compact = changedInput.value === "compact";
     } else if (changedInput.dataset.roleSectionSetting) {
@@ -377,6 +398,7 @@
   }
 
   function reset() {
+    accentChanged = false;
     preferences = {
       version: 3,
       compact: false,

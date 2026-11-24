@@ -49,10 +49,11 @@ class StateController extends Controller
             }
         }
 
+        $state = UserState::firstOrNew(['gebruiker_id' => $request->user()->id]);
         if (isset($data['ontwikkeling-dashboard-instellingen'])) {
             $instellingen = $data['ontwikkeling-dashboard-instellingen'];
             $choices = ['theme'=>['light','dark','system'], 'accent'=>['teal','blue','purple','pink','orange','amber','green'], 'density'=>['compact','standard','spacious']];
-            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines', ...array_keys($choices)];
+            $toegestaneInstellingen = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines', 'accent_changed', ...array_keys($choices)];
 
             if (! is_array($instellingen) || array_diff(array_keys($instellingen), $toegestaneInstellingen)) {
                 throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstellingen.']);
@@ -67,6 +68,16 @@ class StateController extends Controller
                     throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstelling.']);
                 }
             }
+
+            $currentPreferences = $state->gegevens['ontwikkeling-dashboard-instellingen'] ?? [];
+            $currentPreferences = is_array($currentPreferences) ? $currentPreferences : [];
+            // Alleen een expliciete kleurwijziging krijgt een nieuwe persoonlijke versie.
+            $accentChanged = ($instellingen['accent_changed'] ?? false) === true;
+            unset($instellingen['accent_changed']);
+            $instellingen['accent_updated_at'] = $accentChanged
+                ? now()->valueOf()
+                : ($currentPreferences['accent_updated_at'] ?? null);
+            $data['ontwikkeling-dashboard-instellingen'] = $instellingen;
         }
 
         $outcomes = json_decode(file_get_contents(base_path('database/outcomes.json')), true);
@@ -78,8 +89,6 @@ class StateController extends Controller
             }
         }
 
-        $state = UserState::firstOrNew(['gebruiker_id' => $request->user()->id]);
-
         // Alleen de gewijzigde onderdelen vervangen. Andere voorkeuren blijven bewaard.
         $state->gegevens = array_replace($state->gegevens ?? [], $data);
         if (isset($data['notification-settings'])) {
@@ -88,6 +97,6 @@ class StateController extends Controller
         }
         $state->save();
 
-        return response()->json(['saved' => true]);
+        return response()->json(['saved' => true, 'data' => $data]);
     }
 }

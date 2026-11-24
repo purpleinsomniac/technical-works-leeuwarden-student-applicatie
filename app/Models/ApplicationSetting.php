@@ -10,6 +10,7 @@ class ApplicationSetting extends Model
 
     protected $fillable = [
         'application_accent_color',
+        'application_accent_updated_at',
         'application_style',
         'max_upload_size_mb',
         'allowed_upload_extensions',
@@ -20,6 +21,7 @@ class ApplicationSetting extends Model
     {
         return [
             'allowed_upload_extensions' => 'array',
+            'application_accent_updated_at' => 'integer',
             'maintenance_mode' => 'boolean',
         ];
     }

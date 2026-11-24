@@ -97,7 +97,7 @@ async function syncLocalState() {
   const changes = Object.fromEntries(pendingStateChanges);
 
   try {
-    await apiRequest(window.LARAVEL_SAVE_URL, {
+    const body = await apiRequest(window.LARAVEL_SAVE_URL, {
       method: "PUT",
       body: JSON.stringify({ data: changes }),
     });
@@ -107,6 +107,13 @@ async function syncLocalState() {
       const pendingValue = pendingStateChanges.get(key);
       if (JSON.stringify(pendingValue) === JSON.stringify(savedValue)) {
         pendingStateChanges.delete(key);
+        if (Object.prototype.hasOwnProperty.call(body.data || {}, key)) {
+          // Bewaar ook servergegenereerde velden, zoals de persoonlijke kleurversie.
+          localStorage.setItem(
+            "laravel-" + window.LARAVEL_USER.id + "-" + key,
+            JSON.stringify(body.data[key]),
+          );
+        }
       }
     }
 

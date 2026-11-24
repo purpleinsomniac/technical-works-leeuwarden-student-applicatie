@@ -34,6 +34,7 @@
     window.LARAVEL_APPLICATION_THEME = {{ Illuminate\Support\Js::from([
         'accentColor' => $applicationAccentColor,
         'globalAccentColor' => $applicationSettings->application_accent_color,
+        'globalAccentUpdatedAt' => $applicationAccentUpdatedAt,
         'style' => $applicationSettings->application_style,
     ]) }};
     window.LARAVEL_STATE = {{ Illuminate\Support\Js::from($frontendState) }};

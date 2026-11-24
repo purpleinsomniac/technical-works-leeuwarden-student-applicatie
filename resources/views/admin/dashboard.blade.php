@@ -484,7 +484,7 @@
           <option value="rounded" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'rounded')>Afgerond</option>
           <option value="sharp" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'sharp')>Strak</option>
         </select>
-        <p class="dim small">De kleurkiezer toont de hexcode. Bestaande persoonlijke accentvoorkeuren blijven behouden.</p>
+        <p class="dim small">De kleurkiezer toont de hexcode. De laatst gewijzigde kleur geldt: een nieuwere globale kleur wordt op alle accounts gebruikt; een latere persoonlijke wijziging alleen op dat account.</p>
       </section>
 
       <section class="admin-panel">

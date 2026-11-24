@@ -7,6 +7,12 @@
 .manager-teachers-table td { padding: 13px 12px; border-top: 1px solid #edf1f4; color: #405b6a; font-size: 13px; vertical-align: top; }
 .manager-teachers-table th { color: #728391; font-size: 12px; font-weight: 700; }
 .manager-teachers-table td a { color: #167e72; }
+.teamleader-group-status-counts { display: flex; flex-wrap: wrap; gap: 5px; }
+.teamleader-group-status-count { display: inline-flex; min-width: 24px; justify-content: center; padding: 3px 6px; border: 1px solid transparent; border-radius: 999px; font-weight: 750; }
+.teamleader-group-status-count-green { color: #176b3a; background: #e5f5eb; border-color: #b8e4c5; }
+.teamleader-group-status-count-yellow { color: #805d00; background: #fff5d6; border-color: #f0d98a; }
+.teamleader-group-status-count-red { color: #9b3030; background: #fde8e8; border-color: #efbcbc; }
+.teamleader-group-status-count-gray { color: #575757; background: #ededed; border-color: #cccccc; }
 
 
 .theme-dark #managerGroups .teamleader-progress-high { color: #b6efca; background: #1e4935; border-color: #326b4d; }
@@ -14,7 +20,7 @@
 .theme-dark #managerGroups .teamleader-progress-low { color: #ffc4c4; background: #512f37; border-color: #78454e; }
 .theme-dark #managerGroups .teamleader-progress-purple { color: #dfb9f7; background: #4a315e; border-color: #765094; }
 .theme-dark #managerGroups .teamleader-progress-blue { color: #b8d9fa; background: #29455f; border-color: #426b8d; }
-.theme-dark #managerGroups .teamleader-progress-NVT { color: #000000; background: #8a8a8a; border-color: #cccccc; }
+.theme-dark #managerGroups .teamleader-progress-NVT { color: #ccd5dd; background: #40515a; border-color: #cccccc; }
 .teamleader-outcome-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
 .teamleader-outcome-card { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border: 1px solid #dfe8ed; border-radius: 10px; background: #fff; }
 .teamleader-outcome-heading { display: flex; width: 100%; min-width: 0; align-items: flex-start; justify-content: space-between; gap: 10px; }
@@ -22,9 +28,18 @@
 .teamleader-outcome-meta { color: #61798a; font-size: 12px; }
 .teamleader-outcome-status { width: 100%; padding-top: 6px; border-top: 1px solid #edf1f5; color: #728391; font-size: 12px; }
 .teamleader-groups-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 16px; }
-.teamleader-group-card { min-width: 0; overflow: hidden; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; box-shadow: 0 3px 10px #16334a08; }
+.teamleader-group-card { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; box-shadow: 0 3px 10px #16334a08; }
+.teamleader-group-card-attention-green { border: 2px solid #85c99a; }
+.teamleader-group-card-attention-green > .teamleader-group-summary { background: #e5f5eb; }
+.teamleader-group-card-attention-yellow { border: 2px solid #e3c75e; }
+.teamleader-group-card-attention-yellow > .teamleader-group-summary { background: #fff5d6; }
+.teamleader-group-card-attention-red { border: 2px solid #df9999; }
+.teamleader-group-card-attention-red > .teamleader-group-summary { background: #fde8e8; }
+.teamleader-group-card-attention-gray { border: 2px solid #cccccc; }
+.teamleader-group-card-attention-gray > .teamleader-group-summary { background: #ededed; }
 .teamleader-group-card[open] { grid-column: 1 / -1; }
-.teamleader-group-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; padding: 18px; list-style: none; cursor: pointer; }
+.teamleader-group-summary { display: grid; flex: 1 0 auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; padding: 18px; list-style: none; cursor: pointer; }
+.teamleader-group-card[open] > .teamleader-group-summary { border-bottom: 1px solid #dfe8ed; }
 .teamleader-group-summary::-webkit-details-marker { display: none; }
 .teamleader-group-summary::after { content: "＋"; grid-column: 1 / -1; justify-self: end; color: #168b7d; font-size: 19px; line-height: 1; }
 .teamleader-group-card[open] .teamleader-group-summary::after { content: "−"; }
@@ -38,13 +53,19 @@
 .teamleader-group-summary-item > strong.teamleader-progress-high { color: #176b3a; }
 .teamleader-group-summary-item > strong.teamleader-progress-medium { color: #805d00; }
 .teamleader-group-summary-item > strong.teamleader-progress-low { color: #9b3030; }
-.teamleader-group-summary-item > strong.teamleader-progress-NVT { color: #ffffff; }
+.teamleader-group-summary-item > strong.teamleader-progress-NVT { color: #000000; }
+.teamleader-group-coach-link { padding: 0; border: 0; background: transparent; color: #167e72; font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer; }
+.teamleader-group-coach-link:hover { text-decoration: underline; }
 .teamleader-group-details { padding: 0 18px 18px; }
 .teamleader-group-details > .grid3 { margin-top: 16px; }
 .teamleader-teacher-toggle { padding: 0; border: 0; background: transparent; color: #167e72; font: inherit; font-weight: 700; text-align: left; }
 .teamleader-teacher-toggle:hover { text-decoration: underline; }
 .teamleader-coach-group-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
 .teamleader-coach-group { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; border: 1px solid #dfe8ed; border-radius: 10px; background: #fff; }
+.teamleader-coach-group-attention-green { border: 2px solid #85c99a; background: #e5f5eb; }
+.teamleader-coach-group-attention-yellow { border: 2px solid #e3c75e; background: #fff5d6; }
+.teamleader-coach-group-attention-red { border: 2px solid #df9999; background: #fde8e8; }
+.teamleader-coach-group-attention-gray { border: 2px solid #cccccc; background: #ededed; }
 .teamleader-coach-group > strong { color: #17364b; font-size: 15px; }
 .teamleader-coach-group > span { color: #61798a; font-size: 12px; }
 .teamleader-coach-group > span.teamleader-progress-high { color: #176b3a; }
@@ -53,6 +74,15 @@
 .teamleader-coach-group > span.teamleader-progress-NVT { color: #ffffff; }
 .teamleader-coach-group .button { margin-top: 4px; }
 .theme-dark .teamleader-group-card { border-color: #2c4755; background: #152d38; }
+.theme-dark .teamleader-group-card[open] > .teamleader-group-summary { border-color: #2c4755; }
+.theme-dark .teamleader-group-card-attention-green { border-color: #326b4d; }
+.theme-dark .teamleader-group-card-attention-green > .teamleader-group-summary { background: #1e4935; }
+.theme-dark .teamleader-group-card-attention-yellow { border-color: #806b2a; }
+.theme-dark .teamleader-group-card-attention-yellow > .teamleader-group-summary { background: #55451d; }
+.theme-dark .teamleader-group-card-attention-red { border-color: #78454e; }
+.theme-dark .teamleader-group-card-attention-red > .teamleader-group-summary { background: #512f37; }
+.theme-dark .teamleader-group-card-attention-gray { border-color: #607580; }
+.theme-dark .teamleader-group-card-attention-gray > .teamleader-group-summary { background: #40515a; }
 .theme-dark .teamleader-outcome-card { border-color: #2c4755; background: #152d38; }
 .theme-dark .teamleader-outcome-heading > strong { color: #eef7f9; }
 .theme-dark .teamleader-outcome-meta,
@@ -64,6 +94,10 @@
 .theme-dark .teamleader-group-summary::after { color: #7cdfcf; }
 .theme-dark .teamleader-teacher-toggle { color: #7cdfcf; }
 .theme-dark .teamleader-coach-group { border-color: #2c4755; background: #152d38; }
+.theme-dark .teamleader-coach-group-attention-green { border-color: #326b4d; background: #1e4935; }
+.theme-dark .teamleader-coach-group-attention-yellow { border-color: #806b2a; background: #55451d; }
+.theme-dark .teamleader-coach-group-attention-red { border-color: #78454e; background: #512f37; }
+.theme-dark .teamleader-coach-group-attention-gray { border-color: #607580; background: #40515a; }
 .theme-dark .teamleader-coach-group > strong { color: #eef7f9; }
 .theme-dark .teamleader-coach-group > span { color: #c4d2d9; }
 .theme-dark #managerTeachers .teamleader-coach-group > span.teamleader-progress-high { color: #b6efca; background: #1e4935; border-color: #326b4d; }
@@ -74,6 +108,10 @@
 .theme-dark .manager-teachers-table td { border-color: #29434f; color: #c4d2d9; }
 .theme-dark .manager-teachers-table th { background: #19333e; color: #9eb1ba; }
 .theme-dark .manager-teachers-table td a { color: #7cdfcf; }
+.theme-dark .teamleader-group-status-count-green { color: #b6efca; background: #1e4935; border-color: #326b4d; }
+.theme-dark .teamleader-group-status-count-yellow { color: #f4dc8c; background: #55451d; border-color: #806b2a; }
+.theme-dark .teamleader-group-status-count-red { color: #ffc4c4; background: #512f37; border-color: #78454e; }
+.theme-dark .teamleader-group-status-count-gray { color: #d1d9dd; background: #40515a; border-color: #607580; }
 .theme-dark #managerGroups .card { border-color: #2c4755; background: #152d38; color: #eef7f9; }
 .theme-dark #managerGroups h1,
 .theme-dark #managerGroups h2 { color: #eef7f9; }
@@ -84,7 +122,7 @@
 .teamleader-progress-low {color: #9b3030; background: #fde8e8; border-color: #efbcbc; }
 .teamleader-progress-purple { color: #65378b; background: #f1e8f8; border-color: #d5bde8; }
 .teamleader-progress-blue { color: #245d91; background: #e7f1fa; border-color: #b5d3ee; }
-.teamleader-progress-NVT { color: #ffffff; background: #838383; border-color: #535353; }
+.teamleader-progress-NVT { color: #575757; background: #ededed; border-color: #cccccc; }
 .teamleader-status-card-success { color: #176b3a; background: #e5f5eb; border-color: #b8e4c5; }
 .teamleader-status-card-warning { color: #805d00; background: #fff5d6; border-color: #f0d98a; }
 .teamleader-status-card-danger { color: #9b3030; background: #fde8e8; border-color: #efbcbc; }

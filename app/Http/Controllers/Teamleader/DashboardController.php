@@ -74,7 +74,6 @@ class DashboardController extends RoleDashboardController
             'studentCount' => User::where('rol', 'student')->count(),
             'groups' => $groups,
             'coaches' => User::query()
-                ->with('primaryRole')
                 ->where(function ($query): void {
                     $query->whereHas('primaryRole', fn ($roleQuery) => $roleQuery->where('naam', 'coach'))
                         ->orWhere(function ($query): void {
@@ -83,26 +82,33 @@ class DashboardController extends RoleDashboardController
                 })
                 ->orderBy('naam')
                 ->get(['id', 'naam', 'email', 'rol', 'hoofdrol_id'])
-                ->map(fn (User $coach): array => [
-                    'id' => $coach->id,
-                    'name' => $coach->naam,
-                    'email' => $coach->email,
-                    'accountType' => ucfirst($coach->primaryRole?->naam ?? $coach->rol),
-                    'groups' => $groups
-                        ->where('coachId', $coach->id)
-                        ->map(fn (array $group): array => [
-                            'id' => $group['id'],
-                            'name' => $group['name'],
-                            'studentCount' => $group['studentCount'],
-                            'redStudentCount' => $group['redStudentCount'],
-                            'redOrPurpleOutcomeCount' => $group['redOrPurpleOutcomeCount'],
-                            'averagePercentage' => $group['averagePercentage'],
-                            'displayAveragePercentage' => $group['displayAveragePercentage'],
-                            'studyPhase' => $group['studyPhase'],
-                            'goal' => $group['goal'],
-                        ])
-                        ->values(),
-                ])
+                ->map(function (User $coach) use ($groups): array {
+                    $coachGroups = $groups->where('coachId', $coach->id);
+
+                    return [
+                        'id' => $coach->id,
+                        'name' => $coach->naam,
+                        'email' => $coach->email,
+                        'groupStatusCounts' => collect(['green', 'yellow', 'red', 'gray'])
+                            ->mapWithKeys(fn (string $color): array => [
+                                $color => $coachGroups->where('attentionColor', $color)->count(),
+                            ]),
+                        'groups' => $coachGroups
+                            ->map(fn (array $group): array => [
+                                'id' => $group['id'],
+                                'name' => $group['name'],
+                                'studentCount' => $group['studentCount'],
+                                'redStudentCount' => $group['redStudentCount'],
+                                'redOutcomeCount' => $group['redOutcomeCount'],
+                                'averagePercentage' => $group['averagePercentage'],
+                                'displayAveragePercentage' => $group['displayAveragePercentage'],
+                                'studyPhase' => $group['studyPhase'],
+                                'goal' => $group['goal'],
+                                'attentionColor' => $group['attentionColor'],
+                            ])
+                            ->values(),
+                    ];
+                })
                 ->values(),
             'averagePercentage' => (int) round($percentages->avg() ?? 0),
             'attentionCount' => $progress->whereIn('status', ['niet_gestart', 'gestart'])->count(),
@@ -203,13 +209,34 @@ class DashboardController extends RoleDashboardController
             ];
         });
         $redStudentCount = $students->where('progressClass', 'teamleader-progress-low')->count();
-        $redOrPurpleOutcomeCount = $students
+        $redOutcomeCount = $students
             ->flatMap(fn (array $student) => $student['outcomes'])
-            ->filter(fn (array $outcome): bool => in_array($outcome['progressClass'], [
-                'teamleader-progress-low',
-                'teamleader-progress-purple',
-            ], true))
+            ->where('progressClass', 'teamleader-progress-low')
             ->count();
+        $studentCount = $students->count();
+        $redStudentPercentage = $studentCount > 0 ? ($redStudentCount / $studentCount) * 100 : 0;
+        $studentStatus = $redStudentCount === 0
+            ? 'teamleader-progress-high'
+            : ($redStudentPercentage <= 20 ? 'teamleader-progress-medium' : 'teamleader-progress-low');
+        $outcomeStatus = $redOutcomeCount === 0
+            ? 'teamleader-progress-high'
+            : ($redOutcomeCount <= 3 * $studentCount ? 'teamleader-progress-medium' : 'teamleader-progress-low');
+        $progressStatus = $group->doel === null
+            ? 'teamleader-progress-NVT'
+            : ($displayAveragePercentage >= $group->doel
+                ? 'teamleader-progress-high'
+                : ($displayAveragePercentage >= $group->doel - 15
+                    ? 'teamleader-progress-medium'
+                    : 'teamleader-progress-low'));
+        $attentionScore = collect([$studentStatus, $outcomeStatus, $progressStatus])
+            ->sum(fn (string $status): int => match ($status) {
+                'teamleader-progress-low' => 3,
+                'teamleader-progress-medium' => 1,
+                default => 0,
+            });
+        $attentionColor = $studentCount === 0 || $studyPhase === null || $group->doel === null
+            ? 'gray'
+            : ($attentionScore >= 6 ? 'red' : ($attentionScore >= 2 ? 'yellow' : 'green'));
 
         return [
             'id' => $group->id,
@@ -221,9 +248,10 @@ class DashboardController extends RoleDashboardController
             'studyPhase' => $studyPhase,
             'studyPhaseOrder' => $studyPhaseOrder,
             'goal' => $group->doel,
-            'studentCount' => $students->count(),
+            'studentCount' => $studentCount,
             'redStudentCount' => $redStudentCount,
-            'redOrPurpleOutcomeCount' => $redOrPurpleOutcomeCount,
+            'redOutcomeCount' => $redOutcomeCount,
+            'attentionColor' => $attentionColor,
             'averagePercentage' => (int) round($students->avg('percentage') ?? 0),
             'displayAveragePercentage' => $displayAveragePercentage,
             'phases' => $phasePercentages,

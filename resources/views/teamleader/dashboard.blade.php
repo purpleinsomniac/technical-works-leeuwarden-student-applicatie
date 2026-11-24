@@ -11,25 +11,32 @@
 
   <div class="teamleader-groups-list">
     @forelse ($roleData['groups'] as $group)
-    <details id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card">
+    @php($groupSummaryProgressClass = $group['goal'] === null ? 'teamleader-progress-NVT' : ($group['displayAveragePercentage'] >= $group['goal'] ? 'teamleader-progress-high' : ($group['displayAveragePercentage'] >= $group['goal'] - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
+    @php($groupSummaryStudentPercentage = $group['studentCount'] > 0 ? ($group['redStudentCount'] / $group['studentCount']) * 100 : 0)
+    @php($groupSummaryStudentClass = $group['redStudentCount'] === 0 ? 'teamleader-progress-high' : ($groupSummaryStudentPercentage <= 20 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
+    @php($groupSummaryOutcomeClass = $group['redOutcomeCount'] === 0 ? 'teamleader-progress-high' : ($group['redOutcomeCount'] <= 3 * $group['studentCount'] ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
+    <details id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card teamleader-group-card-attention-{{ $group['attentionColor'] }}">
       <summary class="teamleader-group-summary" aria-labelledby="teamleader-group-{{ $group['id'] }}">
         <span class="teamleader-group-name" id="teamleader-group-{{ $group['id'] }}">{{ $group['name'] }}</span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-open"><span>Schooljaar</span><strong>{{ $group['schoolYear'] ?: 'Niet ingesteld' }}</strong></span>
-        <span class="teamleader-group-summary-item"><span>Coach</span><strong>{{ $group['coach'] ?: 'Niet toegewezen' }}</strong></span>
+        <span class="teamleader-group-summary-item">
+          <span>Docent/SLB'er</span>
+          @if ($group['coachId'])
+            <button class="teamleader-group-coach-link" type="button" data-teamleader-open-teacher="{{ $group['coachId'] }}">{{ $group['coach'] }}</button>
+          @else
+            <strong>{{ $group['coach'] ?: 'Niet toegewezen' }}</strong>
+          @endif
+        </span>
         <span class="teamleader-group-summary-item"><span>Fase</span><strong>{{ $group['studyPhase'] ?: 'Niet ingesteld' }}</strong></span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-open"><span>Doel</span><strong>{{ $group['goal'] !== null ? $group['goal'].'%' : 'Niet ingesteld' }}</strong></span>
-        @php($groupSummaryProgressClass = $group['goal'] === null ? 'teamleader-progress-NVT' : ($group['displayAveragePercentage'] >= $group['goal'] ? 'teamleader-progress-high' : ($group['displayAveragePercentage'] >= $group['goal'] - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
-        @php($groupSummaryStudentPercentage = $group['studentCount'] > 0 ? ($group['redStudentCount'] / $group['studentCount']) * 100 : 0)
-        @php($groupSummaryStudentClass = $group['redStudentCount'] === 0 ? 'teamleader-progress-high' : ($groupSummaryStudentPercentage <= 20 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
-        @php($groupSummaryOutcomeClass = $group['redOrPurpleOutcomeCount'] === 0 ? 'teamleader-progress-high' : ($group['redOrPurpleOutcomeCount'] <= 3 * $group['studentCount'] ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
         <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Studenten in het rood</span><strong class="teamleader-progress-indicator {{ $groupSummaryStudentClass }}">{{ $group['redStudentCount'] }}</strong></span>
-        <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Leeruitkomsten rood of paars</span><strong class="teamleader-progress-indicator {{ $groupSummaryOutcomeClass }}">{{ $group['redOrPurpleOutcomeCount'] }}</strong></span>
+        <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Leeruitkomsten rood</span><strong class="teamleader-progress-indicator {{ $groupSummaryOutcomeClass }}">{{ $group['redOutcomeCount'] }}</strong></span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Studenten</span><strong>{{ $group['studentCount'] }}</strong></span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>{{ $group['studyPhase'] ? 'Gemiddelde voortgang fase' : 'Gemiddelde voortgang' }}</span><strong class="teamleader-progress-indicator {{ $groupSummaryProgressClass }}">{{ $group['displayAveragePercentage'] }}%</strong></span>
       </summary>
 
       <div class="teamleader-group-details">
-        <p>{{ $group['description'] ?: 'Geen omschrijving beschikbaar.' }}</p>
+        <p>{{ $group['description'] ?: 'Geen omschrijving.' }}</p>
         <div class="grid2">
           <div class="card"><div class="big">{{ $group['studentCount'] }}</div><span class="dim">studenten</span></div>
           @php($groupProgressStatus = $group['goal'] === null ? 'neutral' : ($group['displayAveragePercentage'] >= $group['goal'] ? 'success' : ($group['displayAveragePercentage'] >= $group['goal'] - 15 ? 'warning' : 'danger')))
@@ -37,8 +44,8 @@
           @php($redStudentPercentage = $group['studentCount'] > 0 ? ($group['redStudentCount'] / $group['studentCount']) * 100 : 0)
           @php($redStudentStatus = $group['redStudentCount'] === 0 ? 'success' : ($redStudentPercentage <= 20 ? 'warning' : 'danger'))
           <div class="card teamleader-status-card teamleader-status-card-{{ $redStudentStatus }}"><div class="big">{{ $group['redStudentCount'] }}</div><span class="dim">studenten in het rood</span></div>
-          @php($redOutcomeStatus = $group['redOrPurpleOutcomeCount'] === 0 ? 'success' : ($group['redOrPurpleOutcomeCount'] <= 3 * $group['studentCount'] ? 'warning' : 'danger'))
-          <div class="card teamleader-status-card teamleader-status-card-{{ $redOutcomeStatus }}"><div class="big">{{ $group['redOrPurpleOutcomeCount'] }}</div><span class="dim">leeruitkomsten in het rood</span></div>
+          @php($redOutcomeStatus = $group['redOutcomeCount'] === 0 ? 'success' : ($group['redOutcomeCount'] <= 3 * $group['studentCount'] ? 'warning' : 'danger'))
+          <div class="card teamleader-status-card teamleader-status-card-{{ $redOutcomeStatus }}"><div class="big">{{ $group['redOutcomeCount'] }}</div><span class="dim">leeruitkomsten in het rood</span></div>
         </div>
 
         <div class="card">
@@ -136,7 +143,7 @@
     </details>
     @empty
       <div class="card">
-        <p>Er zijn nog geen groepen aangemaakt door de beheerder.</p>
+        <p>Er zijn nog geen groepen aangemaakt.</p>
       </div>
     @endforelse
   </div>
@@ -151,12 +158,13 @@
   </div>
   <div class="card manager-teachers-table-wrap">
     <table class="manager-teachers-table">
-      <thead><tr><th>Naam</th><th>E-mailadres</th><th>Accounttype</th><th>Groepen</th></tr></thead>
+      <thead><tr><th>Naam</th><th>E-mailadres</th><th>Groep status</th><th>Groepen</th></tr></thead>
       <tbody>
         @forelse ($roleData['coaches'] as $coach)
           <tr>
             <td>
               <button
+                id="teamleader-teacher-toggle-{{ $coach['id'] }}"
                 class="teamleader-teacher-toggle"
                 type="button"
                 data-teamleader-teacher-toggle="{{ $coach['id'] }}"
@@ -165,7 +173,26 @@
               >{{ $coach['name'] }}</button>
             </td>
             <td><a href="mailto:{{ $coach['email'] }}">{{ $coach['email'] }}</a></td>
-            <td>{{ $coach['accountType'] }}</td>
+            <td>
+              <div
+                class="teamleader-group-status-counts"
+                role="img"
+                aria-label="Groen: {{ $coach['groupStatusCounts']['green'] }} groepen, geel: {{ $coach['groupStatusCounts']['yellow'] }} groepen, rood: {{ $coach['groupStatusCounts']['red'] }} groepen, grijs: {{ $coach['groupStatusCounts']['gray'] }} groepen"
+              >
+                @if ($coach['groupStatusCounts']['green'] > 0)
+                  <span class="teamleader-group-status-count teamleader-group-status-count-green" title="Groen">{{ $coach['groupStatusCounts']['green'] }}</span>
+                @endif
+                @if ($coach['groupStatusCounts']['yellow'] > 0)
+                  <span class="teamleader-group-status-count teamleader-group-status-count-yellow" title="Geel">{{ $coach['groupStatusCounts']['yellow'] }}</span>
+                @endif
+                @if ($coach['groupStatusCounts']['red'] > 0)
+                  <span class="teamleader-group-status-count teamleader-group-status-count-red" title="Rood">{{ $coach['groupStatusCounts']['red'] }}</span>
+                @endif
+                @if ($coach['groupStatusCounts']['gray'] > 0)
+                  <span class="teamleader-group-status-count teamleader-group-status-count-gray" title="Grijs">{{ $coach['groupStatusCounts']['gray'] }}</span>
+                @endif
+              </div>
+            </td>
             <td>{{ $coach['groups']->count() }}</td>
           </tr>
           <tr id="teamleader-teacher-groups-{{ $coach['id'] }}" class="hidden teamleader-teacher-groups-row">
@@ -173,14 +200,14 @@
               @if ($coach['groups']->isNotEmpty())
                 <div class="teamleader-coach-group-list">
                   @foreach ($coach['groups'] as $group)
-                    <article class="teamleader-coach-group">
+                    <article class="teamleader-coach-group teamleader-coach-group-attention-{{ $group['attentionColor'] }}">
                       <strong>{{ $group['name'] }}</strong>
                       <span>{{ $group['studentCount'] }} studenten</span>
                       @php($coachRedStudentPercentage = $group['studentCount'] > 0 ? ($group['redStudentCount'] / $group['studentCount']) * 100 : 0)
                       @php($coachRedStudentClass = $group['redStudentCount'] === 0 ? 'teamleader-progress-high' : ($coachRedStudentPercentage <= 20 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
-                      @php($coachRedOutcomeClass = $group['redOrPurpleOutcomeCount'] === 0 ? 'teamleader-progress-high' : ($group['redOrPurpleOutcomeCount'] <= 3 * $group['studentCount'] ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
+                      @php($coachRedOutcomeClass = $group['redOutcomeCount'] === 0 ? 'teamleader-progress-high' : ($group['redOutcomeCount'] <= 3 * $group['studentCount'] ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
                       <span class="teamleader-progress-indicator {{ $coachRedStudentClass }}">{{ $group['redStudentCount'] }} studenten in het rood</span>
-                      <span class="teamleader-progress-indicator {{ $coachRedOutcomeClass }}">{{ $group['redOrPurpleOutcomeCount'] }} leeruitkomsten in het rood of paars</span>
+                      <span class="teamleader-progress-indicator {{ $coachRedOutcomeClass }}">{{ $group['redOutcomeCount'] }} leeruitkomsten in het rood</span>
                       @php($coachGroupProgressClass = $group['goal'] === null ? 'teamleader-progress-NVT' : ($group['displayAveragePercentage'] >= $group['goal'] ? 'teamleader-progress-high' : ($group['displayAveragePercentage'] >= $group['goal'] - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
                       <span class="teamleader-progress-indicator {{ $coachGroupProgressClass }}">{{ $group['displayAveragePercentage'] }}% {{ $group['studyPhase'] ? 'gemiddelde voortgang in '.$group['studyPhase'] : 'gemiddelde voortgang' }}</span>
                       <button class="button" type="button" data-teamleader-open-group="{{ $group['id'] }}">Bekijk groep</button>

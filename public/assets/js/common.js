@@ -13,7 +13,7 @@ function show(page, force = false) {
 
   const activeRoute = activeView?.dataset.roleSection || page;
   document.querySelectorAll("[data-route]").forEach((button) => {
-    const active = button.dataset.route === activeRoute;
+    const active = button.dataset.route === activeRoute || button.dataset.route === page;
     button.classList.toggle("active", active);
     if (active) button.setAttribute("aria-current", "page");
     else button.removeAttribute("aria-current");

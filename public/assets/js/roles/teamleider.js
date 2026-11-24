@@ -9,12 +9,34 @@ window.RoleApp.initializeRole({
 });
 RoleSettings.initialize();
 
+const setTeacherExpanded = (button, expanded) => {
+  const groupsRow = document.getElementById(button.getAttribute("aria-controls"));
+  if (!groupsRow) return;
+
+  button.setAttribute("aria-expanded", String(expanded));
+  groupsRow.classList.toggle("hidden", !expanded);
+};
+
 document.querySelectorAll("[data-teamleader-teacher-toggle]").forEach((button) => {
   button.addEventListener("click", () => {
-    const groupsRow = document.getElementById(button.getAttribute("aria-controls"));
     const expanded = button.getAttribute("aria-expanded") === "true";
-    button.setAttribute("aria-expanded", String(!expanded));
-    groupsRow.classList.toggle("hidden", expanded);
+    setTeacherExpanded(button, !expanded);
+  });
+});
+
+document.querySelectorAll("[data-teamleader-open-teacher]").forEach((button) => {
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const teacherToggle = document.getElementById(
+      `teamleader-teacher-toggle-${button.dataset.teamleaderOpenTeacher}`,
+    );
+    if (!teacherToggle) return;
+
+    show("managerTeachers", true);
+    setTeacherExpanded(teacherToggle, true);
+    teacherToggle.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 });
 

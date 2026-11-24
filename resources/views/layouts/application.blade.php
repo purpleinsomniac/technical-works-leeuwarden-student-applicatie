@@ -56,6 +56,16 @@
     window.LARAVEL_COACH_PAGE = {{ Illuminate\Support\Js::from($coachPage ?? 'overview') }};
     window.LARAVEL_COACH_STUDENT_ID = {{ Illuminate\Support\Js::from($coachStudentId ?? null) }};
     window.LARAVEL_COACH_PROJECT_FILTER = {{ Illuminate\Support\Js::from(request()->query('status', '')) }};
+    @if ($frontendUser['role'] === 'teamleider')
+      window.LARAVEL_TEAMLEADER_PAGE = {{ Illuminate\Support\Js::from($teamleaderPage) }};
+      window.LARAVEL_TEAMLEADER_GROUP = {{ Illuminate\Support\Js::from($teamleaderGroup) }};
+      window.LARAVEL_TEAMLEADER_STUDENT = {{ Illuminate\Support\Js::from($teamleaderStudent) }};
+      window.LARAVEL_TEAMLEADER_ROUTES = {{ Illuminate\Support\Js::from([
+          'overview' => route('teamleader.dashboard'),
+          'group' => route('teamleader.group', ['group' => '__GROUP_ID__']),
+          'student' => route('teamleader.student', ['group' => '__GROUP_ID__', 'student' => '__STUDENT_ID__']),
+      ]) }};
+    @endif
     window.LARAVEL_API = {{ Illuminate\Support\Js::from([
         'challengeSync' => route('challenges.sync'),
         'notificationSettings' => route('profile.notifications'),

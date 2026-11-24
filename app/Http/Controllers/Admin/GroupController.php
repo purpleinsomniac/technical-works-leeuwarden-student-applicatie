@@ -22,6 +22,8 @@ class GroupController extends Controller
                 'schooljaar' => $data['schooljaar'] ?? null,
                 'omschrijving' => $data['omschrijving'] ?? null,
                 'coach_id' => $data['coach_id'] ?? null,
+                'studiefases_id' => $data['studiefases_id'] ?? null,
+                'doel' => $data['doel'] ?? null,
             ]);
             $group->students()->sync($data['student_ids'] ?? []);
         });
@@ -39,6 +41,8 @@ class GroupController extends Controller
                 'schooljaar' => $data['schooljaar'] ?? null,
                 'omschrijving' => $data['omschrijving'] ?? null,
                 'coach_id' => $data['coach_id'] ?? null,
+                'studiefases_id' => $data['studiefases_id'] ?? null,
+                'doel' => $data['doel'] ?? null,
             ]);
             $group->students()->sync($data['student_ids'] ?? []);
         });
@@ -65,6 +69,12 @@ class GroupController extends Controller
                 'integer',
                 Rule::in(User::canCoach()->pluck('id')->all()),
             ],
+            'studiefases_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('studiefases', 'id'),
+            ],
+            'doel' => ['nullable', 'integer', 'min:0', 'max:100'],
             'student_ids' => ['nullable', 'array'],
             'student_ids.*' => [
                 'required',

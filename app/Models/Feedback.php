@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -42,6 +43,24 @@ class Feedback extends Model
         'wat_kan_beter',
         'volgende_stap',
     ];
+
+    protected function casts(): array
+    {
+        return ['processed_confirmed_at' => 'datetime', 'awarded_hours' => 'integer'];
+    }
+
+    public function scopeReviewableBy(Builder $query, User $coach): Builder
+    {
+        return $query->where('type', 'received')->when(! $coach->canUseRole('beheerder'),
+            fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->where('auteur_id', $coach->id)
+                ->orWhereHas('student.groups', fn (Builder $groups) => $groups->where('coach_id', $coach->id))));
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
 
     public function author(): BelongsTo
     {

@@ -27,6 +27,11 @@ class DashboardController extends RoleDashboardController
         return $this->renderCoachPage($request, 'groups');
     }
 
+    public function group(Request $request, int $group): View
+    {
+        return $this->renderCoachPage($request, 'group', groupId: $group);
+    }
+
     public function activities(Request $request): View
     {
         return $this->renderCoachPage($request, 'activities');
@@ -47,12 +52,17 @@ class DashboardController extends RoleDashboardController
         return $this->renderCoachPage($request, 'feedback');
     }
 
+    public function settings(Request $request): View
+    {
+        return $this->renderCoachPage($request, 'settings');
+    }
+
     public function student(Request $request, int $student): View
     {
         return $this->renderCoachPage($request, 'student', $student);
     }
 
-    private function renderCoachPage(Request $request, string $page, ?int $studentId = null): View
+    private function renderCoachPage(Request $request, string $page, ?int $studentId = null, ?int $groupId = null): View
     {
         /** @var User $user */
         $user = $request->user();
@@ -68,7 +78,10 @@ class DashboardController extends RoleDashboardController
             ->orderBy('naam')
             ->orderBy('schooljaar')
             ->get();
-        $students = $groups
+        $selectedGroup = $groupId === null ? null : $groups->firstWhere('id', $groupId);
+        abort_if($groupId !== null && $selectedGroup === null, 404);
+        $studentGroups = $selectedGroup ? collect([$selectedGroup]) : $groups;
+        $students = $studentGroups
             ->flatMap(fn (Group $group) => $group->students)
             ->unique('id')
             ->sortBy('naam')
@@ -89,7 +102,16 @@ class DashboardController extends RoleDashboardController
             roleData: $roleData,
             style: 'css/roles/coach.css',
             scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/coach.js'],
-            extraData: ['coachPage' => $page, 'coachStudentId' => $studentId],
+            extraData: [
+                'coachPage' => $page,
+                'coachStudentId' => $studentId,
+                'coachGroup' => $selectedGroup ? [
+                    'id' => $selectedGroup->id,
+                    'name' => $selectedGroup->naam,
+                    'schoolYear' => $selectedGroup->schooljaar,
+                    'description' => $selectedGroup->omschrijving,
+                ] : null,
+            ],
         );
     }
 
@@ -119,19 +141,32 @@ class DashboardController extends RoleDashboardController
             ])
             ->all();
 
-        $goals = LearningGoal::query()
-            ->whereIn('gebruiker_id', $studentIds)
-            ->with(['user', 'learningOutcome'])
-            ->latest()
-            ->get()
-            ->map(fn (LearningGoal $goal): array => [
-                'studentId' => $goal->user->id,
-                'student' => $goal->user->naam,
-                'title' => $goal->onderwerp,
-                'description' => $goal->omschrijving,
-                'status' => $goal->status,
-                'outcome' => $goal->learningOutcome?->titel,
-            ])
+        $coachStudentIds = $students->pluck('id')->flip();
+        $goalStudents = User::query()
+            ->where('rol', 'student')
+            ->with(['learningGoals' => fn ($query) => $query->with('learningOutcome')->latest()])
+            ->orderBy('naam')
+            ->get(['id', 'naam'])
+            ->map(function (User $student) use ($coachStudentIds): array {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->naam,
+                    'canViewProgress' => $coachStudentIds->has($student->id),
+                    'goals' => $student->learningGoals
+                        ->map(fn (LearningGoal $goal): array => [
+                            'studentId' => $student->id,
+                            'student' => $student->naam,
+                            'title' => $goal->onderwerp,
+                            'description' => $goal->omschrijving,
+                            'status' => $goal->status,
+                            'outcome' => $goal->learningOutcome?->titel,
+                        ])
+                        ->all(),
+                ];
+            })
+            ->all();
+        $goals = collect($goalStudents)
+            ->flatMap(fn (array $goalStudent): array => $goalStudent['goals'])
             ->all();
 
         $projectRecords = Assignment::query()
@@ -174,11 +209,9 @@ class DashboardController extends RoleDashboardController
             ])
             ->all();
 
-        $pendingFeedback = Feedback::query()
-            ->where('auteur_id', $coach->id)
-            ->where('type', 'received')
+        $pendingFeedback = Feedback::reviewableBy($coach)
             ->whereNull('processed_confirmed_at')
-            ->with('student:id,naam')
+            ->with(['student:id,naam', 'learningOutcome'])
             ->oldest('updated_at')
             ->get()
             ->map(fn (Feedback $feedback): array => [
@@ -186,15 +219,34 @@ class DashboardController extends RoleDashboardController
                 'student' => $feedback->student->naam,
                 'title' => $feedback->onderwerp,
                 'updatedAt' => $feedback->updated_at?->locale('nl')->translatedFormat('j M Y'),
+                'outcome' => $feedback->learningOutcome->titel,
+                'code' => $feedback->learningOutcome->code,
+                'positive' => $feedback->wat_ging_goed,
+                'improve' => $feedback->wat_kan_beter,
+                'action' => $feedback->volgende_stap,
             ])
             ->all();
+
+        $reviewedFeedback = Feedback::reviewableBy($coach)->whereNotNull('processed_confirmed_at')
+            ->with(['student:id,naam', 'learningOutcome', 'reviewer:id,naam'])
+            ->latest('processed_confirmed_at')->limit(10)->get()
+            ->map(fn (Feedback $feedback): array => [
+                'student' => $feedback->student->naam,
+                'title' => $feedback->onderwerp,
+                'outcome' => $feedback->learningOutcome->titel,
+                'hours' => $feedback->awarded_hours,
+                'reviewer' => $feedback->reviewer?->naam,
+                'date' => $feedback->processed_confirmed_at->timezone('Europe/Berlin')->locale('nl')->translatedFormat('j M Y, H:i'),
+            ])->all();
 
         return [
             'activities' => $activities,
             'goals' => $goals,
+            'goalStudents' => $goalStudents,
             'projects' => $projects,
             'pendingProjects' => $pendingProjects,
             'pendingFeedback' => $pendingFeedback,
+            'reviewedFeedback' => $reviewedFeedback,
             'groups' => $groups->map(fn (Group $group): array => [
                 'id' => $group->id,
                 'name' => $group->naam,
@@ -238,6 +290,32 @@ class DashboardController extends RoleDashboardController
             ->selectRaw('SUM(amount) as total')
             ->groupBy('user_id')
             ->pluck('total', 'user_id');
+        $outcomeXp = DB::table('activity_xp')
+            ->whereIn('user_id', $studentIds)
+            ->where('source', 'outcome')
+            ->get()
+            ->groupBy('user_id');
+        // Creation dates describe student actions; coach edits are deliberately excluded.
+        $latestActivity = collect();
+        foreach ([
+            [new Assignment(), 'gebruiker_id', 'Project aangemaakt'],
+            [new \App\Models\Reflection(), 'gebruiker_id', 'Reflectie toegevoegd'],
+            [new Feedback(), 'student_id', 'Feedback toegevoegd'],
+        ] as [$model, $owner, $label]) {
+            $query = $model->newQuery()->whereIn($owner, $studentIds)->whereNotNull('created_at');
+            if ($model instanceof Feedback) {
+                $query->whereColumn('auteur_id', 'student_id');
+            }
+            $latestActivity = $latestActivity->concat($query
+                ->selectRaw($owner.' as student_id, MAX(created_at) as occurred_at')
+                ->groupBy($owner)->get()
+                ->map(fn ($record): array => [
+                    'studentId' => (int) $record->student_id,
+                    'label' => $label,
+                    'at' => $record->occurred_at,
+                ]));
+        }
+        $latestActivity = $latestActivity->sortByDesc('at')->unique('studentId')->keyBy('studentId');
         $levelNames = [
             'Nieuwkomer',
             'Ontdekker',
@@ -252,11 +330,13 @@ class DashboardController extends RoleDashboardController
         ];
 
         return $students
-            ->map(function (User $student) use ($activityXp, $challengeXp, $levelNames, $groupMemberships): array {
+            ->map(function (User $student) use ($activityXp, $challengeXp, $outcomeXp, $latestActivity, $levelNames, $groupMemberships): array {
                 $xp = (int) ($activityXp[$student->id] ?? 0) + (int) ($challengeXp[$student->id] ?? 0);
                 $level = intdiv($xp, 1000) + 1;
                 $levelProgress = $xp % 1000;
                 $memberships = $groupMemberships->get($student->id, collect());
+                $activity = $latestActivity->get($student->id);
+                $activityDate = $activity ? \Carbon\Carbon::parse($activity['at'])->timezone('Europe/Berlin') : null;
 
                 return [
                     'id' => $student->id,
@@ -264,8 +344,16 @@ class DashboardController extends RoleDashboardController
                     'studentNumber' => $student->studentnummer,
                     'year' => $student->leerjaar,
                     'phase' => $student->studyPhase?->naam,
+                    'lastActivity' => $activityDate ? [
+                        'label' => $activity['label'],
+                        'at' => $activityDate->toIso8601String(),
+                        'date' => $activityDate->locale('nl')->translatedFormat('j M Y, H:i'),
+                        'relative' => $activityDate->locale('nl')->diffForHumans(),
+                    ] : null,
                     'hours' => $student->progress->sum('gevalideerde_uren'),
                     'xp' => $xp,
+                    'activityXp' => (int) ($activityXp[$student->id] ?? 0),
+                    'challengeXp' => (int) ($challengeXp[$student->id] ?? 0),
                     'level' => $level,
                     'levelName' => $levelNames[$level - 1] ?? 'Meester · rang '.($level - 9),
                     'levelProgress' => $levelProgress,
@@ -279,6 +367,8 @@ class DashboardController extends RoleDashboardController
                             'id' => $progress->learningOutcome->id,
                             'title' => $progress->learningOutcome->titel,
                             'code' => $progress->learningOutcome->code,
+                            'xp' => (int) $outcomeXp->get($student->id, collect())
+                                ->where('source_id', $progress->learningOutcome->id)->sum('amount'),
                             'hours' => $progress->gevalideerde_uren,
                             'target' => $progress->normwaarden ?? $progress->learningOutcome->normwaarden,
                             'status' => $progress->status,

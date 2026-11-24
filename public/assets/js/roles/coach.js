@@ -3,13 +3,62 @@ window.RoleApp.initializeRole({
   routes: [
     ["Overzicht", "coachOverview"],
     ["Groepen", "coachGroups"],
-    ["Leeractiviteiten", "coachActivities"],
+    ["Leeruitkomsten", "coachActivities"],
     ["Leerdoelen", "coachGoals"],
     ["Projecten", "coachProjects"],
     ["Feedback", "coachFeedback"],
+    ["Instellingen", "coachSettings"],
   ],
 });
 RoleSettings.initialize();
+
+// Keep filters per signed-in user and group for this browser tab.
+function rememberCoachFilters(scope, ids) {
+  const key = `coach-filters:${window.LARAVEL_USER.id}:${scope}`;
+  const controls = ids.map((id) => document.getElementById(id)).filter(Boolean);
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(key) || "{}");
+    controls.forEach((control) => {
+      if (typeof saved[control.id] !== "string") return;
+      if (control.tagName === "SELECT" && ![...control.options].some((option) => option.value === saved[control.id])) return;
+      control.value = saved[control.id];
+    });
+  } catch { /* Browsing remains available when storage is blocked. */ }
+  const save = () => {
+    try { sessionStorage.setItem(key, JSON.stringify(Object.fromEntries(controls.map((control) => [control.id, control.value])))); } catch {}
+  };
+  controls.forEach((control) => {
+    control.addEventListener("input", save);
+    control.addEventListener("change", save);
+  });
+  return save;
+}
+const saveRosterFilters = rememberCoachFilters(
+  `roster:${document.getElementById("coachStudentRoster")?.dataset.rosterScope || "all"}`,
+  ["coachStudentSearch", "coachPhaseFilter", "coachProgressFilter", "coachGroupFilter", "coachStudentSort"],
+);
+rememberCoachFilters("activities", ["coachActivitySearch", "coachActivityPhaseFilter"]);
+rememberCoachFilters("goals", ["coachGoalSearch", "coachGoalStatusFilter"]);
+rememberCoachFilters("projects", ["coachProjectSearch", "coachProjectStatusFilter"]);
+rememberCoachFilters("groups", ["coachGroupSearch"]);
+document.querySelectorAll(".coach-student-card[data-student-name]").forEach((card) => {
+  card.addEventListener("click", () => {
+    try {
+      sessionStorage.setItem(`coach-last-roster:${window.LARAVEL_USER.id}`, document.getElementById("coachStudentRoster").dataset.rosterUrl);
+    } catch {}
+  });
+});
+try {
+  const savedRoster = sessionStorage.getItem(`coach-last-roster:${window.LARAVEL_USER.id}`);
+  const rosterUrl = savedRoster ? new URL(savedRoster, location.origin) : null;
+  const groupsPath = new URL(window.LARAVEL_COACH_ROUTES.groups, location.origin).pathname;
+  if (rosterUrl?.origin === location.origin && (rosterUrl.pathname === groupsPath || rosterUrl.pathname.startsWith(`${groupsPath}/`))) {
+    document.querySelectorAll("[data-coach-roster-back]").forEach((link) => {
+      link.href = rosterUrl.href;
+      link.innerHTML = '<span aria-hidden="true">&larr;</span> Terug naar studentenoverzicht';
+    });
+  }
+} catch {}
 
 // Geef elk hoofdonderwerp een eigen deelbare URL en herstel die pagina na verversen.
 const coachPageRoutes = {
@@ -19,8 +68,18 @@ const coachPageRoutes = {
   coachGoals: "goals",
   coachProjects: "projects",
   coachFeedback: "feedback",
+  coachSettings: "settings",
 };
 const coachNav = document.getElementById("nav");
+const coachNavIcons = {
+  coachOverview: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"></rect>',
+  coachGroups: '<path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"></path><circle cx="10" cy="7.5" r="3.5"></circle><path d="M16 4.2a3.5 3.5 0 0 1 0 6.6M20 20v-1.5a3.5 3.5 0 0 0-2.7-3.4"></path>',
+  coachActivities: '<path d="M5 3.5h10l4 4V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"></path><path d="M14.5 3.5V8H19M8 12h8M8 16h8"></path>',
+  coachGoals: '<circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="1"></circle>',
+  coachProjects: '<path d="M3.5 7.5h7l2 2H20a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 .5-1Z"></path><path d="M3.5 10h17"></path>',
+  coachFeedback: '<path d="M20.5 11.5a7.8 7.8 0 0 1-.9 3.6 8 8 0 0 1-7.1 4.4 7.8 7.8 0 0 1-3.6-.9L3 20l1.4-5.9a7.8 7.8 0 0 1-.9-3.6 8 8 0 0 1 4.4-7.1 7.8 7.8 0 0 1 3.6-.9h.5a8 8 0 0 1 7.6 7.6v.5Z"></path><path d="M8 11.5h8M8 15h5"></path>',
+  coachSettings: '<circle cx="12" cy="12" r="3"></circle><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .8v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.8l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.8-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .8-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.8v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .8l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .8 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.8 3Z"></path>',
+};
 coachNav.querySelectorAll("[data-route]").forEach((button) => {
   const routeKey = coachPageRoutes[button.dataset.route];
   const url = window.LARAVEL_COACH_ROUTES?.[routeKey];
@@ -36,9 +95,14 @@ coachNav.querySelectorAll("[data-route]").forEach((button) => {
     coachProjects: window.LARAVEL_DATA?.projects?.length,
     coachFeedback: window.LARAVEL_DATA?.pendingFeedback?.length,
   };
+  const icon = document.createElement("span");
+  icon.className = "coach-nav-icon";
+  icon.setAttribute("aria-hidden", "true");
+  icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${coachNavIcons[button.dataset.route] || ""}</svg>`;
   const title = document.createElement("span");
+  title.className = "coach-nav-label";
   title.textContent = button.textContent;
-  link.append(title);
+  link.append(icon, title);
   const count = counts[button.dataset.route];
   if (Number.isFinite(count)) {
     const badge = document.createElement("span");
@@ -53,10 +117,12 @@ coachNav.querySelectorAll("[data-route]").forEach((button) => {
 const initialCoachView = {
   overview: "coachOverview",
   groups: "coachGroups",
+  group: "coachGroups",
   activities: "coachActivities",
   goals: "coachGoals",
   projects: "coachProjects",
   feedback: "coachFeedback",
+  settings: "coachSettings",
 }[window.LARAVEL_COACH_PAGE] || "coachOverview";
 const requestedStudentId = Number(window.LARAVEL_COACH_STUDENT_ID || 0);
 const coachViewFromLocation = () => {
@@ -81,7 +147,8 @@ coachNav.addEventListener("click", (event) => {
   window.history.pushState({ coachView: link.dataset.route }, "", link.href);
   show(link.dataset.route);
   if (link.dataset.route === "coachProjects" && coachProjectStatusFilter) {
-    coachProjectStatusFilter.value = new URL(link.href).searchParams.get("status") || "";
+    const params = new URL(link.href).searchParams;
+    if (params.has("status")) coachProjectStatusFilter.value = params.get("status");
     coachProjectStatusFilter.dispatchEvent(new Event("change"));
   }
   coachMobileMenuButton?.setAttribute("aria-expanded", "false");
@@ -161,6 +228,7 @@ function createPager(allItems, pageSize, anchor, label) {
 const coachStudentSearch = document.getElementById("coachStudentSearch");
 const coachPhaseFilter = document.getElementById("coachPhaseFilter");
 const coachGroupFilter = document.getElementById("coachGroupFilter");
+const coachProgressFilter = document.getElementById("coachProgressFilter");
 const coachStudentSort = document.getElementById("coachStudentSort");
 const coachStudentCards = [...document.querySelectorAll(".coach-student-card[data-student-name]")];
 const coachNoResults = document.getElementById("coachNoResults");
@@ -176,30 +244,39 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
     const selectedGroup = coachGroupFilter?.value ?? "";
 
     const matches = coachStudentCards.filter((card) => {
-      const matchesName = card.dataset.studentName.includes(searchTerm);
+      const matchesName = (card.dataset.studentSearch ?? card.dataset.studentName).includes(searchTerm);
       const matchesPhase = !selectedPhase || card.dataset.studentPhase === selectedPhase;
       const matchesGroup = !selectedGroup || card.dataset.studentGroupIds.includes(`,${selectedGroup},`);
-      return matchesName && matchesPhase && matchesGroup;
+      return matchesName && matchesPhase && matchesGroup && (!coachProgressFilter?.value || card.dataset.studentProgressBand === coachProgressFilter.value);
     });
 
     const sort = coachStudentSort?.value ?? "name";
     matches.sort((a, b) => {
+      let order = 0;
       if (sort === "progress-asc") {
-        return Number(a.dataset.studentProgress) - Number(b.dataset.studentProgress);
+        order = Number(a.dataset.studentProgress) - Number(b.dataset.studentProgress);
+      } else if (sort === "xp-desc") {
+        order = Number(b.dataset.studentXp) - Number(a.dataset.studentXp);
+      } else if (sort === "xp-asc") {
+        order = Number(a.dataset.studentXp) - Number(b.dataset.studentXp);
+      } else if (sort === "activity-desc") {
+        order = (Date.parse(b.dataset.studentActivity) || 0) - (Date.parse(a.dataset.studentActivity) || 0);
       }
-      if (sort === "xp-asc") {
-        return Number(a.dataset.studentXp) - Number(b.dataset.studentXp);
-      }
-      return a.dataset.studentName.localeCompare(b.dataset.studentName, "nl");
+      return order || a.dataset.studentName.localeCompare(b.dataset.studentName, "nl");
     });
 
     studentPager.show(matches);
+    saveRosterFilters();
+    const extraFilters = [coachPhaseFilter, coachProgressFilter, coachGroupFilter]
+      .filter((control) => control?.value).length + (sort !== "name" ? 1 : 0);
+    const filterCount = document.getElementById("coachRosterFilterCount");
+    if (filterCount) filterCount.textContent = extraFilters ? `${extraFilters} actief` : "";
     const studentCount = document.getElementById("coachStudentCount");
     if (studentCount) {
       studentCount.textContent = `${matches.length} ${matches.length === 1 ? "student" : "studenten"}`;
     }
     coachRosterReset?.classList.toggle("hidden", !(
-      searchTerm || selectedPhase || selectedGroup || (coachStudentSort?.value ?? "name") !== "name"
+      searchTerm || selectedPhase || selectedGroup || coachProgressFilter?.value || (coachStudentSort?.value ?? "name") !== "name"
     ));
     coachNoResults.classList.toggle("hidden", matches.length > 0);
     coachNoResults.textContent = matches.length
@@ -212,7 +289,7 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
       const groupName = selectedGroup
         ? coachGroupFilter.selectedOptions[0].textContent.split(" · ")[0]
         : "";
-      rosterTitle.textContent = groupName ? `Studenten in ${groupName}` : "Studenten in mijn groepen";
+      rosterTitle.textContent = groupName ? `Studenten in ${groupName}` : rosterTitle.dataset.defaultTitle;
     }
 
     // Markeer de gekozen groepskaart.
@@ -232,11 +309,13 @@ if (coachStudentSearch && coachPhaseFilter && coachNoResults && coachStudentGrid
   coachPhaseFilter.addEventListener("change", filterCoachStudents);
   coachGroupFilter?.addEventListener("change", filterCoachStudents);
   coachStudentSort?.addEventListener("change", filterCoachStudents);
+  coachProgressFilter?.addEventListener("change", filterCoachStudents);
   coachRosterReset?.addEventListener("click", () => {
     coachStudentSearch.value = "";
     coachPhaseFilter.value = "";
     if (coachGroupFilter) coachGroupFilter.value = "";
     if (coachStudentSort) coachStudentSort.value = "name";
+    if (coachProgressFilter) coachProgressFilter.value = "";
     filterCoachStudents();
   });
   filterCoachStudents();
@@ -283,6 +362,13 @@ if (coachProjectGrid && coachProjectSearch && coachProjectStatusFilter && coachP
 
     projectPager.show(matches);
     coachProjectNoResults.classList.toggle("hidden", matches.length > 0);
+    const resultCount = document.getElementById("coachProjectResults");
+    if (resultCount) resultCount.textContent = `${matches.length} ${matches.length === 1 ? "project" : "projecten"}`;
+    document.querySelectorAll("#coachProjects [data-project-filter-shortcut]").forEach((button) => {
+      const active = button.dataset.projectFilterShortcut === selectedStatus;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
   }
 
   coachProjectSearch.addEventListener("input", filterCoachProjects);
@@ -306,20 +392,29 @@ if (coachProjectGrid && coachProjectSearch && coachProjectStatusFilter && coachP
   filterCoachProjects();
 }
 
+document.getElementById("coachProjectReset")?.addEventListener("click", () => {
+  if (!coachProjectSearch || !coachProjectStatusFilter) return;
+  coachProjectSearch.value = "";
+  coachProjectStatusFilter.value = "";
+  coachProjectSearch.dispatchEvent(new Event("input", { bubbles: true }));
+  coachProjectStatusFilter.dispatchEvent(new Event("change", { bubbles: true }));
+  coachProjectSearch.focus();
+});
+
 /* Keep the remaining read-only directories compact. */
 const coachDirectoryPagers = new WeakMap();
+const coachGoalGrid = document.querySelector("#coachGoals .coach-directory-grid");
 document.querySelectorAll(".coach-directory-grid").forEach((grid) => {
-  if (grid === coachProjectGrid) return;
+  if (grid === coachProjectGrid || grid === coachGoalGrid) return;
   const cards = [...grid.children];
   const pager = createPager(cards, 6, grid, "Pagina's");
   coachDirectoryPagers.set(grid, pager);
   pager.show(cards);
 });
 
-/* Zoek ook snel door activiteiten en doelen, zonder de huidige pagina kwijt te raken. */
+/* Zoek snel door leeractiviteiten zonder de huidige pagina kwijt te raken. */
 [
   ["coachActivitySearch", "coachActivityNoResults", "coachActivityPhaseFilter", "phase"],
-  ["coachGoalSearch", "coachGoalNoResults", "coachGoalStatusFilter", "status"],
 ].forEach(([inputId, emptyId, selectId, dataKey]) => {
   const input = document.getElementById(inputId);
   const empty = document.getElementById(emptyId);
@@ -338,10 +433,65 @@ document.querySelectorAll(".coach-directory-grid").forEach((grid) => {
     );
     pager.show(matches);
     empty.classList.toggle("hidden", matches.length > 0);
+    if (input.id === "coachActivitySearch") {
+      const resultCount = document.getElementById("coachActivityResults");
+      if (resultCount) {
+        resultCount.textContent = `${matches.length} ${matches.length === 1 ? "leeruitkomst" : "leeruitkomsten"}`;
+      }
+    }
   };
   input.addEventListener("input", filter);
   select?.addEventListener("change", filter);
   filter();
+});
+
+const coachGoalSearch = document.getElementById("coachGoalSearch");
+const coachGoalStatusFilter = document.getElementById("coachGoalStatusFilter");
+const coachGoalNoResults = document.getElementById("coachGoalNoResults");
+
+if (coachGoalSearch && coachGoalStatusFilter && coachGoalGrid && coachGoalNoResults) {
+  const goalStudentCards = [...coachGoalGrid.children];
+
+  function filterCoachGoals() {
+    const searchTerm = coachGoalSearch.value.trim().toLocaleLowerCase("nl");
+    const selectedStatus = coachGoalStatusFilter.value;
+    let visibleStudentCount = 0;
+
+    goalStudentCards.forEach((card) => {
+      const studentMatches = card.dataset.studentName.includes(searchTerm);
+      const goals = [...card.querySelectorAll(".coach-goal-item")];
+      let visibleGoalCount = 0;
+
+      goals.forEach((goal) => {
+        const matchesSearch = !searchTerm || studentMatches || goal.dataset.directorySearch.includes(searchTerm);
+        const matchesStatus = !selectedStatus || goal.dataset.directoryStatus === selectedStatus;
+        const isVisible = matchesSearch && matchesStatus;
+        goal.classList.toggle("hidden", !isVisible);
+        if (isVisible) visibleGoalCount += 1;
+      });
+
+      const matchesEmptyStudent = goals.length === 0 && !selectedStatus && (!searchTerm || studentMatches);
+      const isVisible = visibleGoalCount > 0 || matchesEmptyStudent;
+      card.classList.toggle("hidden", !isVisible);
+      if (isVisible) visibleStudentCount += 1;
+    });
+
+    coachGoalNoResults.classList.toggle("hidden", visibleStudentCount > 0);
+  }
+
+  coachGoalSearch.addEventListener("input", filterCoachGoals);
+  coachGoalStatusFilter.addEventListener("change", filterCoachGoals);
+  filterCoachGoals();
+}
+
+document.getElementById("coachActivityReset")?.addEventListener("click", () => {
+  const search = document.getElementById("coachActivitySearch");
+  const phase = document.getElementById("coachActivityPhaseFilter");
+  if (!search || !phase) return;
+  search.value = "";
+  phase.value = "";
+  search.dispatchEvent(new Event("input", { bubbles: true }));
+  search.focus();
 });
 
 /* Paginate long work queues while keeping all open actions available. */
@@ -356,6 +506,8 @@ document.querySelectorAll(".coach-student-detail").forEach((detail) => {
   const statusFilter = detail.querySelector(".coachOutcomeStatus");
   const outcomes = [...detail.querySelectorAll(".coach-outcome-card")];
   const noResults = detail.querySelector(".coach-outcomes-no-results");
+  const outcomeCount = detail.querySelector("[data-coach-outcome-count]");
+  const resetFilters = detail.querySelector(".coach-outcome-reset");
   const pagination = detail.querySelector(".coach-outcome-pagination");
   const previousButton = detail.querySelector(".coachOutcomePrevious");
   const nextButton = detail.querySelector(".coachOutcomeNext");
@@ -386,6 +538,12 @@ document.querySelectorAll(".coach-student-detail").forEach((detail) => {
     });
 
     noResults.classList.toggle("hidden", filteredOutcomes.length > 0);
+    if (outcomeCount) {
+      outcomeCount.textContent = searchTerm || selectedStatus
+        ? `${filteredOutcomes.length} van ${outcomes.length} leeruitkomsten`
+        : `${outcomes.length} leeruitkomsten`;
+    }
+    resetFilters?.classList.toggle("hidden", !searchTerm && !selectedStatus);
 
     if (pagination && previousButton && nextButton && pageLabel && rangeLabel) {
       pagination.classList.toggle("hidden", filteredOutcomes.length <= pageSize);
@@ -398,92 +556,24 @@ document.querySelectorAll(".coach-student-detail").forEach((detail) => {
     }
   }
 
-  // Sla met fetch op, zodat de coach op de detailpagina van de student blijft.
-  detail.querySelectorAll(".coach-outcome-form").forEach((form) => {
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const button = form.querySelector(".coach-save-button");
-      const feedback = form.querySelector(".coach-save-feedback");
-      const card = form.closest(".coach-outcome-card");
-      const statusBadge = card.querySelector("[data-outcome-status-label]");
-      const originalButtonContent = button.innerHTML;
-
-      button.disabled = true;
-      button.textContent = "Opslaan...";
-      feedback.textContent = "";
-      feedback.classList.remove("is-error");
-
-      try {
-        const response = await fetch(form.action, {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-          body: new FormData(form),
-        });
-        const result = await response.json();
-
-        if (!response.ok) {
-          const validationMessage = Object.values(result.errors ?? {}).flat()[0];
-          throw new Error(validationMessage ?? result.message ?? "Opslaan is niet gelukt.");
-        }
-
-        const status = form.elements.status.value;
-        const statusLabels = {
-          niet_gestart: "Niet gestart",
-          gestart: "Gestart",
-          in_ontwikkeling: "In ontwikkeling",
-          behaald: "Behaald",
-        };
-        card.dataset.outcomeStatus = status;
-        statusBadge.className = `coach-status-badge coach-status-${status}`;
-        statusBadge.textContent = statusLabels[status];
-        feedback.textContent = result.message ?? "De voortgang is bijgewerkt.";
-
-        // Werk de samenvatting bij op basis van de actuele waarden in de formulieren.
-        const totalHours = [...detail.querySelectorAll('input[name="gevalideerde_uren"]')]
-          .reduce((total, input) => total + Number(input.value), 0);
-        const totalHoursLabel = detail.querySelector("[data-coach-total-hours]");
-        totalHoursLabel.firstChild.textContent = `${totalHours.toLocaleString("nl")} `;
-        const targetHours = Number(detail.dataset.coachTargetHours);
-        const percentage = targetHours > 0 ? Math.min(100, Math.round((totalHours / targetHours) * 100)) : 0;
-        const progressValue = detail.querySelector("[data-coach-progress-value]");
-        const progressBar = detail.querySelector("[data-coach-progress-bar]");
-        progressValue.textContent = `${percentage}%`;
-        progressBar.setAttribute("aria-valuenow", percentage);
-        progressBar.firstElementChild.style.width = `${percentage}%`;
-
-        const studentCard = document.querySelector(`[data-coach-student-card="${detail.dataset.studentId}"]`);
-        if (studentCard) {
-          const targetHours = Number(studentCard.dataset.coachTargetHours);
-          const percentage = targetHours > 0 ? Math.min(100, Math.round((totalHours / targetHours) * 100)) : 0;
-          studentCard.dataset.studentProgress = String(percentage);
-          studentCard.querySelector("[data-coach-student-hours]").textContent = totalHours.toLocaleString("nl");
-          studentCard.querySelector("[data-coach-student-progress]").setAttribute("aria-valuenow", percentage);
-          studentCard.querySelector("[data-coach-student-progress] > span").style.width = `${percentage}%`;
-          studentCard.querySelector("[data-coach-student-progress-value]").textContent = `${percentage}%`;
-        }
-
-        filterOutcomes();
-      } catch (error) {
-        feedback.textContent = error.message || "Opslaan is niet gelukt. Probeer het opnieuw.";
-        feedback.classList.add("is-error");
-      } finally {
-        button.disabled = false;
-        button.innerHTML = originalButtonContent;
-      }
-    });
-  });
-
   search.addEventListener("input", () => {
+    currentPage = 1;
+    filterOutcomes();
+  });
+  search.addEventListener("search", () => {
     currentPage = 1;
     filterOutcomes();
   });
   statusFilter.addEventListener("change", () => {
     currentPage = 1;
     filterOutcomes();
+  });
+  resetFilters?.addEventListener("click", () => {
+    search.value = "";
+    statusFilter.value = "";
+    currentPage = 1;
+    filterOutcomes();
+    search.focus();
   });
   previousButton?.addEventListener("click", () => {
     currentPage -= 1;
@@ -516,3 +606,28 @@ if (coachMobileMenuButton && coachSidebar) {
     coachSidebar.classList.remove("is-open");
   });
 }
+
+/* Search the assigned groups without navigating away or losing open details. */
+const coachGroupSearch = document.getElementById("coachGroupSearch");
+const coachGroupDisclosures = [...document.querySelectorAll(".coach-group-disclosure[data-group-search]")];
+const coachCollapseGroupsButton = document.getElementById("coachGroupCollapse");
+function updateCoachGroupCollapseButton() {
+  if (coachCollapseGroupsButton) coachCollapseGroupsButton.disabled = !coachGroupDisclosures.some((group) => group.open);
+}
+coachGroupDisclosures.forEach((group) => group.addEventListener("toggle", updateCoachGroupCollapseButton));
+coachGroupSearch?.addEventListener("input", () => {
+  const term = coachGroupSearch.value.trim().toLocaleLowerCase("nl");
+  let count = 0;
+  coachGroupDisclosures.forEach((group) => {
+    const match = group.dataset.groupSearch.includes(term);
+    group.classList.toggle("hidden", !match);
+    if (match) count += 1;
+  });
+  document.getElementById("coachGroupSearchEmpty")?.classList.toggle("hidden", count > 0);
+});
+coachCollapseGroupsButton?.addEventListener("click", () => {
+  coachGroupDisclosures.forEach((group) => { group.open = false; });
+  updateCoachGroupCollapseButton();
+});
+updateCoachGroupCollapseButton();
+coachGroupSearch?.dispatchEvent(new Event("input"));

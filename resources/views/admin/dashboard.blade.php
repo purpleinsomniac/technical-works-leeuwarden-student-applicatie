@@ -56,8 +56,10 @@
       <h1>Gebruikers</h1>
       <p>Maak accounts aan, wijzig gegevens en beheer accountrollen.</p>
     </div>
-    {{-- The query flag keeps the form open after validation redirects back to this page. --}}
-    <button class="button admin-hero-action" id="toggleAdminUserForm" type="button" aria-controls="createAdminUser" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleAdminUserForm()">Account aanmaken <span aria-hidden="true">+</span></button>
+    <div class="admin-hero-actions">
+      <button class="button admin-hero-action" id="toggleAdminUserForm" type="button" aria-controls="createAdminUser" aria-expanded="{{ request()->boolean('new') ? 'true' : 'false' }}" onclick="toggleAdminUserForm()">Account aanmaken <span aria-hidden="true">+</span></button>
+      <button class="button admin-hero-action" id="toggleStudentImportForm" type="button" aria-controls="studentImportForm" aria-expanded="{{ request()->boolean('import') || session('pendingUserImport') ? 'true' : 'false' }}" onclick="toggleStudentImportForm()">Studenten importeren <span aria-hidden="true">↓</span></button>
+    </div>
   </header>
 
   {{-- Give administrators a visible result after a save or a validation error. --}}
@@ -69,13 +71,37 @@
     </div>
   @endif
 
-  {{-- Import accepts the downloadable CSV template; server-side validation rejects the whole file on any row error. --}}
-  <section class="admin-panel admin-user-create">
+  @if (session('pendingUserImport'))
+    <div class="notice admin-import-warning" role="status">
+      <p><strong>Controleer de wijzigingen voor bestaande studenten</strong></p>
+      <p>Er is nog niets opgeslagen. Accepteer de gecontroleerde wijzigingen om de import uit te voeren.</p>
+      <ul>
+        @foreach (session('pendingUserImport.review') as $change)
+          <li>
+            {{ $change['email'] }} —
+            naam: {{ $change['current']['naam'] }} → {{ $change['incoming']['naam'] }};
+            leerjaar: {{ $change['current']['leerjaar'] ?? 'Niet ingesteld' }} → {{ $change['incoming']['leerjaar'] ?? 'Niet ingesteld' }}
+          </li>
+        @endforeach
+      </ul>
+      @if (session('pendingUserImport.new_count') > 0)
+        <p>Na bevestiging worden ook {{ session('pendingUserImport.new_count') }} nieuwe studenten uit dit bestand toegevoegd.</p>
+      @endif
+      <p>Bij bestaande accounts blijven wachtwoord, studentnummer en groepskoppelingen ongewijzigd.</p>
+      <form action="{{ route('admin.users.import.confirm', ['page' => 'gebruikers']) }}" method="post">
+        @csrf
+        <button class="button dark" type="submit">Accepteren en importeren</button>
+        <button class="button" type="submit" formaction="{{ route('admin.users.import.cancel', ['page' => 'gebruikers']) }}">Annuleren</button>
+      </form>
+    </div>
+  @endif
+
+  <section class="admin-panel admin-user-create" id="studentImportForm" @if (!request()->boolean('import') && !session('pendingUserImport') && !$errors->has('bestand')) hidden @endif>
     <div class="admin-panel-heading">
       <div><h2>Studenten importeren</h2><p>Importeer meerdere studentaccounts tegelijk vanuit een CSV-bestand dat je met Excel kunt bewerken.</p></div>
     </div>
-    <p>Gebruik de kolommen <code>naam</code>, <code>email</code>, <code>leerjaar</code> en <code>tijdelijk_wachtwoord</code>. Leerjaar is optioneel (1 t/m 4); het wachtwoord moet minimaal 8 tekens bevatten. Elk e-mailadres moet nog niet in de applicatie bestaan. Studentnummers worden automatisch aangemaakt.</p>
-    <p>Download het sjabloon, open het in Excel en sla het daarna op als CSV UTF-8 (maximaal 2 MB). Tijdelijke wachtwoorden staan onversleuteld in het bestand: deel en verwijder het bestand zorgvuldig. Een fout in een rij voorkomt dat de hele import wordt opgeslagen.</p>
+    <p>Gebruik de kolommen <code>naam</code>, <code>email</code>, <code>leerjaar</code> en <code>tijdelijk_wachtwoord</code>. Leerjaar is optioneel (1 t/m 4); het wachtwoord moet minimaal 8 tekens bevatten. Bestaande studentaccounts met dezelfde e-mail worden alleen na bevestiging bijgewerkt. Studentnummers worden automatisch aangemaakt.</p>
+    <p>Download het sjabloon, open het in Excel en sla het daarna op als CSV UTF-8 (maximaal 2 MB). Tijdelijke wachtwoorden staan onversleuteld in het bestand: deel en verwijder het bestand zorgvuldig. Wachtwoorden en groepskoppelingen van bestaande accounts worden niet gewijzigd. Een fout in een rij voorkomt dat de hele import wordt opgeslagen.</p>
     <p><a href="{{ route('admin.users.template') }}">Download importsjabloon</a></p>
     <form action="{{ route('admin.users.import', ['page' => 'gebruikers']) }}" method="post" enctype="multipart/form-data" class="admin-user-form">
       @csrf
@@ -142,12 +168,21 @@
       <div><h2>Alle accounts</h2><p id="adminUsersCount" aria-live="polite">{{ $roleData['users']->count() }} gebruikers</p></div>
     </div>
     {{-- Option values match each row's data-user-role attribute for the JavaScript filter. --}}
-    <div class="admin-user-filter">
-      <label for="adminUserRoleFilter">Filter op accounttype</label>
-      <select class="input" id="adminUserRoleFilter">
-        <option value="all">Alle accounttypen</option>
-        @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}">{{ ucfirst($role->naam) }}</option>@endforeach
-      </select>
+    <div class="admin-user-filters">
+      <div class="admin-user-filter-search">
+        <label for="adminUserSearch">Zoek op naam of e-mailadres</label>
+        <div class="admin-user-search-tools">
+          <input class="input" id="adminUserSearch" type="search" autocomplete="off" placeholder="Bijvoorbeeld: Sam of sam@school.nl">
+          <button class="button admin-user-search-clear" type="button" id="adminUserSearchClear" hidden>Wissen</button>
+        </div>
+      </div>
+      <div class="admin-user-filter">
+        <label for="adminUserRoleFilter">Filter op accounttype</label>
+        <select class="input" id="adminUserRoleFilter">
+          <option value="all">Alle accounttypen</option>
+          @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}">{{ ucfirst($role->naam) }}</option>@endforeach
+        </select>
+      </div>
     </div>
     <div class="admin-users-table-wrap">
       <table class="admin-users-table">
@@ -155,71 +190,77 @@
         <tbody>
           {{-- Show a data-driven row for each account so its existing role is available to the filter. --}}
           @forelse ($roleData['users'] as $managedUser)
-            <tr data-user-role="{{ $managedUser->primaryRole?->naam ?? $managedUser->rol }}">
+            @php($managedUserRole = $managedUser->primaryRole?->naam ?? $managedUser->rol)
+            <tr data-user-role="{{ $managedUserRole }}" data-user-search="{{ mb_strtolower($managedUser->naam.' '.$managedUser->email.' '.($managedUser->studentnummer ?? '')) }}">
               <td>{{ $managedUser->naam }}</td>
               <td><a href="mailto:{{ $managedUser->email }}">{{ $managedUser->email }}</a></td>
-              <td>{{ ucfirst($managedUser->primaryRole?->naam ?? $managedUser->rol) }}</td>
+              <td>{{ ucfirst($managedUserRole) }}</td>
               <td>
-                @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) === 'student')
+                @if ($managedUserRole === 'student')
                   <strong>{{ $managedUser->studentnummer ?: 'Niet ingesteld' }}</strong><br><small>{{ $managedUser->leerjaar ? 'Leerjaar '.$managedUser->leerjaar : 'Leerjaar niet ingesteld' }}</small>
                 @else
                   —
                 @endif
               </td>
               <td>
-                {{-- Keep each edit form beside its user to avoid mixing account identifiers. --}}
-                <details class="admin-user-edit">
-                  <summary class="button">Wijzigen</summary>
-                  <form action="{{ route('admin.users.update', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+                @if ($managedUserRole === 'admin')
+                  <button class="button admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden gewijzigd.">Wijzigen</button>
+                  <button class="button admin-user-delete admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden verwijderd.">Verwijderen</button>
+                @else
+                  {{-- Keep each edit form beside its user to avoid mixing account identifiers. --}}
+                  <details class="admin-user-edit">
+                    <summary class="button">Wijzigen</summary>
+                    <form action="{{ route('admin.users.update', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" class="admin-user-form">
+                      @csrf
+                      {{-- Laravel interprets this form as an update while the browser submits POST. --}}
+                      @method('PUT')
+                      <input type="hidden" name="_account_user_id" value="{{ $managedUser->id }}">
+                      <div class="admin-user-fields">
+                        <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
+                        <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
+                        <div>
+                          <label for="user-{{ $managedUser->id }}-role">Accounttype</label>
+                          <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" data-admin-user-role-selector required>
+                            @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(($managedUser->primaryRole?->naam ?? $managedUser->rol) === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
+                          </select>
+                        </div>
+                        <div data-admin-student-fields @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student') hidden @endif>
+                          <p>Studentnummer: <strong>{{ $managedUser->studentnummer ?: 'Wordt aangemaakt bij de eerste opslag als student' }}</strong></p>
+                          <label for="user-{{ $managedUser->id }}-year">Leerjaar</label>
+                          <select class="input" id="user-{{ $managedUser->id }}-year" name="leerjaar" @disabled(($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student')>
+                            <option value="">Niet ingesteld</option>
+                            @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) $managedUser->leerjaar === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
+                          </select>
+                          <fieldset class="admin-user-group-fields">
+                            <legend>Groep(en) voor deze student</legend>
+                            @forelse ($roleData['groups'] as $group)
+                              @php($selectedGroupsAfterError = (string) old('_account_user_id') === (string) $managedUser->id ? $selectedUserGroupIds : null)
+                              <label><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked($selectedGroupsAfterError !== null ? in_array($group->id, $selectedGroupsAfterError) : $managedUser->groups->contains('id', $group->id))><span>{{ $group->naam }}<small>{{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</small></span></label>
+                            @empty
+                              <small>Maak eerst een groep aan om deze student aan een docent te koppelen.</small>
+                            @endforelse
+                          </fieldset>
+                        </div>
+                        <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
+                        <div><label for="user-{{ $managedUser->id }}-password-confirmation">Herhaal nieuw wachtwoord</label><input class="input" id="user-{{ $managedUser->id }}-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8"></div>
+                      </div>
+                      <button class="button dark" type="submit">Wijzigingen opslaan</button>
+                    </form>
+                  </details>
+                  {{-- Warn that deleting a user also removes their linked learning records. --}}
+                  <form action="{{ route('admin.users.destroy', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je dit account wilt verwijderen? Gekoppelde voortgang, opdrachten, reflecties en feedback worden ook verwijderd.')">
                     @csrf
-                    {{-- Laravel interprets this form as an update while the browser submits POST. --}}
-                    @method('PUT')
-                    <input type="hidden" name="_account_user_id" value="{{ $managedUser->id }}">
-                    <div class="admin-user-fields">
-                      <div><label for="user-{{ $managedUser->id }}-name">Naam</label><input class="input" id="user-{{ $managedUser->id }}-name" name="naam" value="{{ $managedUser->naam }}" maxlength="255" required></div>
-                      <div><label for="user-{{ $managedUser->id }}-email">E-mailadres</label><input class="input" id="user-{{ $managedUser->id }}-email" name="email" type="email" value="{{ $managedUser->email }}" maxlength="255" required></div>
-                      <div>
-                        <label for="user-{{ $managedUser->id }}-role">Accounttype</label>
-                        <select class="input" id="user-{{ $managedUser->id }}-role" name="rol" data-admin-user-role-selector required>
-                          @foreach ($roleData['roles'] as $role)<option value="{{ $role->naam }}" @selected(($managedUser->primaryRole?->naam ?? $managedUser->rol) === $role->naam)>{{ ucfirst($role->naam) }}</option>@endforeach
-                        </select>
-                      </div>
-                      <div data-admin-student-fields @if (($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student') hidden @endif>
-                        <p>Studentnummer: <strong>{{ $managedUser->studentnummer ?: 'Wordt aangemaakt bij de eerste opslag als student' }}</strong></p>
-                        <label for="user-{{ $managedUser->id }}-year">Leerjaar</label>
-                        <select class="input" id="user-{{ $managedUser->id }}-year" name="leerjaar" @disabled(($managedUser->primaryRole?->naam ?? $managedUser->rol) !== 'student')>
-                          <option value="">Niet ingesteld</option>
-                          @foreach ([1, 2, 3, 4] as $year)<option value="{{ $year }}" @selected((string) $managedUser->leerjaar === (string) $year)>Leerjaar {{ $year }}</option>@endforeach
-                        </select>
-                        <fieldset class="admin-user-group-fields">
-                          <legend>Groep(en) voor deze student</legend>
-                          @forelse ($roleData['groups'] as $group)
-                            @php($selectedGroupsAfterError = (string) old('_account_user_id') === (string) $managedUser->id ? $selectedUserGroupIds : null)
-                            <label><input type="checkbox" name="group_ids[]" value="{{ $group->id }}" @checked($selectedGroupsAfterError !== null ? in_array($group->id, $selectedGroupsAfterError) : $managedUser->groups->contains('id', $group->id))><span>{{ $group->naam }}<small>{{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</small></span></label>
-                          @empty
-                            <small>Maak eerst een groep aan om deze student aan een docent te koppelen.</small>
-                          @endforelse
-                        </fieldset>
-                      </div>
-                      <div><label for="user-{{ $managedUser->id }}-password">Nieuw wachtwoord (optioneel)</label><input class="input" id="user-{{ $managedUser->id }}-password" name="password" type="password" autocomplete="new-password" minlength="8"></div>
-                      <div><label for="user-{{ $managedUser->id }}-password-confirmation">Herhaal nieuw wachtwoord</label><input class="input" id="user-{{ $managedUser->id }}-password-confirmation" name="password_confirmation" type="password" autocomplete="new-password" minlength="8"></div>
-                    </div>
-                    <button class="button dark" type="submit">Wijzigingen opslaan</button>
+                    @method('DELETE')
+                    <button class="button admin-user-delete" type="submit">Verwijderen</button>
                   </form>
-                </details>
-                {{-- Warn that deleting a user also removes their linked learning records. --}}
-                <form action="{{ route('admin.users.destroy', ['user' => $managedUser, 'page' => 'gebruikers']) }}" method="post" onsubmit="return confirm('Weet je zeker dat je dit account wilt verwijderen? Gekoppelde voortgang, opdrachten, reflecties en feedback worden ook verwijderd.')">
-                  @csrf
-                  @method('DELETE')
-                  <button class="button admin-user-delete" type="submit">Verwijderen</button>
-                </form>
+                @endif
               </td>
             </tr>
           @empty
             <tr data-user-empty><td colspan="5">Er zijn nog geen accounts.</td></tr>
           @endforelse
           {{-- The filter reveals this row when accounts exist but none match the chosen role. --}}
-          <tr id="adminUsersNoMatches" hidden><td colspan="5">Geen gebruikers gevonden voor dit accounttype.</td></tr>
+          <tr id="adminUsersNoMatches" hidden><td colspan="5">Geen gebruikers gevonden. Pas je zoekopdracht of filter aan.</td></tr>
         </tbody>
       </table>
     </div>
@@ -269,7 +310,11 @@
       <fieldset class="admin-class-members">
         <legend>Studenten in deze groep <span>({{ $roleData['students']->count() }} beschikbaar)</span></legend>
         @if ($roleData['students']->isNotEmpty())
-          <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
+          <div class="admin-class-search-tools">
+            <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam, e-mailadres of studentnummer"></label>
+            <button class="button admin-class-search-clear" type="button" data-class-student-clear hidden>Zoekopdracht wissen</button>
+          </div>
+          <p class="admin-class-student-summary" data-class-student-summary role="status" aria-live="polite"></p>
           <div class="admin-class-student-list">
             @foreach ($roleData['students'] as $student)
               <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
@@ -277,6 +322,7 @@
                 <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
               </label>
             @endforeach
+            <p class="admin-class-student-empty" data-class-student-empty hidden>Geen studenten gevonden met deze zoekopdracht.</p>
           </div>
         @else
           <p class="dim">Maak eerst studentaccounts aan via Gebruikers.</p>
@@ -293,7 +339,7 @@
           <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
           <div class="admin-class-actions">
             <details class="admin-class-edit" @if ($groupForm === 'update' && (string) old('_group_id') === (string) $group->id) open @endif>
-              <summary class="button">Groep beheren</summary>
+              <summary class="button">Wijzigen</summary>
               <form action="{{ route('admin.groups.update', ['group' => $group, 'page' => 'groepen']) }}" method="post" class="admin-class-form">
                 @csrf
                 @method('PUT')
@@ -315,7 +361,11 @@
                 </div>
                 <fieldset class="admin-class-members">
                   <legend>Studenten in deze groep</legend>
-                  <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam of e-mailadres"></label>
+                  <div class="admin-class-search-tools">
+                    <label class="admin-class-search">Zoek student<input class="input" type="search" data-class-student-search autocomplete="off" placeholder="Naam, e-mailadres of studentnummer"></label>
+                    <button class="button admin-class-search-clear" type="button" data-class-student-clear hidden>Zoekopdracht wissen</button>
+                  </div>
+                  <p class="admin-class-student-summary" data-class-student-summary role="status" aria-live="polite"></p>
                   <div class="admin-class-student-list">
                     @foreach ($roleData['students'] as $student)
                       <label class="admin-class-student-option" data-class-student-option="{{ mb_strtolower($student->naam.' '.$student->email.' '.$student->studentnummer.' '.$student->leerjaar) }}">
@@ -323,6 +373,7 @@
                         <span><strong>{{ $student->naam }}</strong><small>{{ $student->email }}</small><small>{{ $student->studentnummer ?: 'Studentnummer niet ingesteld' }} · {{ $student->leerjaar ? 'Leerjaar '.$student->leerjaar : 'Leerjaar niet ingesteld' }}</small></span>
                       </label>
                     @endforeach
+                    <p class="admin-class-student-empty" data-class-student-empty hidden>Geen studenten gevonden met deze zoekopdracht.</p>
                   </div>
                 </fieldset>
                 <div class="admin-class-form-actions"><button class="button dark" type="submit">Groep opslaan</button></div>

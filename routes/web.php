@@ -50,10 +50,14 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
     Route::middleware('role:coach')->prefix('coach')->name('coach.')->group(function (): void {
         Route::get('/', CoachDashboardController::class)->name('dashboard');
         Route::get('/groepen', [CoachDashboardController::class, 'groups'])->name('groups');
+        Route::get('/groepen/{group}', [CoachDashboardController::class, 'group'])
+            ->whereNumber('group')
+            ->name('group');
         Route::get('/leeractiviteiten', [CoachDashboardController::class, 'activities'])->name('activities');
         Route::get('/leerdoelen', [CoachDashboardController::class, 'goals'])->name('goals');
         Route::get('/projecten', [CoachDashboardController::class, 'projects'])->name('projects');
         Route::get('/feedback', [CoachDashboardController::class, 'feedback'])->name('feedback');
+        Route::get('/instellingen', [CoachDashboardController::class, 'settings'])->name('settings');
         Route::get('/studenten/{student}', [CoachDashboardController::class, 'student'])
             ->whereNumber('student')
             ->name('student');
@@ -72,6 +76,8 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
     Route::middleware('role:beheerder')->prefix('beheer/gebruikers')->name('admin.users.')->group(function (): void {
         Route::get('/sjabloon', [AdminUserController::class, 'downloadImportTemplate'])->name('template');
         Route::post('/importeren', [AdminUserController::class, 'import'])->name('import');
+        Route::post('/importeren/bevestigen', [AdminUserController::class, 'confirmImport'])->name('import.confirm');
+        Route::post('/importeren/annuleren', [AdminUserController::class, 'cancelImport'])->name('import.cancel');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
@@ -114,12 +120,6 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
     Route::patch('/coach/studenten/{student}/voortgang/{learningOutcome}', [ProgressController::class, 'update'])
         ->middleware('role:coach')
         ->name('progress.update');
-    Route::post('/coach/feedback/{feedback}/verwerkt', function (\Illuminate\Http\Request $request, \App\Models\Feedback $feedback, \App\Services\ChallengeService $challenges) {
-        abort_unless($feedback->auteur_id === $request->user()->id && $feedback->type === 'received', 403);
-        if (!$feedback->processed_confirmed_at) {
-            $feedback->forceFill(['processed_confirmed_at'=>now()])->save();
-        }
-        $challenges->sync($feedback->student);
-        return back()->with('status', 'Verwerkte feedback bevestigd.');
-    })->middleware('role:coach')->name('feedback.confirmProcessed');
+    Route::post('/coach/feedback/{feedback}/verwerkt', \App\Http\Controllers\Coach\FeedbackReviewController::class)
+        ->middleware('role:coach')->name('feedback.confirmProcessed');
 });

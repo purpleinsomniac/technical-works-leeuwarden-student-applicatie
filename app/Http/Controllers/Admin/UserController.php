@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
-    private const ROLES = ['student', 'coach', 'teamleider', 'beheerder'];
+    private const ROLES = ['student', 'coach', 'teamleider', 'beheerder', 'admin'];
 
     public function downloadImportTemplate(): StreamedResponse
     {
@@ -34,6 +34,7 @@ class UserController extends Controller
             'bestand' => ['required', 'file', 'extensions:csv', 'max:2048'],
             'groep_id' => ['nullable', 'integer', Rule::exists('groepen', 'id')],
         ]);
+        $request->session()->forget('pendingUserImport');
 
         $handle = fopen($request->file('bestand')->getRealPath(), 'rb');
         if ($handle === false) {
@@ -42,7 +43,9 @@ class UserController extends Controller
             ]);
         }
 
-        $rows = [];
+        $newStudents = [];
+        $updates = [];
+        $unchangedCount = 0;
         $errors = [];
         try {
             $firstLine = fgets($handle);
@@ -113,19 +116,43 @@ class UserController extends Controller
                 }
 
                 $normalizedEmail = strtolower($student['email']);
-                if (isset($seenEmails[$normalizedEmail]) || User::whereRaw('LOWER(email) = ?', [$normalizedEmail])->exists()) {
-                    $errors[] = "Rij {$rowNumber}: het e-mailadres {$student['email']} bestaat al of staat meerdere keren in het bestand.";
+                if (isset($seenEmails[$normalizedEmail])) {
+                    $errors[] = "Rij {$rowNumber}: het e-mailadres {$student['email']} staat meerdere keren in het bestand.";
                     continue;
                 }
 
                 $seenEmails[$normalizedEmail] = true;
-                $rows[] = $student;
+                $existing = User::whereRaw('LOWER(email) = ?', [$normalizedEmail])->first();
+                if ($existing === null) {
+                    $newStudents[] = $student;
+                    continue;
+                }
+
+                if (($existing->primaryRole?->naam ?? $existing->rol) !== 'student') {
+                    $errors[] = "Rij {$rowNumber}: het e-mailadres {$student['email']} hoort bij een account dat geen student is.";
+                    continue;
+                }
+
+                $currentYear = $existing->leerjaar === null ? null : (string) $existing->leerjaar;
+                $incomingYear = $student['leerjaar'] === null ? null : (string) $student['leerjaar'];
+                if ($existing->naam === $student['naam'] && $currentYear === $incomingYear) {
+                    $unchangedCount++;
+                    continue;
+                }
+
+                $updates[] = [
+                    'row' => $rowNumber,
+                    'user_id' => $existing->id,
+                    'email' => $existing->email,
+                    'current' => ['naam' => $existing->naam, 'leerjaar' => $currentYear],
+                    'incoming' => ['naam' => $student['naam'], 'leerjaar' => $incomingYear],
+                ];
             }
         } finally {
             fclose($handle);
         }
 
-        if ($rows === [] && $errors === []) {
+        if ($newStudents === [] && $updates === [] && $unchangedCount === 0 && $errors === []) {
             $errors[] = 'Het bestand bevat geen studentgegevens.';
         }
 
@@ -133,11 +160,103 @@ class UserController extends Controller
             throw ValidationException::withMessages(['bestand' => $errors]);
         }
 
+        if ($updates !== [] && ! $request->boolean('bevestig_bijwerken')) {
+            $review = array_map(
+                static fn (array $update): array => [
+                    'email' => $update['email'],
+                    'current' => $update['current'],
+                    'incoming' => $update['incoming'],
+                ],
+                $updates,
+            );
+
+            $request->session()->put('pendingUserImport', [
+                'new_students' => $newStudents,
+                'updates' => $updates,
+                'unchanged_count' => $unchangedCount,
+                'import_options' => $importOptions,
+                'review' => $review,
+                'new_count' => count($newStudents),
+                'expires_at' => now()->addMinutes(30)->timestamp,
+            ]);
+
+            return $this->usersPage(['import' => 1]);
+        }
+
+        $this->applyImport($newStudents, $updates, $importOptions);
+
+        return $this->usersPage()->with('status', $this->importStatus(count($newStudents), count($updates), $unchangedCount));
+    }
+
+    public function confirmImport(Request $request): RedirectResponse
+    {
+        $pendingImport = $request->session()->get('pendingUserImport');
+        if (
+            ! is_array($pendingImport)
+            || ! isset($pendingImport['expires_at'])
+            || $pendingImport['expires_at'] < now()->timestamp
+        ) {
+            $request->session()->forget('pendingUserImport');
+
+            throw ValidationException::withMessages([
+                'bestand' => 'De importbevestiging is verlopen. Upload het bestand opnieuw om de actuele wijzigingen te controleren.',
+            ]);
+        }
+
+        try {
+            $this->applyImport(
+                $pendingImport['new_students'],
+                $pendingImport['updates'],
+                $pendingImport['import_options'],
+            );
+        } catch (ValidationException $exception) {
+            $request->session()->forget('pendingUserImport');
+
+            throw $exception;
+        }
+        $request->session()->forget('pendingUserImport');
+
+        return $this->usersPage()->with('status', $this->importStatus(
+            count($pendingImport['new_students']),
+            count($pendingImport['updates']),
+            $pendingImport['unchanged_count'],
+        ));
+    }
+
+    public function cancelImport(Request $request): RedirectResponse
+    {
+        $request->session()->forget('pendingUserImport');
+
+        return $this->usersPage(['import' => 1])->with('status', 'De import is geannuleerd.');
+    }
+
+    private function applyImport(array $newStudents, array $updates, array $importOptions): void
+    {
         // Validate every row before writing so an invalid file cannot create a partial batch.
-        DB::transaction(function () use ($rows, $importOptions): void {
+        DB::transaction(function () use ($newStudents, $updates, $importOptions): void {
+            foreach ($updates as $update) {
+                $student = User::query()->lockForUpdate()->find($update['user_id']);
+                $currentYear = $student?->leerjaar === null ? null : (string) $student->leerjaar;
+                if (
+                    $student === null
+                    || strtolower($student->email) !== strtolower($update['email'])
+                    || ($student->primaryRole?->naam ?? $student->rol) !== 'student'
+                    || $student->naam !== $update['current']['naam']
+                    || $currentYear !== $update['current']['leerjaar']
+                ) {
+                    throw ValidationException::withMessages([
+                        'bestand' => "Rij {$update['row']}: de studentgegevens zijn intussen gewijzigd. Upload het bestand opnieuw om de actuele wijzigingen te controleren.",
+                    ]);
+                }
+
+                $student->naam = $update['incoming']['naam'];
+                $student->leerjaar = $update['incoming']['leerjaar'];
+                $student->save();
+            }
+
             $studentRole = Role::where('naam', 'student')->firstOrFail();
 
-            foreach ($rows as $row) {
+            foreach ($newStudents as $row) {
                 $student = User::create([
                     'naam' => $row['naam'],
                     'email' => $row['email'],
@@ -152,10 +271,22 @@ class UserController extends Controller
                 }
             }
         });
+    }
 
-        $count = count($rows);
+    private function importStatus(int $createdCount, int $updatedCount, int $unchangedCount): string
+    {
+        $status = [];
+        if ($createdCount > 0) {
+            $status[] = $createdCount.' '.($createdCount === 1 ? 'nieuwe student geïmporteerd' : 'nieuwe studenten geïmporteerd');
+        }
+        if ($updatedCount > 0) {
+            $status[] = $updatedCount.' '.($updatedCount === 1 ? 'bestaande student bijgewerkt' : 'bestaande studenten bijgewerkt');
+        }
+        if ($unchangedCount > 0) {
+            $status[] = $unchangedCount.' '.($unchangedCount === 1 ? 'student ongewijzigd gelaten' : 'studenten ongewijzigd gelaten');
+        }
 
-        return $this->usersPage()->with('status', "{$count} ".($count === 1 ? 'student is' : 'studenten zijn').' geïmporteerd.');
+        return implode('; ', $status).'.';
     }
 
     public function store(Request $request): RedirectResponse
@@ -191,6 +322,12 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        if ($this->isProtectedAdmin($user)) {
+            throw ValidationException::withMessages([
+                'account' => 'Adminaccounts kunnen niet worden gewijzigd.',
+            ]);
+        }
+
         $data = $this->validatedUser($request, $user);
         $role = Role::where('naam', $data['rol'])->firstOrFail();
         $currentRole = $user->primaryRole?->naam ?? $user->rol;
@@ -243,6 +380,12 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
+        if ($this->isProtectedAdmin($user)) {
+            throw ValidationException::withMessages([
+                'account' => 'Adminaccounts kunnen niet worden verwijderd.',
+            ]);
+        }
+
         if ($request->user()->is($user)) {
             throw ValidationException::withMessages([
                 'account' => 'Je kunt je eigen account niet verwijderen.',
@@ -304,24 +447,29 @@ class UserController extends Controller
 
     private function administratorCount(): int
     {
-        $administratorRoleId = Role::where('naam', 'beheerder')->value('id');
+        $administratorRoleIds = Role::whereIn('naam', ['beheerder', 'admin'])->pluck('id');
 
         return User::query()
-            ->where(function ($query) use ($administratorRoleId): void {
-                if ($administratorRoleId !== null) {
-                    $query->where('hoofdrol_id', $administratorRoleId)
+            ->where(function ($query) use ($administratorRoleIds): void {
+                if ($administratorRoleIds->isNotEmpty()) {
+                    $query->whereIn('hoofdrol_id', $administratorRoleIds)
                         ->orWhere(fn ($fallback) => $fallback
                             ->whereNull('hoofdrol_id')
-                            ->where('rol', 'beheerder'));
+                            ->whereIn('rol', ['beheerder', 'admin']));
                 } else {
-                    $query->where('rol', 'beheerder');
+                    $query->whereIn('rol', ['beheerder', 'admin']);
                 }
             })
             ->count();
     }
 
-    private function usersPage(): RedirectResponse
+    private function isProtectedAdmin(User $user): bool
     {
-        return redirect()->route('admin.dashboard', ['page' => 'gebruikers']);
+        return ($user->primaryRole?->naam ?? $user->rol) === 'admin';
+    }
+
+    private function usersPage(array $query = []): RedirectResponse
+    {
+        return redirect()->route('admin.dashboard', array_merge(['page' => 'gebruikers'], $query));
     }
 }

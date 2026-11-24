@@ -1,0 +1,35 @@
+.demo-account-switcher { position:fixed; right:20px; bottom:20px; z-index:2000; font-family:inherit; }
+.demo-account-switcher > summary { display:flex; align-items:center; gap:8px; padding:9px 12px; border:1px solid #52cbb5; border-radius:11px; background:linear-gradient(110deg,#006f64,#009979); color:#fff; box-shadow:0 6px 24px #073d4b35; font-size:11px; font-weight:750; cursor:pointer; list-style:none; }
+.demo-account-switcher > summary::-webkit-details-marker { display:none; }
+.demo-account-switcher > summary > span:first-child { font-size:20px; line-height:1; border-right:1px solid #ffffff65; padding-right:8px; }
+.demo-account-switcher > summary small { border-radius:99px; padding:4px 7px; color:#005b4e; background:#b5f1dd; font-size:9px; font-weight:800; }
+.demo-account-panel { position:absolute; right:0; bottom:calc(100% + 10px); width:min(350px,calc(100vw - 32px)); max-height:calc(100dvh - 110px); overflow-y:auto; border:1px solid #e2ecef; border-radius:17px; padding:12px; background:linear-gradient(135deg,#fff,#fcfefe); color:#193a50; box-shadow:0 15px 55px #123e4b35; }
+.demo-account-panel header { padding:6px 6px 13px; }
+.demo-account-panel header strong { display:block; font-size:21px; color:#19384c; }
+.demo-account-panel header small { display:block; color:#64808f; margin-top:8px; font-size:14px; }
+.demo-role-group { margin:4px 0 12px; }
+.demo-role-group h3 { display:flex; align-items:center; gap:11px; margin:0 0 7px; padding:4px 12px; border-radius:9px; background:linear-gradient(110deg,#d2eee4,#d9f3e9); color:#173c4c; font-size:13px; }
+.demo-role-group h3 svg { width:23px; height:20px; color:#007c67; flex:none; }
+.demo-account-panel form { margin:0 0 7px; }
+.demo-account-panel button { display:flex; align-items:center; gap:14px; width:100%; padding:8px 13px; border:1px solid #dce9ec; border-radius:10px; background:linear-gradient(110deg,#fbfcfd,#f6f9fa); color:#21475b; text-align:left; cursor:pointer; }
+.demo-account-panel button > span:nth-child(2) { flex:1; }
+.demo-account-panel button strong { display:block; font-size:13px; }
+.demo-account-panel button small { display:block; color:#6c8191; font-size:11px; margin-top:4px; }
+.demo-account-panel button:hover:not(:disabled) { background:#e5f7ef; border-color:#66bfa9; }
+.demo-account-panel button[aria-current] { background:linear-gradient(110deg,#e3f8ef,#d9f4eb); border-color:#0caa84; opacity:1; }
+.demo-account-panel button:disabled { cursor:default; }
+.demo-account-initial { display:grid; place-items:center; width:34px; height:34px; flex:none; border-radius:9px; background:#c9efe1; color:#008265; font-size:20px; font-weight:850; }
+.demo-account-selection { display:grid; place-items:center; width:17px; height:17px; border:1px solid #476476; border-radius:50%; flex:none; font-size:12px; }
+.demo-account-panel button[aria-current] .demo-account-selection { border-color:#008e72; background:#008e72; color:#fff; }
+.demo-account-panel footer { display:flex; align-items:center; gap:8px; border-top:1px solid #e6eef0; padding:12px 4px 0; font-size:10px; color:#758a99; line-height:1.5; }
+.demo-account-panel footer > span { color:#35b89c; font-size:17px; }
+.demo-account-switcher :focus-visible { outline:3px solid #72d3ba; outline-offset:3px; }
+.theme-dark .demo-account-panel { background:#17303c; border-color:#365363; color:#edf5f8; }
+.theme-dark .demo-account-panel button { background:#203d49; color:#edf5f8; border-color:#365363; }
+.theme-dark .demo-account-panel button small,.theme-dark .demo-account-panel header small,.theme-dark .demo-account-panel footer { color:#b4c8d3; }
+.theme-dark .demo-account-panel button[aria-current],.theme-dark .demo-account-panel button:hover:not(:disabled) { background:#20594f; }
+.theme-dark .demo-role-group h3 { background:#244d48; color:#e3f9f1; }
+.theme-dark .demo-role-group h3 svg { color:#9be6cf; }
+.theme-dark .demo-account-panel header strong { color:#edf5f8; }
+.theme-dark .demo-account-selection { border-color:#a2b9c5; }
+@media(max-width:550px) { .demo-account-switcher { right:12px; bottom:12px; } .demo-account-switcher > summary { padding:8px 10px; } .demo-account-switcher > summary small { display:none; } }

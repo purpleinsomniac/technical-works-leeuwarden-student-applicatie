@@ -31,7 +31,16 @@ class Assignment extends Model
 
     protected function casts(): array
     {
-        return ['inleverdatum' => 'date'];
+        return ['inleverdatum' => 'date', 'completed_at' => 'datetime'];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Assignment $project) {
+            if ($project->isDirty('status')) {
+                $project->completed_at = $project->status === 'completed' ? now() : null;
+            }
+        });
     }
 
     public function user(): BelongsTo

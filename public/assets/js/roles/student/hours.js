@@ -21,6 +21,7 @@ async function syncChallenges() {
     card.querySelector('button').onclick = openChallengeDetail;
     document.getElementById('xpChallengeProgress').textContent = active ? active.progress + ' / ' + active.target + ' · +' + active.reward + ' XP' : 'Bekijk je historie';
     document.getElementById('xpChallengeBar').style.width = active ? Math.min(100, active.progress / active.target * 100) + '%' : '100%';
+    if (!document.getElementById('challengeModal').classList.contains('hidden')) renderChallengeDetail();
   } catch (error) {
     document.querySelector('.xp-challenge p').textContent = 'Challenges konden niet worden geladen. Open Punten opnieuw om het nogmaals te proberen.';
   } finally { challengeSyncBusy = false; }
@@ -28,12 +29,56 @@ async function syncChallenges() {
 
 function openChallengeDetail() {
   const modal = document.getElementById('challengeModal');
+  challengeListFilter = 'recommended';
+  challengeShowAll = false;
+  renderChallengeDetail();
+  modal.classList.remove('hidden');
+  modal.querySelector('.modal-close').focus({preventScroll:true});
+}
+let challengeListFilter = 'recommended';
+let challengeShowAll = false;
+function selectChallengeFilter(filter) {
+  challengeListFilter = filter;
+  challengeShowAll = false;
+  renderChallengeDetail();
+}
+function toggleAllChallenges() {
+  challengeShowAll = !challengeShowAll;
+  renderChallengeDetail();
+}
+function renderChallengeDetail() {
   const active = challengeState?.active;
   document.getElementById('challengeDetailTitle').textContent = active?.title || 'Alle challenges voltooid';
-  document.getElementById('challengeDetailCopy').textContent = active ? active.description + ' Fase: ' + active.phase + '. Voortgang: ' + active.progress + ' / ' + active.target + '. Beloning: ' + active.reward + ' XP.' : 'Je hebt alle beschikbare challenges voltooid.';
-  document.getElementById('challengeHistory').innerHTML = (challengeState?.history || []).map((item) => '<li>' + esc(item.title) + ' · +' + item.reward + ' XP · Voltooid</li>').join('') || '<li>Je hebt nog geen challenges voltooid.</li>';
-  modal.classList.remove('hidden');
-  modal.querySelector('.modal-close').focus();
+  document.getElementById('challengeDetailCopy').textContent = active?.description || 'Je hebt alle beschikbare challenges in deze fase voltooid. Bekijk hieronder wat je hebt bereikt.';
+  const percent = active ? Math.min(100, Math.round(active.progress / active.target * 100)) : 100;
+  document.getElementById('challengeProgressPercent').textContent = percent + '%';
+  document.getElementById('challengeProgressRing').style.setProperty('--challenge-progress', percent * 3.6 + 'deg');
+  document.getElementById('challengePhaseName').textContent = active?.phase || challengeState?.phase || 'Jouw fase';
+  document.getElementById('challengeProgressCopy').textContent = active ? 'Voortgang: ' + active.progress + ' / ' + active.target + ' · Beloning: ' + active.reward + ' XP' : 'Alle uitdagingen in deze fase afgerond.';
+  document.getElementById('challengeSummaryReward').textContent = active ? '☆ +' + active.reward + ' XP' : '✓ Voltooid';
+  document.getElementById('challengeActiveCard').classList.toggle('hidden', !active);
+  document.getElementById('challengeActiveTitle').textContent = active?.title || '';
+  document.getElementById('challengeActiveDescription').textContent = active?.description || '';
+  document.getElementById('challengeActiveCount').textContent = active ? active.progress + ' / ' + active.target + ' voltooid' : '';
+  document.getElementById('challengeActiveBar').style.width = percent + '%';
+  document.getElementById('challengeActiveReward').textContent = active ? '+' + active.reward + ' XP' : '';
+  const history = challengeState?.history || [];
+  document.getElementById('challengeHistory').innerHTML = history.map((item) => '<li>' + esc(item.title) + ' · ' + esc(item.phase) + ' · +' + item.reward + ' XP · Voltooid</li>').join('') || '<li>Je hebt nog geen challenges voltooid.</li>';
+  const finished = new Set(history.filter((item) => item.phase === challengeState?.phase).map((item) => Number(item.challenge_id)));
+  let upcoming = (challengeState?.catalog || []).filter((item) => !finished.has(Number(item.id)) && Number(item.id) !== Number(active?.challenge_id));
+  if (challengeListFilter === 'nearly') upcoming = upcoming.filter((item) => item.target > 0 && item.progress / item.target >= .75).sort((a,b) => b.progress/b.target - a.progress/a.target);
+  const visible = challengeShowAll || challengeListFilter === 'phase' ? upcoming : upcoming.slice(0,3);
+  const icons = {reflections:'reflection',project_reflections:'reflection',feedback:'feedback',goals_created:'target',goals_completed:'target',projects:'assignment',team_reflections:'feedback',evidence:'assignment',on_time_projects:'calendar',skill_balance:'layout',phase_percentage:'progress',points:'progress'};
+  document.getElementById('challengeUpcoming').innerHTML = visible.map((item) => '<article><span class="challenge-list-icon ' + (item.type === 'feedback' ? 'purple' : '') + '">' + uiIcon(icons[item.type] || 'target') + '</span><div><strong>' + esc(item.title) + '</strong><p>' + esc(item.description) + '</p></div><b class="challenge-xp-pill">+' + item.reward + ' XP</b></article>').join('') || '<p class="challenge-empty">' + (challengeListFilter === 'nearly' ? 'Er zijn nog geen volgende challenges voor minstens 75% voltooid.' : 'Geen volgende challenges in deze fase.') + '</p>';
+  document.getElementById('challengeVisibleCount').textContent = visible.length + ' van ' + upcoming.length + ' uitdagingen zichtbaar';
+  const showAllButton = document.getElementById('challengeShowAll');
+  showAllButton.classList.toggle('hidden', upcoming.length <= 3 || challengeListFilter === 'phase');
+  showAllButton.textContent = challengeShowAll ? 'Toon minder uitdagingen ↑' : 'Bekijk alle uitdagingen →';
+  document.querySelectorAll('[data-challenge-filter]').forEach((button) => {
+    const selected = button.dataset.challengeFilter === challengeListFilter;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
 }
 function closeChallengeDetail() { document.getElementById('challengeModal').classList.add('hidden'); }
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeChallengeDetail(); });
@@ -71,7 +116,8 @@ function renderXp() {
   document.getElementById('xpLevelName').textContent = titles[level - 1] || 'Meester · rang ' + (level - 9);
   document.getElementById('xpLevelProgress').textContent = xp.toLocaleString('nl-NL') + ' / ' + (level * 1000).toLocaleString('nl-NL') + ' XP';
   document.getElementById('xpHelpProgress').textContent = document.getElementById('xpLevelProgress').textContent;
-  ['xpLevelBar', 'xpHelpBar'].forEach((id) => document.getElementById(id).style.width = (progress / 10) + '%');
+  document.getElementById('xpLevelBar').style.width = (progress / 10) + '%';
+  document.getElementById('xpHelpBar').style.width = Math.min(100, xp / (level * 1000) * 100) + '%';
   document.getElementById('xpRemaining').textContent = 'Nog ' + (1000 - progress) + ' XP tot level ' + (level + 1) + '!';
 }
 

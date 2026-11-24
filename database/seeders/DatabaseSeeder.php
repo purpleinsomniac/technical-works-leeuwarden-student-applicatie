@@ -300,6 +300,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(SchoolPointsSeeder::class);
+        $this->call(SecondStudentDemoSeeder::class);
         $eersteLeeruitkomst = LearningOutcome::where('code', 'IT_OF_LU_Hardskills_001')->firstOrFail();
         Reflection::updateOrCreate(
             ['gebruiker_id' => $student->id, 'onderwerp' => 'Installatieopdracht'],

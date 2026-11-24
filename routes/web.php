@@ -22,6 +22,8 @@ Route::get('/', [DashboardController::class, 'index'])
     ->middleware(EnforceMaintenanceMode::class)
     ->name('home');
 Route::post('/uitloggen', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::post('/demo/account-wisselen', [\App\Http\Controllers\DemoAccountController::class, 'switchAccount'])
+    ->middleware(['auth','throttle:30,1'])->name('demo.account-switch');
 
 Route::middleware('guest')->group(function (): void {
     // Een ingelogde gebruiker hoort nooit opnieuw een loginformulier met een

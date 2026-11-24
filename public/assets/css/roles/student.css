@@ -1739,6 +1739,15 @@ html.theme-dark { color-scheme: dark; background: #0b1821; }
 .xp-challenge { display:flex; gap:20px; align-items:center; border:1px solid #eadbff; border-radius:14px; background:linear-gradient(110deg,#faf6ff,#eee4ff); padding:20px; margin:18px 0; }
 .xp-challenge > div { flex:1; }
 .xp-challenge .button { background:#873bd0; border-color:#873bd0; color:white; }
+#challengeModal .goal-detail-dialog { width:min(680px,100%); max-height:calc(100dvh - 40px); overflow-y:auto; }
+#challengeModal h3 { margin:22px 0 12px; }
+.challenge-catalog { display:grid; gap:10px; }
+.challenge-catalog article { display:flex; justify-content:space-between; gap:16px; align-items:start; padding:13px; border:1px solid #e6def3; border-radius:12px; background:#faf7ff; }
+.challenge-catalog strong { color:#25384f; font-size:14px; }
+.challenge-catalog p { margin:5px 0 0; color:#657b8e; font-size:12px; line-height:1.6; }
+.challenge-catalog b { flex:none; border-radius:99px; padding:5px 9px; background:#eee2ff; color:#7b31c9; font-size:12px; }
+.theme-dark .challenge-catalog article { background:#293044; border-color:#494664; }
+.theme-dark .challenge-catalog b { background:#493164; }
 .xp-help-panel { position:fixed; z-index:1200; inset:12px 12px 12px auto; width:min(420px,calc(100vw - 24px)); overflow:auto; border:1px solid #d7b9ff; border-radius:18px; background:#fcfaff; box-shadow:0 15px 70px #35214c40; padding:30px 20px; }
 .xp-help-panel > .modal-close { position:absolute; right:12px; top:10px; }
 .xp-help-panel header { display:flex; gap:15px; margin:15px 0 25px; }
@@ -1751,6 +1760,41 @@ html.theme-dark { color-scheme: dark; background: #0b1821; }
 .xp-rewards li > span { flex:1; }
 .xp-rewards small { display:block; margin-top:5px; font-size:10px; font-weight:400; }
 .xp-rewards b { background:#ecdfff; color:#7430bd; border-radius:99px; padding:5px 8px; white-space:nowrap; }
+#xpHelpPanel { width:min(390px,calc(100vw - 24px)); padding:30px 18px 24px; border:1px solid #cbeee5; border-radius:19px; background:radial-gradient(ellipse at top left,#e0faf2,transparent 55%),linear-gradient(135deg,#fff,#f8fffc); box-shadow:0 16px 65px #124f4730; }
+#xpHelpPanel > .modal-close { z-index:2; border:0; width:29px; height:29px; border-radius:50%; color:#3f6c74; background:#e9f6f1; }
+#xpHelpPanel header { align-items:center; gap:10px; margin:0 -6px 20px; }
+#xpHelpPanel .xp-trophy { flex:none; display:block; width:102px; height:105px; }
+#xpHelpPanel .xp-trophy svg { display:block; width:100%; height:100%; }
+#xpHelpPanel header h2 { margin:0 0 7px; font-size:18px; line-height:1.3; color:#123d50; }
+#xpHelpPanel header p { font-size:12px; line-height:1.5; margin:0; color:#526f7f; }
+#xpHelpPanel .xp-progress-card { padding:17px; border:1px solid #d3edf0; border-radius:14px; background:#ffffffd9; box-shadow:0 4px 13px #169a8c12; margin:0 0 24px; }
+#xpHelpPanel .xp-progress-card h3 { display:flex; align-items:center; gap:9px; margin:0 0 12px; font-size:16px; color:#174c5b; }
+#xpHelpPanel .xp-progress-card h3 > span { display:flex; color:#08bb95; background:#dcfbef; border-radius:6px; padding:3px; }
+#xpHelpPanel .xp-progress-card h3 svg { width:19px; height:19px; }
+#xpHelpPanel #xpHelpProgress { display:block; font-size:17px; color:#124d5c; margin-bottom:12px; }
+#xpHelpPanel .xp-track { height:11px; background:#d8e9ec; border-radius:99px; }
+#xpHelpPanel .xp-track > span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#15c5c2,#08c8a3); }
+#xpHelpPanel #xpRemaining { margin:12px 0 0; padding:8px 11px; border-radius:10px; background:linear-gradient(90deg,#e1faf2,#d8ffec); color:#226270; font-size:12px; }
+#xpHelpPanel #xpRemaining::before { content:'↗'; font-size:18px; margin-right:8px; color:#009d89; }
+#xpHelpPanel .xp-rewards-title { display:flex; align-items:center; gap:9px; font-size:18px; margin:0 0 6px; color:#174656; }
+#xpHelpPanel .xp-rewards-title > span { color:#06bc8c; font-size:25px; }
+#xpHelpPanel .xp-rewards { margin:0; }
+#xpHelpPanel .xp-rewards li { gap:11px; padding:14px 2px; border-bottom:1px solid #e0eeed; font-weight:400; }
+#xpHelpPanel .xp-rewards li:last-child { border:0; padding-bottom:0; }
+#xpHelpPanel .xp-reward-icon { display:grid; place-items:center; width:36px; height:36px; flex:none; border-radius:12px; font-style:normal; font-size:22px; }
+#xpHelpPanel .xp-reward-icon svg { width:23px; height:23px; }
+#xpHelpPanel .xp-reward-icon.project { color:#0aaf6c; background:#e0f7e8; }
+#xpHelpPanel .xp-reward-icon.outcome { color:#ed5b6f; background:#fff0f0; }
+#xpHelpPanel .xp-reward-icon.reflection { color:#129ed4; background:#e2f5ff; }
+#xpHelpPanel .xp-reward-icon.feedback { color:#9a4ce9; background:#f5eaff; }
+#xpHelpPanel .xp-reward-icon.challenge { color:#eaa400; background:#fff4d9; }
+#xpHelpPanel .xp-rewards strong { display:block; font-size:13px; line-height:1.35; color:#194758; }
+#xpHelpPanel .xp-rewards small { font-size:11px; margin-top:3px; line-height:1.4; color:#5a7480; }
+#xpHelpPanel .xp-rewards b { color:#007b6e; background:#d1fae9; padding:6px 9px; font-size:12px; font-weight:850; }
+.theme-dark #xpHelpPanel { background:#132f39; border-color:#31565d; }
+.theme-dark #xpHelpPanel #xpRemaining { background:#204e45; color:#baf9e1; }
+.theme-dark #xpHelpPanel .xp-reward-icon { background:#244d48; color:#a4f3dc; }
+@media(max-width:400px) { #xpHelpPanel { padding:30px 13px 20px; } #xpHelpPanel .xp-trophy { width:85px; } #xpHelpPanel header h2 { font-size:16px; } #xpHelpPanel .xp-rewards li { gap:8px; } }
 @media(max-width:1100px) { .xp-level-summary { grid-column:1/-1; border-left:0; padding-left:0; } }
 @media(max-width:650px) { .xp-level-summary,.xp-challenge { flex-wrap:wrap; } }
 .goals-page { width: 100%; max-width: 1180px; align-self: center; }

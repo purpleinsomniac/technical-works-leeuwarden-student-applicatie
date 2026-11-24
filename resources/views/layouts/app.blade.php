@@ -12,6 +12,12 @@
     <body>
         @yield('content')
 
+        @if (app()->environment('local') && config('demo.account_switcher'))
+            @auth
+                @include('components.demo-account-switcher')
+            @endauth
+        @endif
+
         @stack('scripts')
     </body>
 </html>

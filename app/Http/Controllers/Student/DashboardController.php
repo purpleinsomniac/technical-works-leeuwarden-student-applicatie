@@ -100,7 +100,10 @@ class DashboardController extends RoleDashboardController
             ->with(['learningOutcomes.studyPhase', 'files'])
             ->orderByRaw('inleverdatum is null, inleverdatum')
             ->get()
-            ->map(fn (Assignment $assignment): array => $this->assignmentPayload($assignment, $allocation))
+            ->map(function ($assignment) use ($allocation): array {
+                /** @var Assignment $assignment */
+                return $this->assignmentPayload($assignment, $allocation);
+            })
             ->values();
 
         // Neem ook verwijderde reflecties mee, zodat de student ze kan herstellen.

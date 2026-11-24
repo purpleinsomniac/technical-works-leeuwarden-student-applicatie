@@ -1,12 +1,26 @@
 @extends('layouts.application')
 
 @section('role-content')
+@php($teamleaderPage = $teamleaderPage ?? 'overview')
 <section id="managerGroups" class="view hidden" data-role-section="groups">
   <div class="head">
     <div>
-      <h1>Groepsoverzicht</h1>
-      <p class="dim">Voortgang en studenten per groep.</p>
+      @if ($teamleaderPage === 'student')
+        <h1>{{ $teamleaderStudent['name'] }}</h1>
+        <p class="dim">Voortgang en leeruitkomsten van deze student.</p>
+      @elseif ($teamleaderPage === 'group')
+        <h1>{{ $teamleaderGroup['name'] }}</h1>
+        <p class="dim">Voortgang en studenten in deze groep.</p>
+      @else
+        <h1>Groepsoverzicht</h1>
+        <p class="dim">Voortgang en studenten per groep.</p>
+      @endif
     </div>
+    @if ($teamleaderPage === 'student')
+      <a class="button" href="{{ route('teamleader.group', ['group' => $teamleaderGroup['id']]) }}">Terug naar {{ $teamleaderGroup['name'] }}</a>
+    @elseif ($teamleaderPage === 'group')
+      <a class="button" href="{{ route('teamleader.dashboard') }}">Terug naar Groepsoverzicht</a>
+    @endif
   </div>
 
   <div class="teamleader-groups-list">
@@ -15,14 +29,17 @@
     @php($groupSummaryStudentPercentage = $group['studentCount'] > 0 ? ($group['redStudentCount'] / $group['studentCount']) * 100 : 0)
     @php($groupSummaryStudentClass = $group['redStudentCount'] === 0 ? 'teamleader-progress-high' : ($groupSummaryStudentPercentage <= 20 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
     @php($groupSummaryOutcomeClass = $group['redOutcomeCount'] === 0 ? 'teamleader-progress-high' : ($group['redOutcomeCount'] <= 3 * $group['studentCount'] ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
-    <details id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card teamleader-group-card-attention-{{ $group['attentionColor'] }}">
-      <summary class="teamleader-group-summary" aria-labelledby="teamleader-group-{{ $group['id'] }}">
+    @if ($teamleaderPage === 'student')
+    <div id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card teamleader-group-card-attention-{{ $group['attentionColor'] }}">
+    @else
+    <details id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card teamleader-group-card-attention-{{ $group['attentionColor'] }}" @if ($teamleaderPage === 'group') open @endif>
+      <summary class="teamleader-group-summary" aria-labelledby="teamleader-group-{{ $group['id'] }}" data-teamleader-group-summary="{{ $group['id'] }}">
         <span class="teamleader-group-name" id="teamleader-group-{{ $group['id'] }}">{{ $group['name'] }}</span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-open"><span>Schooljaar</span><strong>{{ $group['schoolYear'] ?: 'Niet ingesteld' }}</strong></span>
         <span class="teamleader-group-summary-item">
           <span>Docent/SLB'er</span>
           @if ($group['coachId'])
-            <button class="teamleader-group-coach-link" type="button" data-teamleader-open-teacher="{{ $group['coachId'] }}">{{ $group['coach'] }}</button>
+            <strong>{{ $group['coach'] }}</strong>
           @else
             <strong>{{ $group['coach'] ?: 'Niet toegewezen' }}</strong>
           @endif
@@ -31,11 +48,13 @@
         <span class="teamleader-group-summary-item teamleader-group-summary-item-open"><span>Doel</span><strong>{{ $group['goal'] !== null ? $group['goal'].'%' : 'Niet ingesteld' }}</strong></span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Studenten in het rood</span><strong class="teamleader-progress-indicator {{ $groupSummaryStudentClass }}">{{ $group['redStudentCount'] }}</strong></span>
         <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Leeruitkomsten rood</span><strong class="teamleader-progress-indicator {{ $groupSummaryOutcomeClass }}">{{ $group['redOutcomeCount'] }}</strong></span>
-        <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Studenten</span><strong>{{ $group['studentCount'] }}</strong></span>
-        <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>{{ $group['studyPhase'] ? 'Gemiddelde voortgang fase' : 'Gemiddelde voortgang' }}</span><strong class="teamleader-progress-indicator {{ $groupSummaryProgressClass }}">{{ $group['displayAveragePercentage'] }}%</strong></span>
+        <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>Aantal studenten</span><strong class="teamleader-progress-indicator teamleader-progress-NVT">{{ $group['studentCount'] }}</strong></span>
+        <span class="teamleader-group-summary-item teamleader-group-summary-item-extra"><span>{{ $group['studyPhase'] ? 'Gemiddelde voortgang' : 'Gemiddelde voortgang' }}</span><strong class="teamleader-progress-indicator {{ $groupSummaryProgressClass }}">{{ $group['displayAveragePercentage'] }}%</strong></span>
       </summary>
+    @endif
 
       <div class="teamleader-group-details">
+        @if ($teamleaderPage !== 'student')
         <p>{{ $group['description'] ?: 'Geen omschrijving.' }}</p>
         <div class="grid2">
           <div class="card"><div class="big">{{ $group['studentCount'] }}</div><span class="dim">studenten</span></div>
@@ -66,18 +85,36 @@
             <p class="dim">Er zijn nog geen studiefases ingesteld.</p>
           @endforelse
         </div>
+        @endif
 
         <div class="card">
-          <h3>Studenten in deze groep</h3>
+          @if ($teamleaderPage !== 'student')
+            <h3>Studenten in deze groep</h3>
+          @endif
+          @if ($teamleaderPage === 'group')
+            <div class="teamleader-student-card-grid">
+              @forelse ($group['students'] as $student)
+                <a class="teamleader-student-card" href="{{ route('teamleader.student', ['group' => $group['id'], 'student' => $student['id']]) }}">
+                  <strong>{{ $student['name'] }}</strong>
+                  <span class="teamleader-outcome-meta">{{ $student['studyPhase'] ?: 'Geen studiefase ingesteld' }}</span>
+                  <span class="teamleader-progress-indicator {{ $student['progressClass'] }}">{{ $student['displayPercentage'] }}% gemiddelde voortgang{{ $student['studyPhase'] ? ' in '.$student['studyPhase'] : '' }}</span>
+                  <span class="teamleader-student-card-link">Bekijk student &rarr;</span>
+                </a>
+              @empty
+                <p class="dim">Er zijn nog geen studenten aan deze groep gekoppeld.</p>
+              @endforelse
+            </div>
+          @else
           @forelse ($group['students'] as $student)
             @php($studentOverallProgressClass = $group['goal'] === null ? 'teamleader-progress-NVT' : ($student['percentage'] >= $group['goal'] ? 'teamleader-progress-high' : ($student['percentage'] >= $group['goal'] - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
+            @if ($teamleaderPage !== 'student')
             <details>
-              <summary class="name">
+              <summary class="name" data-teamleader-student-summary="{{ $student['id'] }}">
                 <strong>{{ $student['name'] }}</strong>
                 <span class="dim">{{ $student['studyPhase'] ?: 'Geen studiefase ingesteld' }}</span>
                 <span><span class="teamleader-progress-indicator {{ $student['progressClass'] }}">{{ $student['displayPercentage'] }}%</span> gemiddelde voortgang{{ $student['studyPhase'] ? ' in '.$student['studyPhase'] : '' }}</span>
               </summary>
-              <h4>Voortgang per leeruitkomst</h4>
+            @endif
               @if ($student['outcomes']->isNotEmpty())
                 <div class="actions card">
                   <label class="label">
@@ -85,8 +122,11 @@
                     <select data-teamleader-phase-filter aria-label="Filter voortgang van {{ $student['name'] }} op fase">
                       <option value="__all">Alle fases</option>
                       @foreach ($student['outcomes']->sortBy('phaseOrder')->pluck('phase')->filter()->unique()->values() as $fase)
-                        <option value="{{ $fase }}">{{ $fase }}</option>
+                        <option value="{{ $fase }}" @selected($teamleaderPage === 'student' && $fase === $student['studyPhase'])>{{ $fase }}</option>
                       @endforeach
+                      @if ($teamleaderPage === 'student' && $student['studyPhase'] && !$student['outcomes']->contains(fn ($outcome) => $outcome['phase'] === $student['studyPhase']))
+                        <option value="{{ $student['studyPhase'] }}" selected>{{ $student['studyPhase'] }}</option>
+                      @endif
                       @if ($student['outcomes']->contains(fn ($outcome) => $outcome['phase'] === null))
                         <option value="">Geen fase</option>
                       @endif
@@ -111,6 +151,38 @@
               @endif
               @if ($student['outcomes']->isEmpty())
                 <p class="dim">Er is nog geen voortgang geregistreerd.</p>
+              @elseif ($teamleaderPage === 'student')
+                <div class="teamleader-outcome-columns">
+                  @foreach (['Hardskills' => 'Hardskills', 'Softskills' => 'Softskills'] as $kind => $heading)
+                    <section class="teamleader-outcome-column">
+                      <h4>{{ $heading }}</h4>
+                      <div class="teamleader-outcome-grid" data-teamleader-outcome-grid data-teamleader-outcome-kind="{{ $kind }}">
+                        @foreach ($student['outcomes']->where('kind', $kind) as $outcome)
+                          <article
+                            class="teamleader-outcome-card"
+                            data-teamleader-outcome
+                            data-teamleader-progress-phase="{{ $outcome['phase'] ?? '' }}"
+                            data-teamleader-progress-phase-order="{{ $outcome['phaseOrder'] }}"
+                            data-teamleader-progress-percentage="{{ $outcome['percentage'] ?? '' }}"
+                          >
+                            <div class="teamleader-outcome-heading">
+                              <strong>{{ $outcome['code'] }} — {{ $outcome['title'] }}</strong>
+                            </div>
+                            <span class="teamleader-outcome-meta">{{ $outcome['phase'] ?: 'Geen fase' }}</span>
+                            <div class="teamleader-progress-indicator {{ $outcome['progressClass'] }}">
+                              <span>{{ $outcome['hours'] }}{{ $outcome['target'] ? ' / '.$outcome['target'] : '' }} punten - </span>
+                              <span>{{ $outcome['percentage'] === null ? 'Geen norm' : $outcome['percentage'].'%' }}</span>
+                            </div>
+                            <span class="teamleader-outcome-status">{{ str_replace('_', ' ', ucfirst($outcome['status'])) }}</span>
+                          </article>
+                        @endforeach
+                        @if ($student['outcomes']->where('kind', $kind)->isEmpty())
+                          <p class="dim">Geen leeruitkomsten.</p>
+                        @endif
+                      </div>
+                    </section>
+                  @endforeach
+                </div>
               @else
                 <div class="teamleader-outcome-grid" data-teamleader-outcome-grid>
                   @foreach ($student['outcomes'] as $outcome)
@@ -126,7 +198,7 @@
                       </div>
                       <span class="teamleader-outcome-meta">{{ $outcome['phase'] ?: 'Geen fase' }}</span>
                       <div class="teamleader-progress-indicator {{ $outcome['progressClass'] }}">
-                        <span>{{ $outcome['hours'] }}{{ $outcome['target'] ? ' / '.$outcome['target'] : '' }} uur - </span>
+                        <span>{{ $outcome['hours'] }}{{ $outcome['target'] ? ' / '.$outcome['target'] : '' }} punten - </span>
                         <span>{{ $outcome['percentage'] === null ? 'Geen norm' : $outcome['percentage'].'%' }}</span>
                       </div>
                       <span class="teamleader-outcome-status">{{ str_replace('_', ' ', ucfirst($outcome['status'])) }}</span>
@@ -134,13 +206,20 @@
                   @endforeach
                 </div>
               @endif
+            @if ($teamleaderPage !== 'student')
             </details>
+            @endif
           @empty
             <p class="dim">Er zijn nog geen studenten aan deze groep gekoppeld.</p>
           @endforelse
+          @endif
         </div>
       </div>
+    @if ($teamleaderPage === 'student')
+    </div>
+    @else
     </details>
+    @endif
     @empty
       <div class="card">
         <p>Er zijn nog geen groepen aangemaakt.</p>

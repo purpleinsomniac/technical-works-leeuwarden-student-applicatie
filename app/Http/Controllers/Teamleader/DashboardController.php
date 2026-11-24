@@ -18,13 +18,55 @@ class DashboardController extends RoleDashboardController
         /** @var User $user */
         $user = $request->user();
 
+        return $this->renderPage($user, 'overview');
+    }
+
+    public function group(Request $request, int $group): View
+    {
+        return $this->renderPage($request->user(), 'group', $group);
+    }
+
+    public function student(Request $request, int $group, int $student): View
+    {
+        return $this->renderPage($request->user(), 'student', $group, $student);
+    }
+
+    private function renderPage(User $user, string $page, ?int $groupId = null, ?int $studentId = null): View
+    {
+        $roleData = $this->overview();
+        $selectedGroup = $groupId === null
+            ? null
+            : $roleData['groups']->firstWhere('id', $groupId);
+        abort_if($groupId !== null && $selectedGroup === null, 404);
+
+        $selectedStudent = $studentId === null
+            ? null
+            : collect($selectedGroup['students'])->firstWhere('id', $studentId);
+        abort_if($studentId !== null && $selectedStudent === null, 404);
+
+        if ($selectedGroup !== null) {
+            $selectedGroup['students'] = $selectedStudent === null
+                ? collect($selectedGroup['students'])
+                : collect([$selectedStudent]);
+            $roleData['groups'] = collect([$selectedGroup]);
+        }
+
         return $this->dashboardView(
             user: $user,
             activeRole: 'teamleider',
             view: 'teamleader.dashboard',
             style: 'css/roles/teamleader.css',
-            roleData: $this->overview(),
+            roleData: $roleData,
             scripts: ['js/common.js', 'js/role-settings.js', 'js/roles/teamleider.js'],
+            extraData: [
+                'teamleaderPage' => $page,
+                'teamleaderGroup' => $selectedGroup
+                    ? ['id' => $selectedGroup['id'], 'name' => $selectedGroup['name']]
+                    : null,
+                'teamleaderStudent' => $selectedStudent
+                    ? ['id' => $selectedStudent['id'], 'name' => $selectedStudent['name']]
+                    : null,
+            ],
         );
     }
 
@@ -165,6 +207,7 @@ class DashboardController extends RoleDashboardController
                     return [
                         'code' => $item->learningOutcome->code,
                         'title' => $item->learningOutcome->titel,
+                        'kind' => $item->learningOutcome->type,
                         'phase' => $item->learningOutcome->studyPhase?->naam,
                         'phaseOrder' => $this->phaseRank($item->learningOutcome->studyPhase?->naam) ?? 4,
                         'hours' => $item->gevalideerde_uren,

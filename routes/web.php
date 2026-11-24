@@ -60,7 +60,16 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
             ->whereNumber('student')
             ->name('student');
     });
-    Route::get('/teamleider', TeamleaderDashboardController::class)->middleware('role:teamleider')->name('teamleader.dashboard');
+    Route::middleware('role:teamleider')->prefix('teamleider')->name('teamleader.')->group(function (): void {
+        Route::get('/', TeamleaderDashboardController::class)->name('dashboard');
+        Route::get('/groepen/{group}', [TeamleaderDashboardController::class, 'group'])
+            ->whereNumber('group')
+            ->name('group');
+        Route::get('/groepen/{group}/studenten/{student}', [TeamleaderDashboardController::class, 'student'])
+            ->whereNumber('group')
+            ->whereNumber('student')
+            ->name('student');
+    });
     Route::get('/beheer', AdminDashboardController::class)->middleware('role:beheerder')->name('admin.dashboard');
 
     Route::middleware('role:beheerder')->prefix('beheer/leeruitkomsten')->name('admin.learning-outcomes.')->group(function (): void {

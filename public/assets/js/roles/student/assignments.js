@@ -2,7 +2,7 @@
 let assignmentPage = 1;
 let assignmentFilterKey = '';
 
-// Bouwt het projectenoverzicht en zoekt de gekoppelde leeruitkomsten op.
+// Filter projecten op status en zoekterm, inclusief de gekoppelde leeruitkomsten.
 function renderAssignments() {
   const selectedStatus = document.getElementById("assignmentStatus").value.trim();
 
@@ -14,6 +14,7 @@ function renderAssignments() {
     if (sort === "title") return left.title.localeCompare(right.title, "nl");
     return assignmentDeadlineValue(left) - assignmentDeadlineValue(right);
   });
+  // Begin op pagina één zodra het zoekresultaat of de volgorde kan veranderen.
   const filterKey = JSON.stringify([selectedStatus, search, sort]);
   if (filterKey !== assignmentFilterKey) assignmentPage = 1;
   assignmentFilterKey = filterKey;
@@ -76,6 +77,7 @@ function selectAssignmentStatus(status) {
   renderAssignments();
 }
 
+// Gebruik de datum voor sortering. Projecten zonder bruikbare datum komen achteraan.
 function assignmentDeadlineValue(assignment) {
   if (assignment.dueDateIso) return new Date(assignment.dueDateIso + "T00:00:00").getTime();
   const value = assignment.dueDate;
@@ -101,13 +103,14 @@ function assignmentPhaseCodes(assignment) {
 }
 
 function assignmentPhaseNames(assignment) {
-  return assignmentPhaseCodes(assignment).map((code) => phases.find((item) => item[0] === code)?.[1] || code);
+  return assignmentPhaseCodes(assignment).map((code) => studentPhaseName(code));
 }
 
 function assignmentDisplayStatus(assignment) {
   return assignment.status === "completed" ? "Afgerond" : "Actief";
 }
 
+// Geef voorrang aan actieve projecten waarvan de deadline nog niet is verstreken.
 function renderCurrentAssignment(selectedStatus) {
   const current = assignments
     .filter((assignment) => assignment.status === "active" && !isAssignmentLate(assignment))
@@ -143,7 +146,7 @@ function assignmentListIcon(type) {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
 }
 
-// Vult de detailpagina van de gekozen project en toont daar de koppelingen.
+// Toon het gekozen project met de gekoppelde leeruitkomsten en bestanden.
 function openAssignment(id) {
   const assignment = assignments.find((item) => item.id === id);
   if (!assignment) return;
@@ -185,7 +188,7 @@ function openAssignment(id) {
       (outcome) =>
         '<button class="assignment-outcome" type="button" onclick="openOutcome(\'' +
         esc(outcome.code) +
-        "', 'assignmentDetail')\"><span><b>" +
+        "')\"><span><b>" +
         esc(outcome.short) +
         '</b><small class="code">' +
         esc(outcome.code) +
@@ -228,6 +231,7 @@ function formatFileSize(bytes) {
   return (size / (1024 * 1024)).toFixed(1).replace(".0", "") + " MB";
 }
 
+// Stuur het gekozen bestand via de API en vernieuw de bestandslijst na succes.
 async function uploadAssignmentFile(input) {
   const assignment = assignments.find((item) => item.id === selectedAssignmentId);
   const file = input.files?.[0];

@@ -259,6 +259,41 @@ body.account-modal-open { overflow: hidden; }
 .theme-dark .account-modal-data dt { color: #9eb1ba; }
 .product-credit { display: flex; flex-direction: column; gap: 1px; margin: 8px 6px 0; padding: 10px 3px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 7px; line-height: 1.35; letter-spacing: 0.1px; }
 .product-credit strong { color: #d2e1e9; font-size: 8px; font-weight: 650; }
+button.product-credit { width:calc(100% - 12px); border-right:0; border-bottom:0; border-left:0; background:transparent; text-align:left; cursor:pointer; }
+button.product-credit:hover strong { color:#65e0ce; }
+button.product-credit:focus-visible { outline:2px solid #65e0ce; outline-offset:3px; border-radius:4px; }
+.team-credits-dialog { position:fixed; isolation:isolate; width:min(560px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; border:1px solid #cfe0e4; border-radius:28px; padding:34px 32px 48px; background:linear-gradient(135deg,#fff,#f4fbfb); color:#073443; box-shadow:0 24px 80px #092e4540,inset 0 0 0 2px #ffffffb3; }
+.team-credits-dialog::backdrop { background:rgba(8,30,43,.5); backdrop-filter:blur(3px); }
+.team-credits-dialog h2 { position:relative; margin:20px 0 12px; padding-bottom:18px; font-size:clamp(22px,4vw,29px); line-height:1.2; font-weight:800; letter-spacing:-.7px; }
+.team-credits-dialog h2::after { content:""; position:absolute; left:0; bottom:0; width:54px; height:6px; border-radius:99px; background:linear-gradient(90deg,#14c8a2,#008d89); }
+.team-credits-dialog p { color:#607785; font-size:16px; }
+.team-credits-dialog ul { display:grid; gap:11px; list-style:none; margin:24px 0 12px; padding:0; }
+.team-credits-dialog li { display:flex; align-items:center; gap:17px; padding:13px 18px; border:1px solid #cce5e8; border-radius:16px; background:#ffffffb8; box-shadow:0 5px 12px #008f8310; font-size:19px; font-weight:750; }
+.team-credits-avatar { display:grid; place-items:center; flex:none; width:42px; height:42px; border:1px solid #b8eee3; border-radius:50%; background:#d4f5ee; color:#008c7d; }
+.team-credits-avatar svg { width:25px; height:25px; }
+.team-credits-person { width:100%; min-width:0; }
+.team-credits-person summary { display:flex; align-items:center; gap:17px; list-style:none; cursor:pointer; border-radius:8px; }
+.team-credits-person summary::-webkit-details-marker { display:none; }
+.team-credits-person summary:focus-visible { outline:2px solid #008e80; outline-offset:5px; }
+.team-credits-chevron { margin-left:auto; color:#008c7d; font-size:30px; line-height:1; transition:transform .15s; }
+.team-credits-person[open] .team-credits-chevron { transform:rotate(90deg); }
+.team-credits-contribution { margin:14px 0 2px; padding:14px 0 0; border-top:1px solid #cce5e8; }
+.team-credits-contribution p { margin:0 0 10px; font-size:14px; font-weight:400; }
+.team-credits-contribution a { display:inline-flex; align-items:center; gap:8px; color:#007e70; font-size:14px; font-weight:650; text-decoration:underline; text-underline-offset:3px; overflow-wrap:anywhere; }
+.team-credits-contribution a:hover { color:#00594f; }
+.theme-dark .team-credits-contribution { border-color:#31505b; }
+.theme-dark .team-credits-contribution a { color:#69deca; }
+.team-credits-mark { display:grid; place-items:center; width:66px; height:66px; border:1px solid #008f84; border-radius:19px; background:linear-gradient(140deg,#38deb2,#009c95 55%,#006073); color:#fff; box-shadow:0 8px 16px #008f8326; }
+.team-credits-mark svg { width:39px; height:39px; }
+.team-credits-close { position:absolute; z-index:1; top:20px; right:20px; width:40px; height:40px; border:1px solid #fff; border-radius:50%; background:#ffffffb0; color:#123e4d; font-size:29px; box-shadow:0 3px 12px #07576d15; }
+.team-credits-close:focus-visible { outline:2px solid #008e80; outline-offset:3px; }
+.team-credits-wave { position:absolute; z-index:-1; width:80%; height:100px; right:0; color:#05c3b4; pointer-events:none; }
+.team-credits-wave-top { top:0; }
+.team-credits-wave-bottom { bottom:0; }
+.theme-dark .team-credits-dialog { background:#152d38; border-color:#31505b; color:#e5f4f3; }
+.theme-dark .team-credits-dialog li { border-color:#31505b; background:#1d3b45; }
+.theme-dark .team-credits-dialog p { color:#adc1c9; }
+@media(max-width:480px) { .team-credits-dialog { padding:26px 20px 32px; border-radius:22px; } .team-credits-dialog li { font-size:16px; padding:11px 13px; gap:12px; } }
 .main { display: flex; min-width: 0; min-height: 100vh; flex-direction: column; padding: 0 42px 36px; margin: 0 auto; }
 
 /* Gedeelde header met projectcontext en het ingelogde account. */

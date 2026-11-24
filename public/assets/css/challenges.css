@@ -1,3 +1,4 @@
+/* Vormgeving van het challengevenster in het puntenoverzicht. */
 #challengeModal .challenge-redesign { width:min(900px,100%); padding:0 24px 20px; border:1px solid #ddf1ed; border-radius:25px; background:linear-gradient(125deg,#fff,#f9fffd); }
 #challengeModal .modal-close { top:18px; right:18px; z-index:3; display:grid; place-items:center; width:43px; height:43px; border:1px solid #fff; border-radius:50%; background:#ffffffa6; color:#264c5e; font-size:30px; }
 .challenge-hero { position:relative; overflow:hidden; min-height:210px; margin:0 -24px; padding:32px 30px 35px; border-radius:25px 25px 0 0; background:linear-gradient(120deg,#fff 30%,#e5faf7 70%,#bdf0e7); }
@@ -6,6 +7,7 @@
 .challenge-hero p { position:relative; z-index:1; width:67%; margin:0; font-size:16px; line-height:1.6; color:#61758b; }
 .challenge-hero-art { position:absolute; width:255px; height:195px; bottom:-8px; right:25px; pointer-events:none; }
 .challenge-progress-summary { position:relative; z-index:1; display:flex; align-items:center; gap:24px; padding:18px 24px; margin:-10px -6px 23px; border:1px solid #d5e8ed; border-radius:23px; background:linear-gradient(110deg,#fff,#f4fcfb); box-shadow:0 5px 14px #1b56650b; }
+/* Het studentenscript zet het voortgangspercentage om in de hoek van de ring. */
 .challenge-progress-ring { --challenge-progress:0deg; position:relative; flex:none; display:grid; place-items:center; width:83px; height:83px; border-radius:50%; background:conic-gradient(#00a58b var(--challenge-progress),#d9e5e9 0); }
 .challenge-progress-ring::before { content:''; position:absolute; inset:9px; border-radius:50%; background:#fff; }
 .challenge-progress-ring strong { position:relative; font-size:24px; color:#183e54; }
@@ -45,6 +47,7 @@
 .challenge-history li { line-height:1.7; color:#65788d; }
 .challenge-footnote { margin:12px 0 0; font-size:11px; line-height:1.5; }
 .challenge-empty { padding:16px; text-align:center; color:#637a8e; }
+/* Kleuren voor het donkere thema. De indeling blijft hetzelfde. */
 .theme-dark #challengeModal .challenge-hero { background:linear-gradient(115deg,#163541,#20564f); }
 .theme-dark #challengeModal :is(.challenge-progress-summary,.challenge-active-card) { background:#203747; border-color:#45576c; }
 .theme-dark #challengeModal .challenge-progress-ring::before { background:#203747; }

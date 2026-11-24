@@ -1,6 +1,6 @@
 // Gedeelde Laravel-opslag en beveiligde API-aanroepen.
 
-// Laravel synchronisatie: opgeslagen gebruikersgegevens worden bij het openen ingeladen.
+// Ververs bij het openen de lokale opslag met de voorkeuren van dit account.
 const persistentKeys = [
   'notification-settings',
   'weekly-plan',
@@ -10,14 +10,15 @@ const persistentKeys = [
 ];
 if (window.LARAVEL_USER) {
   for (const [key, value] of Object.entries(window.LARAVEL_STATE || {})) {
-    if (typeof key === "string" && (persistentKeys.includes(key) || key.includes("processing"))) {
+    if (persistentKeys.includes(key) || key.includes("processing")) {
       localStorage.setItem("laravel-" + window.LARAVEL_USER.id + "-" + key, JSON.stringify(value));
     }
   }
 }
 
-// Verstuur onderwijsgegevens via beveiligde Laravel-routes naar MySQL.
+// Stuur API-verzoeken met de sessie en geef de eerste validatiefout door aan de pagina.
 async function apiRequest(url, options = {}) {
+  // Laat de browser bij een bestandsupload zelf het type van de aanvraag instellen.
   const isFormData = options.body instanceof FormData;
   const response = await fetch(url, {
     credentials: "same-origin",
@@ -34,15 +35,21 @@ async function apiRequest(url, options = {}) {
     const validationMessage = Object.values(body.errors || {}).flat()[0];
     throw new Error(validationMessage || body.message || "Opslaan is mislukt.");
   }
-  if (options.method && options.method !== 'GET' && url !== window.LARAVEL_API?.challengeSync && typeof syncChallenges === 'function') syncChallenges();
+  // Werk challenges bij na een wijziging. Sla het challengeverzoek zelf over.
+  const changesData = options.method && options.method !== "GET";
+  const syncsChallenges = url === window.LARAVEL_API?.challengeSync;
+  if (changesData && !syncsChallenges && typeof syncChallenges === "function") {
+    syncChallenges();
+  }
   return body;
 }
 
+// Vul het recordnummer in de URL in die Laravel heeft aangeleverd.
 function apiUrl(template, id) {
   return template.replace("__ID__", String(id));
 }
 
-// Gedeelde paginering voor leerdoelen, leeruitkomsten en puntenregistraties.
+// Bouw de paginaknoppen voor projecten, leerdoelen en puntenregistraties.
 function pageButtons(page, total, handler) {
   if (total <= 1) return '';
   const arrow = (label, target, disabled, icon) => `<button type="button" aria-label="${label}" ${disabled ? 'disabled' : ''} onclick="paginateWithoutScrolling(() => ${handler}(${target}))">${icon}</button>`;
@@ -90,6 +97,7 @@ function parseStoredState(value) {
   }
 }
 
+// Stuur wijzigingen samen en voorkom dat twee verzoeken tegelijk opslaan.
 async function syncLocalState() {
   if (!window.LARAVEL_SAVE_URL || pendingStateChanges.size === 0 || stateSyncBusy) return;
   stateSyncBusy = true;
@@ -129,6 +137,7 @@ async function syncLocalState() {
   }
 }
 
+// Bewaar de wijziging lokaal en voeg die toe aan het volgende opslagverzoek.
 function saveLocalState(key, value) {
   if (!window.LARAVEL_USER) return;
   localStorage.setItem("laravel-" + window.LARAVEL_USER.id + "-" + key, value);

@@ -1,3 +1,4 @@
+// Reflecties tonen, koppelen aan projecten of leeruitkomsten, en beheren.
 let reflectionTypeFilter = 'all';
 function selectReflectionOutcomeFilter(kind) {
   document.getElementById(kind === 'Softskills' ? 'reflectionHardOutcome' : 'reflectionSoftOutcome').value = 'all';
@@ -27,6 +28,7 @@ function renderReflectionOutcomePicker() {
   document.getElementById('reflectionOutcomePicker').innerHTML = list.map((item) => '<button type="button" aria-pressed="' + (select.value === item.code) + '" class="reflection-outcome-option ' + (select.value === item.code ? 'selected' : '') + '" onclick="chooseReflectionOutcome(\'' + item.code + '\')"><span class="nav-icon" aria-hidden="true">' + uiIcon(item.kind === 'Hardskills' ? 'layout' : 'feedback') + '</span><span><strong>' + esc(item.short) + '</strong><small>' + esc(item.code) + '</small></span><i aria-hidden="true">' + (select.value === item.code ? '✓' : '') + '</i></button>').join('') || '<p class="dim">Geen leeruitkomsten gevonden. Kies een andere vaardigheid, fase of project.</p>';
 }
 function selectReflectionType(type) { reflectionTypeFilter = type; renderReflections(); }
+// Pas de keuzevelden aan voor een reflectie bij een project of leeruitkomst.
 function updateReflectionLinkType() {
   const previousOutcome = document.getElementById('reflectionOutcome').value;
   const isProject = document.getElementById('reflectionLinkType').value === 'project';
@@ -48,14 +50,7 @@ function selectReflectionProject() {
   if (project) document.getElementById('reflectionPhase').value = project.phase;
   updateReflectionOutcomeOptions();
 }
-// Reflecties tonen, toevoegen en verwijderen.
-
-// -----------------------------------------------------------------------------
-// Reflecties
-// -----------------------------------------------------------------------------
-let reflections = Array.isArray(window.LARAVEL_DATA?.reflections)
-  ? [...window.LARAVEL_DATA.reflections]
-  : [];
+let reflections = copyStudentList("reflections");
 
 function getReflections() {
   return reflections.filter((item) => !item.deleted);
@@ -182,6 +177,7 @@ function renderReflections() {
     return '<details id="reflection-row-' + esc(item.id) + '" class="reflection-table-row"><summary><span class="reflection-row-title"><i aria-hidden="true">▤</i><span><strong>' + esc(item.title) + '</strong><small>' + esc(outcome?.short || '') + '</small></span></span><span class="reflection-row-label">' + (item.assignmentId ? '▣ Project' : '◎ Leeruitkomst') + '</span><span class="reflection-row-code" title="' + esc(item.code) + '">' + esc(outcome?.short || item.code) + '</span><span class="reflection-row-status ' + (item.deleted ? 'deleted' : '') + '">' + (item.deleted ? 'Verwijderd' : '✓ Afgerond') + '</span><span class="reflection-row-date">' + esc(item.date) + '</span><span aria-hidden="true">›</span></summary><div class="reflection-table-body">' + sections.map(([title,text])=>'<section><h3>' + title + '</h3><p>' + esc(text || '') + '</p></section>').join('') + '<button class="button" type="button" onclick="' + (item.deleted ? 'restoreReflection' : 'deleteReflection') + '(\'' + esc(item.id) + '\')">' + (item.deleted ? 'Reflectie herstellen' : 'Reflectie verwijderen') + '</button></div></details>';
   }).join('') || '<div class="empty-state"><h2>Geen reflecties gevonden</h2><p>Pas je filters aan of schrijf een nieuwe reflectie.</p></div>';
 }
+// Vraag de server de reflectie te herstellen en vernieuw daarna de weergave.
 async function restoreReflection(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.reflectionRestore,id), {method:'POST',body:'{}'});
@@ -222,6 +218,7 @@ function filterReflectionsByPhase(phaseCode) {
   renderReflections();
 }
 
+// Kies het API-verzoek voor aanmaken of bewerken op basis van de huidige reflectie.
 async function saveReflection(event) {
   event.preventDefault();
   const title = document.getElementById("reflectionTitle").value.trim();
@@ -338,6 +335,7 @@ function editSelectedReflection() {
   showReflectionOutcomePreview();
 }
 
+// Verwijder de reflectie uit het actieve overzicht en behoud de mogelijkheid tot herstel.
 async function deleteReflection(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.reflectionDelete, id), { method: "DELETE" });

@@ -3,18 +3,20 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\RoleDashboardController;
-use App\Models\Assignment;
 use App\Models\ApplicationSetting;
+use App\Models\Assignment;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
 use App\Models\Reflection;
 use App\Models\User;
+use App\Services\ProjectPoints;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class DashboardController extends RoleDashboardController
 {
+    // Start het studentdashboard met de gegevens en scripts voor deze rol.
     public function __invoke(Request $request): View
     {
         /** @var User $user */
@@ -27,6 +29,7 @@ class DashboardController extends RoleDashboardController
             frontendData: $this->studentData($user),
             roleData: ['applicationSettings' => ApplicationSetting::current()],
             style: 'css/roles/student.css',
+            // Laad de scripts met gedeelde studentfuncties eerst. De initialisatie volgt als laatste.
             scripts: [
                 'js/common.js',
                 'js/roles/student/core.js',
@@ -50,13 +53,15 @@ class DashboardController extends RoleDashboardController
      */
     private function studentData(User $user): array
     {
-        $pointService = app(\App\Services\ProjectPoints::class);
+        // Bereken de puntenverdeling één keer voor de projecten en leeruitkomsten.
+        $pointService = app(ProjectPoints::class);
         $allocation = $pointService->allocation($user);
         $projectPoints = $allocation['outcomes'];
         $coachName = User::query()
             ->where('rol', 'coach')
             ->value('naam') ?? 'Coach';
 
+        // Combineer de algemene leeruitkomsten met de voortgang van deze student.
         $outcomes = LearningOutcome::query()
             ->with([
                 'studyPhase',
@@ -68,14 +73,14 @@ class DashboardController extends RoleDashboardController
                 $progress = $outcome->progress->first();
                 $hours = $projectPoints[$outcome->id] ?? 0;
                 $target = $pointService->norm($outcome);
-                $percentage = $hours !== null && $target
+                $percentage = $target
                     ? min(100, (int) round(($hours / $target) * 100))
                     : null;
 
                 return [
                     'id' => $outcome->id,
                     'code' => $outcome->code,
-                    'phase' => $this->phaseCode($outcome->studyPhase?->naam),
+                    'phase' => StudentPayload::phaseCode($outcome->studyPhase?->naam),
                     'kind' => $outcome->type,
                     'number' => (int) preg_replace('/\D+/', '', str($outcome->code)->afterLast('_')->value()),
                     'description' => $outcome->omschrijving,
@@ -89,61 +94,23 @@ class DashboardController extends RoleDashboardController
             })
             ->values();
 
+        // Sorteer projecten op deadline, met projecten zonder deadline achteraan.
         $assignments = Assignment::query()
             ->where('gebruiker_id', $user->id)
             ->with(['learningOutcomes.studyPhase', 'files'])
             ->orderByRaw('inleverdatum is null, inleverdatum')
             ->get()
-            ->map(fn ($assignment): array => [
-                'id' => $assignment->id,
-                'title' => $assignment->onderwerp,
-                'type' => $assignment->type,
-                'description' => $assignment->omschrijving,
-                'status' => $assignment->status,
-                'phase' => $this->phaseCode($assignment->learningOutcomes->sortBy('id')->first()?->studyPhase?->naam),
-                'phases' => $assignment->learningOutcomes
-                    ->sortBy('id')->take(1)
-                    ->map(fn ($outcome): string => $this->phaseCode($outcome->studyPhase?->naam))
-                    ->filter()
-                    ->unique()
-                    ->values()
-                    ->all(),
-                'dueDate' => $assignment->inleverdatum?->locale('nl')->translatedFormat('j F Y'),
-                'dueDateIso' => $assignment->inleverdatum?->format('Y-m-d'),
-                'registeredAt' => $assignment->updated_at?->locale('nl')->translatedFormat('j F Y'),
-                'registeredAtIso' => $assignment->updated_at?->format('Y-m-d'),
-                'hours' => $allocation['projects'][$assignment->id] ?? 0,
-                'maxPoints' => $allocation['maximums'][$assignment->id] ?? 0,
-                'outcomeCodes' => $assignment->learningOutcomes->where('studiefase_id', $assignment->learningOutcomes->sortBy('id')->first()?->studiefase_id)->pluck('code')->values()->all(),
-                'files' => $assignment->files->map(fn ($file): array => [
-                    'id' => $file->id,
-                    'name' => $file->originele_naam,
-                    'size' => $file->bestandsgrootte,
-                    'mime' => $file->mime_type,
-                    'downloadUrl' => route('assignments.files.download', $file),
-                    'uploadedAt' => $file->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
-                ])->values()->all(),
-            ])
+            ->map(fn (Assignment $assignment): array => $this->assignmentPayload($assignment, $allocation))
             ->values();
 
+        // Neem ook verwijderde reflecties mee, zodat de student ze kan herstellen.
         $reflections = Reflection::query()
             ->withTrashed()
             ->where('gebruiker_id', $user->id)
-            ->with('learningOutcome.studyPhase')
+            ->with('learningOutcome')
             ->latest()
             ->get()
-            ->map(fn ($reflection): array => [
-                'id' => (string) $reflection->id,
-                'title' => $reflection->onderwerp,
-                'assignmentId' => $reflection->opdracht_id,
-                'code' => $reflection->learningOutcome->code,
-                'situation' => $reflection->situatie,
-                'good' => $reflection->wat_ging_goed,
-                'improve' => $reflection->wat_kan_beter,
-                'next' => $reflection->volgende_stap,
-                'deleted' => $reflection->trashed(),
-                'date' => $reflection->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
-            ])
+            ->map(fn ($reflection): array => StudentPayload::reflection($reflection, includeArchiveStatus: true))
             ->values();
 
         $feedback = Feedback::query()
@@ -151,38 +118,18 @@ class DashboardController extends RoleDashboardController
             ->with(['author', 'learningOutcome'])
             ->latest()
             ->get()
-            ->map(fn ($item): array => [
-                'id' => (string) $item->id,
-                'type' => $item->type,
-                'person' => $item->persoon ?: $item->author->naam,
-                'title' => $item->onderwerp,
-                'code' => $item->learningOutcome->code,
-                'positive' => $item->wat_ging_goed,
-                'improve' => $item->wat_kan_beter,
-                'action' => $item->volgende_stap,
-                'awardedHours' => $item->awarded_hours,
-                'confirmedAt' => $item->processed_confirmed_at?->toIso8601String(),
-                'date' => $item->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
-            ])
+            ->map(StudentPayload::feedback(...))
             ->values();
 
         $goals = LearningGoal::query()
             ->where('gebruiker_id', $user->id)
-            ->with('learningOutcome')
+            ->with('learningOutcome.studyPhase')
             ->latest()
             ->get()
-            ->map(fn ($goal): array => [
-                'id' => $goal->id,
-                'title' => $goal->onderwerp,
-                'description' => $goal->omschrijving,
-                'status' => $goal->status,
-                'code' => $goal->learningOutcome?->code,
-                'outcome' => $goal->learningOutcome?->titel,
-                'phaseCode' => $this->phaseCode($goal->learningOutcome?->studyPhase?->naam),
-                'phase' => $goal->learningOutcome?->studyPhase?->naam,
-            ])
+            ->map(StudentPayload::goal(...))
             ->values();
 
+        // Vergelijk de behaalde punten per fase met de som van de richtwaarden.
         $phaseTotals = collect(['OF', 'VF', 'AF'])->mapWithKeys(function (string $phase) use ($outcomes): array {
             $items = $outcomes->where('phase', $phase)->whereNotNull('hours');
             $hours = (int) $items->sum('hours');
@@ -196,6 +143,7 @@ class DashboardController extends RoleDashboardController
             ]];
         });
 
+        // Bouw maximaal drie vermeldingen op voor het overzicht van verwerkte punten.
         $hourApprovals = $outcomes
             ->filter(fn (array $outcome): bool => (int) ($outcome['hours'] ?? 0) > 0)
             ->take(3)
@@ -216,24 +164,38 @@ class DashboardController extends RoleDashboardController
             })
             ->values();
 
+        // Zet leerdoelen, reflecties en voortgang op volgorde van datum.
+        $goalActivities = $user->learningGoals()->get()->map(fn ($goal): array => [
+            'title' => 'Nieuw leerdoel · '.$goal->onderwerp,
+            'date' => $goal->created_at->toIso8601String(),
+        ]);
+        $reflectionActivities = $user->reflections()->get()->map(fn ($reflection): array => [
+            'title' => 'Reflectie toegevoegd · '.$reflection->onderwerp,
+            'date' => $reflection->created_at->toIso8601String(),
+        ]);
+        $progressActivities = $user->progress()->get()->map(fn ($progress): array => [
+            'title' => 'Voortgang bijgewerkt',
+            'date' => $progress->updated_at->toIso8601String(),
+        ]);
+        $activities = $goalActivities->concat($reflectionActivities)
+            ->concat($progressActivities)
+            ->sortByDesc('date')
+            ->values();
+
         return [
             'outcomes' => $outcomes,
             'assignments' => $assignments,
             'reflections' => $reflections,
             'feedback' => $feedback,
             'goals' => $goals,
-            'goalInsights' => [
-                'activities' => $user->learningGoals()->get()->map(fn ($goal) => ['title'=>'Nieuw leerdoel · '.$goal->onderwerp,'date'=>$goal->created_at->toIso8601String()])
-                    ->concat($user->reflections()->get()->map(fn ($item) => ['title'=>'Reflectie toegevoegd · '.$item->onderwerp,'date'=>$item->created_at->toIso8601String()]))
-                    ->concat($user->progress()->get()->map(fn ($item) => ['title'=>'Voortgang bijgewerkt','date'=>$item->updated_at->toIso8601String()]))
-                    ->sortByDesc('date')->values(),
-            ],
+            'goalInsights' => ['activities' => $activities],
             'hourApprovals' => $hourApprovals,
             'phases' => [
                 ['OF', 'Oriëntatiefase', $phaseTotals['OF']['percentage'], $phaseTotals['OF']['hours']],
                 ['VF', 'Verdiepingsfase', $phaseTotals['VF']['percentage'], $phaseTotals['VF']['hours']],
                 ['AF', 'Afrondingsfase', $phaseTotals['AF']['percentage'], $phaseTotals['AF']['hours']],
             ],
+            // Alleen afgeronde projecten verschijnen als puntenregistratie.
             'records' => $assignments->where('status', 'completed')->map(fn (array $assignment): array => [
                 'assignmentId' => $assignment['id'],
                 'title' => $assignment['title'],
@@ -261,12 +223,30 @@ class DashboardController extends RoleDashboardController
         ];
     }
 
-    private function phaseCode(?string $name): string
+    private function assignmentPayload(Assignment $assignment, array $allocation): array
     {
-        return match ($name) {
-            'Verdiepingsfase' => 'VF',
-            'Afrondingsfase' => 'AF',
-            default => 'OF',
-        };
+        // Alleen leeruitkomsten uit de fase van de eerste koppeling horen bij dit project.
+        $firstOutcome = $assignment->learningOutcomes->sortBy('id')->first();
+        $phase = StudentPayload::phaseCode($firstOutcome?->studyPhase?->naam);
+
+        return [
+            'id' => $assignment->id,
+            'title' => $assignment->onderwerp,
+            'type' => $assignment->type,
+            'description' => $assignment->omschrijving,
+            'status' => $assignment->status,
+            'phase' => $phase,
+            'phases' => $firstOutcome ? [$phase] : [],
+            'dueDate' => $assignment->inleverdatum?->locale('nl')->translatedFormat('j F Y'),
+            'dueDateIso' => $assignment->inleverdatum?->format('Y-m-d'),
+            'registeredAt' => $assignment->updated_at?->locale('nl')->translatedFormat('j F Y'),
+            'registeredAtIso' => $assignment->updated_at?->format('Y-m-d'),
+            'hours' => $allocation['projects'][$assignment->id] ?? 0,
+            'maxPoints' => $allocation['maximums'][$assignment->id] ?? 0,
+            'outcomeCodes' => $assignment->learningOutcomes
+                ->where('studiefase_id', $firstOutcome?->studiefase_id)
+                ->pluck('code')->values()->all(),
+            'files' => $assignment->files->map(StudentPayload::assignmentFile(...))->values()->all(),
+        ];
     }
 }

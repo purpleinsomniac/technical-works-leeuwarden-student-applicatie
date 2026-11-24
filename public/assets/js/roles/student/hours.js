@@ -1,12 +1,13 @@
-// Urenoverzicht, registratiedetails en urenmeldingen.
+// Puntenoverzicht, registraties, meldingen en challenges.
 let hoursPhaseFilter = "OF";
-// Voorlopige puntendoelen; pas deze aan zodra de opdrachtgever de normen vastlegt.
+// Gebruik deze richtwaarde als er voor een fase geen puntendoel uit de leeruitkomsten komt.
 const phasePointTargets = { OF: 800, VF: 800, AF: 800 };
 let hoursPage = 1;
 let selectedRegistrationRecord = null;
 let challengeState = null;
 let challengeSyncBusy = false;
 
+// Laat de server de challengevoortgang bijwerken en voorkom overlappende verzoeken.
 async function syncChallenges() {
   if (challengeSyncBusy || !window.LARAVEL_API?.challengeSync) return;
   challengeSyncBusy = true;
@@ -64,6 +65,7 @@ function renderChallengeDetail() {
   document.getElementById('challengeActiveReward').textContent = active ? '+' + active.reward + ' XP' : '';
   const history = challengeState?.history || [];
   document.getElementById('challengeHistory').innerHTML = history.map((item) => '<li>' + esc(item.title) + ' · ' + esc(item.phase) + ' · +' + item.reward + ' XP · Voltooid</li>').join('') || '<li>Je hebt nog geen challenges voltooid.</li>';
+  // Sluit de huidige en afgeronde challenges uit van de lijst met volgende uitdagingen.
   const finished = new Set(history.filter((item) => item.phase === challengeState?.phase).map((item) => Number(item.challenge_id)));
   let upcoming = (challengeState?.catalog || []).filter((item) => !finished.has(Number(item.id)) && Number(item.id) !== Number(active?.challenge_id));
   if (challengeListFilter === 'nearly') upcoming = upcoming.filter((item) => item.target > 0 && item.progress / item.target >= .75).sort((a,b) => b.progress/b.target - a.progress/a.target);
@@ -84,6 +86,7 @@ function closeChallengeDetail() { document.getElementById('challengeModal').clas
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeChallengeDetail(); });
 window.addEventListener('focus', syncChallenges);
 
+// Tel de punten op voor het gekozen jaar en de gekozen fase.
 function renderHours() {
   const selected = document.getElementById("hoursYear").value;
   const isTotal = selected === "total";
@@ -128,6 +131,7 @@ function openXpHelp() {
 function closeXpHelp() { document.getElementById('xpHelpPanel').classList.add('hidden'); }
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeXpHelp(); });
 
+// Toon de gefilterde projectregistraties per pagina.
 function renderHoursRegistrations(selected, periodLabel) {
   const search = document.getElementById("hoursSearch").value.trim().toLowerCase();
   const sort = document.getElementById("hoursSort").value;
@@ -211,7 +215,7 @@ function goToHoursPage(page) {
 }
 
 function hoursPhaseName(code) {
-  return phases.find((phaseItem) => phaseItem[0] === code)?.[1] || code;
+  return studentPhaseName(code);
 }
 
 function openHourRegistration(index) {
@@ -248,7 +252,7 @@ function closeRegistrationDetail() {
 
 function openRegistrationOutcome(code) {
   closeRegistrationDetail();
-  if (code) openOutcome(code, "hours");
+  if (code) openOutcome(code);
 }
 
 function openRegistrationAssignment() {
@@ -296,7 +300,7 @@ function renderHourApprovals() {
 }
 
 function openHoursApprovalModal() {
-  if (role === "student") show("studentDashboard");
+  show("studentDashboard");
   document.getElementById("hoursApprovalModal").classList.remove("hidden");
   document.body.classList.add("modal-open");
   requestAnimationFrame(() => document.querySelector("#hoursApprovalModal .modal-close").focus());
@@ -309,6 +313,7 @@ function closeHoursApprovalModal() {
 
 const hoursProcessingReadKey = "hours-processing-latest-read";
 
+// Vergelijk de huidige melding met de laatst gelezen melding.
 function updateHoursProcessingReadState() {
   const isRead = loadLocalState(hoursProcessingReadKey) === "true",
     notification = document.getElementById("processingNotification"),

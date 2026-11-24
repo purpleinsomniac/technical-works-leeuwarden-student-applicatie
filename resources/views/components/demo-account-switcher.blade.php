@@ -1,8 +1,13 @@
 @php
-    $demoAccounts = \App\Models\User::query()
-        ->whereIn('email', array_column(config('demo.accounts'), 'email'))
-        ->get()->keyBy('email');
-    $demoCurrentChoice = collect(config('demo.accounts'))->first(fn ($choice) => $choice['email'] === auth()->user()->email);
+    $currentUser = auth()->user();
+    $choices = collect(config('demo.accounts'));
+    // Haal alle ingestelde accounts op in één query, ook als sommige nog ontbreken.
+    $usersByEmail = \App\Models\User::query()
+        ->whereIn('email', $choices->pluck('email'))
+        ->get()
+        ->keyBy('email');
+    $currentChoice = $choices->first(fn ($choice) => $choice['email'] === $currentUser->email);
+    $choicesByRole = $choices->groupBy(fn ($choice, $key) => $choice['role'] ?? $key, preserveKeys: true);
     $demoGroups = [
         'student'=>['label'=>'Studenten','icon'=>'<path d="m2 8 10-5 10 5-10 5Z"/><path d="M6 10v7q6 5 12 0v-7M22 8v8"/>'],
         'coach'=>['label'=>'Docent (coach)','icon'=>'<path d="M9 4h13v12H12M13 8h5"/><circle cx="6" cy="10" r="3"/><path d="M1 21v-2a5 5 0 0 1 10 0v2Z"/>'],
@@ -12,26 +17,34 @@
 @endphp
 <link rel="stylesheet" href="{{ asset('assets/css/demo-switcher.css') }}">
 <details id="demoAccountSwitcher" class="demo-account-switcher">
-    <summary aria-label="Demoaccount wisselen"><span aria-hidden="true">⇄</span><span>Demo: wissel account</span><small>{{ $demoCurrentChoice['label'] ?? ucfirst(auth()->user()->rol) }}</small></summary>
+    <summary aria-label="Demoaccount wisselen">
+        <span aria-hidden="true">⇄</span>
+        <span>Demo: wissel account</span>
+        <small>{{ $currentChoice['label'] ?? ucfirst($currentUser->rol) }}</small>
+    </summary>
     <div class="demo-account-panel">
         <header><strong>Demonstratie</strong><small>Wissel naar een bestaand account</small></header>
-        @foreach($demoGroups as $groupRole => $group)
-        <section class="demo-role-group" aria-label="{{ $group['label'] }}">
-            <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $group['icon'] !!}</svg>{{ $group['label'] }}</h3>
-        @foreach(config('demo.accounts') as $role => $demo)
-            @continue(($demo['role'] ?? $role) !== $groupRole)
-            @php($account = $demoAccounts->get($demo['email']))
-            <form action="{{ route('demo.account-switch') }}" method="post">
-                @csrf
-                <input type="hidden" name="role" value="{{ $role }}">
-                <button type="submit" @disabled(!$account || $account->rol !== ($demo['role'] ?? $role) || auth()->id() === $account->id) @if($account && auth()->id() === $account->id) aria-current="true" @endif>
-                    <span class="demo-account-initial" aria-hidden="true">{{ mb_strtoupper(mb_substr($demo['label'],0,1)) }}</span>
-                    <span><strong>{{ $demo['label'] }}</strong><small>{{ $account?->naam ?? 'Account niet beschikbaar' }}</small></span>
-                    <span class="demo-account-selection" aria-hidden="true">{{ $account && auth()->id() === $account->id ? '✓' : '' }}</span>
-                </button>
-            </form>
-        @endforeach
-        </section>
+        @foreach ($demoGroups as $groupRole => $group)
+            <section class="demo-role-group" aria-label="{{ $group['label'] }}">
+                <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $group['icon'] !!}</svg>{{ $group['label'] }}</h3>
+
+                {{-- Toon ontbrekende accounts, zodat duidelijk is welke keuzes beschikbaar zijn. --}}
+                @foreach ($choicesByRole->get($groupRole, []) as $accountKey => $choice)
+                    @php
+                        $account = $usersByEmail->get($choice['email']);
+                        $isCurrent = $account && $currentUser->getAuthIdentifier() === $account->id;
+                    @endphp
+                    <form action="{{ route('demo.account-switch') }}" method="post">
+                        @csrf
+                        <input type="hidden" name="role" value="{{ $accountKey }}">
+                        <button type="submit" @disabled(!$account || $account->rol !== $groupRole || $isCurrent) @if ($isCurrent) aria-current="true" @endif>
+                            <span class="demo-account-initial" aria-hidden="true">{{ mb_strtoupper(mb_substr($choice['label'], 0, 1)) }}</span>
+                            <span><strong>{{ $choice['label'] }}</strong><small>{{ $account?->naam ?? 'Account niet beschikbaar' }}</small></span>
+                            <span class="demo-account-selection" aria-hidden="true">{{ $isCurrent ? '✓' : '' }}</span>
+                        </button>
+                    </form>
+                @endforeach
+            </section>
         @endforeach
         <footer><span aria-hidden="true">ⓘ</span>Alleen beschikbaar in de lokale demo-omgeving.</footer>
     </div>

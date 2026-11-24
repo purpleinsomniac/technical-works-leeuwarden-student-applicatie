@@ -1249,7 +1249,7 @@ body { background: #f3f6f9; }
 .registration-outcome-group button strong { font-size: 13px; }
 .registration-outcome-group button small { color: #748a99; font-size: 11px; }
 
-/* Logout action remains specific to the student sidebar layout. */
+/* Opmaak van de uitlogknop onder het accountblok in de zijbalk. */
 .side .foot .sidebar-logout { gap: 13px; min-height: 39px; margin-top: 5px; padding-left: 15px; color: #e6f0f3; }
 .side .foot .sidebar-logout:hover { background: rgba(18, 82, 104, 0.55); color: #fff; }
 
@@ -1379,7 +1379,7 @@ body { background: #f3f6f9; }
 .dashboard-assignment-card .card-link,
 .dashboard-attention-card .card-link { margin-top: auto; }
 
-/* Twee ruime kolommen houden het dashboard leesbaar zonder veel scrollen. */
+/* Basisindeling voor de widgets. Verderop staan de specifieke regels voor het dashboard. */
 .dashboard-widget-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 250px; gap: 14px; margin-top: 14px; }
 .dashboard-panel { display: flex; box-sizing: border-box; height: 100%; min-height: 250px; max-height: 250px; min-width: 0; flex-direction: column; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; padding: 19px; overflow: hidden; }
 .dashboard-panel-head { display: flex; min-height: 34px; align-items: center; flex-direction: row; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
@@ -2036,16 +2036,14 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 .theme-dark .badge-gallery-card.locked { background:#192e39; border-color:#324652; }
 .theme-dark .badge-gallery-card h3 { color:#e1f0f3; }
 @media(max-width:600px) { .badge-gallery { grid-template-columns:1fr; } }
+/* De dashboardweergave toont een korte takenlijst naast de leerdoelen. */
 .week-plan-preview { display:grid; gap:5px; padding:0; margin:9px 0; list-style:none; min-width:0; }
 .week-plan-preview li { display:flex; gap:8px; align-items:center; color:#665735; font-size:12px; min-width:0; }
 .week-plan-preview li > span:first-child { color:#b58b36; flex:none; }
 .week-plan-preview li > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .week-plan-preview li.done > span:last-child { text-decoration:line-through; opacity:.65; }
 .week-plan-preview .week-plan-more { font-size:10px; color:#8c7957; }
-.dashboard-primary-grid:has(.week-plan-preview:not(:empty)) { grid-auto-rows:minmax(250px,auto); }
 .theme-dark .week-plan-preview li { color:#d6c39f; }
-.dashboard-primary-grid:has(.dashboard-current-goals) { grid-auto-rows:minmax(290px,auto); }
-.dashboard-primary-grid .dashboard-current-goals { height:auto; min-height:290px; max-height:none; overflow:visible; background:linear-gradient(135deg,#edf8f4,#fff); border-color:#cce6dd; padding:20px; }
 .dashboard-goals-caption { margin:5px 0 0; font-size:11px; color:#6a867f; }
 .dashboard-current-goals .dashboard-action-list { display:grid; align-content:start; gap:9px; min-height:0; max-height:none; overflow:visible; flex:1; margin:14px 0; }
 .dashboard-current-goals .dashboard-action-row { display:grid; grid-template-columns:28px minmax(0,1fr) 12px; align-items:start; gap:10px; padding:12px; border:1px solid #dcebe5; border-radius:10px; background:#ffffffd9; }
@@ -2059,11 +2057,11 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 .dashboard-week-card .week-plan-preview { margin:0; gap:8px; }
 .dashboard-week-card .week-plan-preview li { padding:9px 12px; border:1px solid #eee5d3; border-radius:9px; background:#ffffffc9; font-size:13px; }
 .dashboard-week-card .week-plan-preview .week-plan-more { border:0; background:transparent; padding:0 3px; font-size:11px; }
-.theme-dark .dashboard-primary-grid .dashboard-current-goals { background:#16332c; border-color:#31564a; }
 .theme-dark .dashboard-current-goals .dashboard-action-row { background:#1b3b32; border-color:#355b4b; }
 .theme-dark .dashboard-current-goals .dashboard-action-row strong { color:#d7eee6; }
 .theme-dark .dashboard-week-card { background:#332e22; border-color:#514735; }
 .theme-dark .dashboard-week-card .week-plan-preview li { background:#3b3427; border-color:#514735; }
+/* Opmaak voor de fasekeuze en kaarten op het studentdashboard. */
 #studentDashboard .dashboard-phase-tabs { width:min(100%,760px); grid-auto-rows:42px; background:#f7faff; border:1px solid #e0e8f0; border-radius:99px; overflow:hidden; margin-bottom:20px; }
 #studentDashboard .dashboard-phase-tabs .tab { height:42px; min-height:42px; padding:8px 12px; font-size:13px; }
 #studentDashboard .dashboard-phase-tabs .tab.active { background:#ddf6ec; color:#087953; border-radius:99px; box-shadow:inset 0 -3px #14956e; }

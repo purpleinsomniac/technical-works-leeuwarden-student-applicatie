@@ -4,6 +4,7 @@ let goalStatusFilter = 'actief';
 let goalListPage = 1;
 let goalSaving = false;
 let selectedGoalId = null;
+// Laat de server het doel afronden en ververs daarna het overzicht.
 async function completeSelectedGoal() {
   const goal = goalItems.find((item) => Number(item.id) === Number(selectedGoalId));
   if (!goal || goal.status === 'afgerond') return;
@@ -17,40 +18,71 @@ async function completeSelectedGoal() {
     renderGoalList();
     closeGoalDetail();
     hint('Je leerdoel is afgerond en staat bij Afgerond.');
-  } catch (error) { document.getElementById('goalCompleteMessage').textContent = error.message; }
-  finally { button.disabled = false; }
+  } catch (error) {
+    document.getElementById('goalCompleteMessage').textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
 }
+
+// Leid badges af uit de behaalde mijlpalen en laad de recente activiteiten.
 function goalInsightData() {
   const activities = window.LARAVEL_DATA?.goalInsights?.activities || [];
+  const completedGoals = goalItems.filter((goal) => goal.status === 'afgerond');
+  const completedProjectCount = assignments.filter((project) => project.status === 'completed').length;
   const badges = [
     { title: 'Eerste leerdoel', icon: '◎', earned: goalItems.length > 0, description: 'Maak je eerste persoonlijke leerdoel.' },
-    { title: 'Plannen & organiseren', icon: '▦', earned: goalItems.some((goal) => goal.status === 'afgerond' && /plann|voortgang/i.test(goal.title)), description: 'Rond een leerdoel over plannen of voortgang af.' },
-    { title: 'Teamsamenwerking', icon: '♧', earned: goalItems.some((goal) => goal.status === 'afgerond' && /samenwerk|team/i.test(goal.title)), description: 'Rond een leerdoel over samenwerken af.' },
-  ];
-  badges.push(
-    { title: 'Eerste mijlpaal', icon: '⚑', earned: goalItems.some((g) => g.status === 'afgerond'), description: 'Rond je eerste leerdoel af.' },
-    { title: 'Doorzetter', icon: '★', earned: goalItems.filter((g) => g.status === 'afgerond').length >= 5, description: 'Rond vijf leerdoelen af.' },
-    { title: 'Doelgericht', icon: '◎', earned: goalItems.filter((g) => g.status === 'afgerond').length >= 10, description: 'Rond tien leerdoelen af.' },
-    { title: 'Projectbouwer', icon: '▣', earned: assignments.some((p) => p.status === 'completed'), description: 'Rond een project succesvol af.' },
-    { title: 'Ervaren maker', icon: '◇', earned: assignments.filter((p) => p.status === 'completed').length >= 5, description: 'Rond vijf projecten af.' },
+    { title: 'Plannen & organiseren', icon: '▦', earned: completedGoals.some((goal) => /plann|voortgang/i.test(goal.title)), description: 'Rond een leerdoel over plannen of voortgang af.' },
+    { title: 'Teamsamenwerking', icon: '♧', earned: completedGoals.some((goal) => /samenwerk|team/i.test(goal.title)), description: 'Rond een leerdoel over samenwerken af.' },
+    { title: 'Eerste mijlpaal', icon: '⚑', earned: completedGoals.length > 0, description: 'Rond je eerste leerdoel af.' },
+    { title: 'Doorzetter', icon: '★', earned: completedGoals.length >= 5, description: 'Rond vijf leerdoelen af.' },
+    { title: 'Doelgericht', icon: '◎', earned: completedGoals.length >= 10, description: 'Rond tien leerdoelen af.' },
+    { title: 'Projectbouwer', icon: '▣', earned: completedProjectCount > 0, description: 'Rond een project succesvol af.' },
+    { title: 'Ervaren maker', icon: '◇', earned: completedProjectCount >= 5, description: 'Rond vijf projecten af.' },
     { title: 'Reflectieve denker', icon: '▤', earned: (window.LARAVEL_DATA?.reflections || []).length >= 3, description: 'Schrijf drie reflecties over je ontwikkeling.' },
-    { title: 'Brede ontwikkeling', icon: '✧', earned: ['OF','VF','AF'].every((phase) => goalItems.some((g) => goalPhaseCode(g) === phase && g.status === 'afgerond')), description: 'Rond in iedere fase een leerdoel af.' }
-  );
+    {
+      title: 'Brede ontwikkeling',
+      icon: '✧',
+      earned: ['OF', 'VF', 'AF'].every((phase) => completedGoals.some((goal) => goalPhaseCode(goal) === phase)),
+      description: 'Rond in iedere fase een leerdoel af.',
+    },
+  ];
   return { activities, badges };
 }
+
 function renderGoalInsights() {
   const { activities, badges } = goalInsightData();
   document.getElementById('goalBadges').innerHTML = badges.slice(0, 3).map((badge) => '<span class="goal-badge ' + (badge.earned ? 'earned' : 'locked') + '" title="' + esc(badge.description) + '"><i>' + badge.icon + '</i><b>' + esc(badge.title) + '</b><small>' + (badge.earned ? '✓' : '○') + '</small></span>').join('');
   document.getElementById('goalRecentActivity').innerHTML = activities.slice(0, 3).map((item) => '<div><span>＋</span><strong>' + esc(item.title) + '</strong><time>' + esc(new Date(item.date).toLocaleDateString('nl-NL', {day:'numeric',month:'short'})) + '</time></div>').join('') || '<p>Nog geen activiteit.</p>';
-  const monday = (date) => { const d = new Date(date); d.setHours(0,0,0,0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); };
-  const weeks = new Set(activities.map((item) => monday(item.date)));
-  const current = monday(new Date());
-  const weekBefore = (n) => { const date = new Date(current); date.setDate(date.getDate() - n * 7); return date.getTime(); };
+  // Tel opeenvolgende actieve weken. Een lege lopende week telt nog niet mee.
+  function mondayTime(value) {
+    const date = new Date(value);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+    return date.getTime();
+  }
+
+  const activeWeeks = new Set(activities.map((item) => mondayTime(item.date)));
+  const currentMonday = mondayTime(new Date());
+  function weekBefore(weeksAgo) {
+    const date = new Date(currentMonday);
+    date.setDate(date.getDate() - weeksAgo * 7);
+    return date.getTime();
+  }
+
   let streak = 0;
-  let offset = weeks.has(current) ? 0 : 1;
-  while (weeks.has(weekBefore(offset + streak))) streak++;
+  const offset = activeWeeks.has(currentMonday) ? 0 : 1;
+  while (activeWeeks.has(weekBefore(offset + streak))) streak++;
+
+  const recentWeeks = [];
+  for (let weeksAgo = 3; weeksAgo >= 0; weeksAgo--) {
+    const wasActive = activeWeeks.has(weekBefore(weeksAgo));
+    const weekClass = wasActive ? 'done' : '';
+    const mark = wasActive ? '✓' : '·';
+    recentWeeks.push('<span class="' + weekClass + '" title="' + weeksAgo + ' weken geleden">' + mark + '</span>');
+  }
   document.getElementById('goalStreakCopy').textContent = streak ? 'Je leert ' + streak + ' weken op rij. Goed bezig!' : 'Maak deze week een nieuwe stap.';
-  document.getElementById('goalStreak').innerHTML = Array.from({length:4}, (_, index) => '<span class="' + (weeks.has(weekBefore(3-index)) ? 'done' : '') + '" title="' + (3-index) + ' weken geleden">' + (weeks.has(weekBefore(3-index)) ? '✓' : '·') + '</span>').join('') + '<strong>' + streak + '<small>weken</small></strong>';
+  document.getElementById('goalStreak').innerHTML = recentWeeks.join('') + '<strong>' + streak + '<small>weken</small></strong>';
 }
 function openGoalInsight(type) {
   const { activities, badges } = goalInsightData();
@@ -63,14 +95,14 @@ function openGoalInsight(type) {
 }
 function closeGoalInsight() { document.getElementById('goalInsightModal')?.classList.add('hidden'); }
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeGoalInsight(); });
-let goalItems = Array.isArray(window.LARAVEL_DATA?.goals) ? [...window.LARAVEL_DATA.goals] : [];
+let goalItems = copyStudentList("goals");
 
 function goalPhaseCode(goal) {
   return goal.phaseCode || outcomes.find((outcome) => outcome.code === goal.code)?.phase || "OF";
 }
 
 function goalPhaseName(code) {
-  return phases.find((item) => item[0] === code)?.[1] || "Oriëntatiefase";
+  return studentPhaseName(code, "Oriëntatiefase");
 }
 
 function goalStatusMeta(status) {
@@ -78,6 +110,7 @@ function goalStatusMeta(status) {
   return { label: "Afgerond", className: "completed" };
 }
 
+// Filter en pagineer de leerdoelen voor de gekozen fase en status.
 function renderGoalList() {
   const list = document.getElementById("goalList");
   if (!list) return;
@@ -235,6 +268,7 @@ function showGoalOutcomePreview() {
     : "";
 }
 
+// Toon de huidige stap en werk de bijbehorende navigatie bij.
 function setGoalWizardStep(step) {
   goalWizardStep = Math.max(1, Math.min(3, step));
   document.querySelectorAll("[data-goal-step]").forEach((panel) => panel.classList.toggle("hidden", Number(panel.dataset.goalStep) !== goalWizardStep));
@@ -351,9 +385,10 @@ function openGoalLinkedOutcome() {
   const goal = goalItems.find((item) => Number(item.id) === Number(selectedGoalId));
   if (!goal || !outcomes.some((item) => item.code === goal.code)) return;
   closeGoalDetail();
-  openOutcome(goal.code, 'goals');
+  openOutcome(goal.code);
 }
 
+// Sla het leerdoel met de gekozen leeruitkomst op en verwerk het API-antwoord.
 async function saveGoal() {
   if (goalSaving) return;
   const description = document.getElementById("goalText").value.trim();

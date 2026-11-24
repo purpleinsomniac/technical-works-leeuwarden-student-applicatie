@@ -40,12 +40,10 @@
       @csrf
       <button class="nav sidebar-logout" type="submit"><span class="nav-icon" data-icon="logout" aria-hidden="true"></span><span>Uitloggen</span></button>
     </form>
-    <p class="product-credit">
-      <span>Product of</span>
-      <strong>Technical Works Leeuwarden</strong>
-    </p>
+    @include('components.team-credits-trigger')
   </div>
 </aside>
+@include('components.team-credits')
 
 <div id="sidebarAccountDetails" class="account-modal hidden" aria-hidden="true">
   <button class="account-modal-backdrop" type="button" tabindex="-1" data-account-close aria-label="Profielvenster sluiten"></button>

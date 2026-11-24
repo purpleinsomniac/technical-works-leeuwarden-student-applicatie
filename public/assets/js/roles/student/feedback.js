@@ -1,11 +1,6 @@
 // Feedback tonen, toevoegen en verwijderen.
 
-// -----------------------------------------------------------------------------
-// Feedback
-// -----------------------------------------------------------------------------
-let feedbackItems = Array.isArray(window.LARAVEL_DATA?.feedback)
-  ? [...window.LARAVEL_DATA.feedback]
-  : [];
+let feedbackItems = copyStudentList("feedback");
 
 function getFeedback() {
   return feedbackItems;
@@ -38,6 +33,7 @@ function renderOutcomeFeedback() {
 }
 
 let feedbackDetailTrigger = null;
+// Toon het feedbackbericht en onthoud vanwaar het venster is geopend.
 function openOutcomeFeedbackDetail(id, fromList = false) {
   const item = getFeedback().find((feedback) => String(feedback.id) === String(id));
   if (!item) return;
@@ -132,6 +128,7 @@ function openLatestFeedback() {
   const item = getFeedback().find((item) => outcomes.find((o) => o.code === item.code)?.phase === feedbackPhaseFilter);
   if (item) openOutcomeFeedbackDetail(item.id, true);
 }
+// Toon de feedback voor de gekozen fase en bereken de aantallen per fase.
 function renderFeedback() {
   if (feedbackPhaseFilter === 'all') feedbackPhaseFilter = 'OF';
   const all = getFeedback();
@@ -208,6 +205,7 @@ function closeFeedbackForm() {
   feedbackReturnToOutcome = false;
 }
 
+// Sla het bericht op en gebruik de gegevens die de API terugstuurt.
 async function saveFeedback(event) {
   event.preventDefault();
   const type = document.getElementById("feedbackType").value,
@@ -244,6 +242,7 @@ async function saveFeedback(event) {
   }
 }
 
+// Haal het bericht pas uit de lijst nadat de server het heeft verwijderd.
 async function deleteFeedback(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.feedbackDelete, id), { method: "DELETE" });

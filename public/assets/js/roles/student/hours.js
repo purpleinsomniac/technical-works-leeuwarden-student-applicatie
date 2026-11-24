@@ -1,7 +1,5 @@
 // Puntenoverzicht, registraties, meldingen en challenges.
 let hoursPhaseFilter = "OF";
-// Gebruik deze richtwaarde als er voor een fase geen puntendoel uit de leeruitkomsten komt.
-const phasePointTargets = { OF: 800, VF: 800, AF: 800 };
 let hoursPage = 1;
 let selectedRegistrationRecord = null;
 let challengeState = null;
@@ -87,27 +85,27 @@ document.addEventListener('keydown', (event) => { if (event.key === 'Escape') cl
 window.addEventListener('focus', syncChallenges);
 
 // Tel de punten op voor het gekozen jaar en de gekozen fase.
-function renderHours() {
+function renderHours(refreshChallenges = true) {
   const selected = document.getElementById("hoursYear").value;
   const isTotal = selected === "total";
-  const target = outcomes.filter((outcome) => outcome.phase === hoursPhaseFilter).reduce((sum, outcome) => sum + Number(outcome.target || 0), 0) || phasePointTargets[hoursPhaseFilter];
-  const phasePoints = records
-    .filter((record) => (isTotal || Number(record.year) === Number(selected)) && record.phases?.[0] === hoursPhaseFilter)
-    .reduce((sum, record) => sum + (Number(record.hours) || 0), 0);
+  const target = phasePointTarget;
+  const phaseProgress = phases.find(([code]) => code === hoursPhaseFilter);
+  // De bestaande puntenregistraties vallen onder leerjaar één.
+  const phasePoints = isTotal || Number(selected) === 1 ? phaseProgress?.[3] ?? 0 : 0;
   const remaining = Math.max(0, target - phasePoints);
-  const percentage = target ? Math.min(100, Math.round((phasePoints / target) * 100)) : 0;
+  const percentage = isTotal || Number(selected) === 1 ? phaseProgress?.[2] ?? 0 : 0;
   const periodLabel = isTotal ? "Totaal opleiding" : "Leerjaar " + selected;
 
   document.getElementById("registrationsYear").textContent = periodLabel;
   document.getElementById("hoursYearTotal").textContent = phasePoints.toLocaleString("nl-NL");
   document.getElementById("hoursTarget").textContent = target.toLocaleString("nl-NL");
-  document.getElementById("hoursProgressPercent").textContent = percentage + "%";
-  document.getElementById("hoursProgressRing").style.setProperty("--hours-progress", Math.min(360, percentage * 3.6) + "deg");
+  document.getElementById("hoursProgressPercent").textContent = pointPercentLabel(percentage);
+  document.getElementById("hoursProgressRing").style.setProperty("--hours-progress", displayPointPercent(percentage) * 3.6 + "deg");
   document.getElementById("hoursYearPercentage").textContent = hoursPhaseName(hoursPhaseFilter) + ' · ' + (remaining === 0 ? 'Puntendoel behaald' : 'Nog ' + remaining.toLocaleString('nl-NL') + ' punten nodig');
 
   renderHoursRegistrations(selected, periodLabel);
   renderXp();
-  syncChallenges();
+  if (refreshChallenges) syncChallenges();
 }
 
 function renderXp() {

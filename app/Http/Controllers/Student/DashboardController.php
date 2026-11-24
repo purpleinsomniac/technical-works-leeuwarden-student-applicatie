@@ -11,7 +11,9 @@ use App\Models\LearningOutcome;
 use App\Models\Reflection;
 use App\Models\User;
 use App\Services\ProjectPoints;
+use App\Services\StudentPointTargets;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends RoleDashboardController
@@ -48,34 +50,35 @@ class DashboardController extends RoleDashboardController
         );
     }
 
-    /**
-     * Verzamel uitsluitend de gegevens van de ingelogde student.
-     */
-    private function studentData(User $user): array
+    public function pointProgress(Request $request): JsonResponse
     {
-        // Bereken de puntenverdeling één keer voor de projecten en leeruitkomsten.
-        $pointService = app(ProjectPoints::class);
-        $allocation = $pointService->allocation($user);
-        $projectPoints = $allocation['outcomes'];
-        $coachName = User::query()
-            ->where('rol', 'coach')
-            ->value('naam') ?? 'Coach';
+        [$outcomes, , $phaseTotals] = $this->pointData($request->user());
 
-        // Combineer de algemene leeruitkomsten met de voortgang van deze student.
-        $outcomes = LearningOutcome::query()
+        return response()->json([
+            'outcomes' => $outcomes,
+            'phases' => $this->phaseRows($phaseTotals),
+        ])->header('Cache-Control', 'no-store');
+    }
+
+    private function pointData(User $user): array
+    {
+        $pointService = app(ProjectPoints::class);
+        $catalog = LearningOutcome::query()
             ->with([
                 'studyPhase',
                 'progress' => fn ($query) => $query->where('gebruiker_id', $user->id),
             ])
             ->orderBy('code')
-            ->get()
-            ->map(function ($outcome) use ($projectPoints, $pointService): array {
+            ->get();
+        $targets = app(StudentPointTargets::class)->forOutcomes($catalog);
+        $allocation = $pointService->allocation($user, $targets);
+        $outcomes = $catalog->map(function ($outcome) use ($allocation, $targets): array {
                 $progress = $outcome->progress->first();
-                $hours = $projectPoints[$outcome->id] ?? 0;
-                $target = $pointService->norm($outcome);
-                $percentage = $target
-                    ? min(100, (int) round(($hours / $target) * 100))
-                    : null;
+                $target = $targets[$outcome->id] ?? 0;
+                $projectPoints = $allocation['outcomes'][$outcome->id] ?? 0;
+                $validatedPoints = max(0, (int) $progress?->gevalideerde_uren);
+                $hours = min($target, $projectPoints + $validatedPoints);
+                $percentage = StudentPointTargets::percentage($hours, $target);
 
                 return [
                     'id' => $outcome->id,
@@ -93,6 +96,33 @@ class DashboardController extends RoleDashboardController
                 ];
             })
             ->values();
+
+        $phaseTotals = [];
+        foreach (['OF', 'VF', 'AF'] as $phase) {
+            $earned = (int) $outcomes->where('phase', $phase)->sum('hours');
+            $phaseTotals[$phase] = [
+                'hours' => $earned,
+                'percentage' => StudentPointTargets::percentage($earned, StudentPointTargets::PHASE_TARGET),
+            ];
+        }
+
+        return [$outcomes, $allocation, $phaseTotals];
+    }
+
+    private function phaseRows(array $totals): array
+    {
+        return [
+            ['OF', 'Oriëntatiefase', $totals['OF']['percentage'], $totals['OF']['hours']],
+            ['VF', 'Verdiepingsfase', $totals['VF']['percentage'], $totals['VF']['hours']],
+            ['AF', 'Afrondingsfase', $totals['AF']['percentage'], $totals['AF']['hours']],
+        ];
+    }
+
+    // Verzamel uitsluitend de gegevens van de ingelogde student.
+    private function studentData(User $user): array
+    {
+        [$outcomes, $allocation, $phaseTotals] = $this->pointData($user);
+        $coachName = User::query()->where('rol', 'coach')->value('naam') ?? 'Coach';
 
         // Sorteer projecten op deadline, met projecten zonder deadline achteraan.
         $assignments = Assignment::query()
@@ -131,20 +161,6 @@ class DashboardController extends RoleDashboardController
             ->get()
             ->map(StudentPayload::goal(...))
             ->values();
-
-        // Vergelijk de behaalde punten per fase met de som van de richtwaarden.
-        $phaseTotals = collect(['OF', 'VF', 'AF'])->mapWithKeys(function (string $phase) use ($outcomes): array {
-            $items = $outcomes->where('phase', $phase)->whereNotNull('hours');
-            $hours = (int) $items->sum('hours');
-            $target = $items->sum(
-                fn (array $item): float => is_numeric($item['target']) ? (float) $item['target'] : 0.0,
-            );
-
-            return [$phase => [
-                'hours' => $hours,
-                'percentage' => $target > 0 ? min(100, (int) round(($hours / $target) * 100)) : 0,
-            ]];
-        });
 
         // Bouw maximaal drie vermeldingen op voor het overzicht van verwerkte punten.
         $hourApprovals = $outcomes
@@ -193,11 +209,9 @@ class DashboardController extends RoleDashboardController
             'goals' => $goals,
             'goalInsights' => ['activities' => $activities],
             'hourApprovals' => $hourApprovals,
-            'phases' => [
-                ['OF', 'Oriëntatiefase', $phaseTotals['OF']['percentage'], $phaseTotals['OF']['hours']],
-                ['VF', 'Verdiepingsfase', $phaseTotals['VF']['percentage'], $phaseTotals['VF']['hours']],
-                ['AF', 'Afrondingsfase', $phaseTotals['AF']['percentage'], $phaseTotals['AF']['hours']],
-            ],
+            'phases' => $this->phaseRows($phaseTotals),
+            'phasePointTarget' => StudentPointTargets::PHASE_TARGET,
+            'pointProgressUrl' => route('student.points.progress', absolute: false),
             // Alleen afgeronde projecten verschijnen als puntenregistratie.
             'records' => $assignments->where('status', 'completed')->map(fn (array $assignment): array => [
                 'assignmentId' => $assignment['id'],
@@ -214,7 +228,7 @@ class DashboardController extends RoleDashboardController
             ])->values(),
             'hoursByYear' => [
                 1 => [
-                    'total' => $phaseTotals->sum('hours'),
+                    'total' => array_sum(array_column($phaseTotals, 'hours')),
                     'orientation' => $phaseTotals['OF']['hours'],
                     'deepening' => $phaseTotals['VF']['hours'],
                     'completion' => $phaseTotals['AF']['hours'],

@@ -1,6 +1,22 @@
 // Bereid de door Laravel aangeleverde gegevens voor op gebruik in de studentweergaven.
 
 const studentData = window.LARAVEL_DATA || {};
+const phasePointTarget = studentData.phasePointTarget || 1200;
+
+function displayPointPercent(value) {
+  const percentage = Math.max(0, Math.min(100, Number(value) || 0));
+  return Math.round(percentage / 5) * 5;
+}
+
+function pointPercentLabel(value) {
+  return displayPointPercent(value) + "%";
+}
+
+function competencyLevel(percentage) {
+  if (percentage >= 75) return { key: "completed", label: "Bekwaam", detail: "Voldoende zelfstandig beheerst" };
+  if (percentage >= 55) return { key: "active", label: "In ontwikkeling", detail: "Basis aanwezig, verbetering nodig" };
+  return { key: "todo", label: "Aandacht nodig", detail: "Extra ontwikkeling nodig" };
+}
 
 // Kopieer de lijst zodat een andere sortering de bronlijst niet wijzigt.
 function copyStudentList(key) {

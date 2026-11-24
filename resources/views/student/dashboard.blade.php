@@ -231,25 +231,34 @@
         {{-- Catalogus met een fasekeuze, zoekveld en filters voor de leeruitkomsten. --}}
         <section id="learningOutcomes" class="view hidden">
           <div class="head learning-catalog-head">
+            <span class="catalog-heading-icon" data-icon="progress" aria-hidden="true"></span>
             <div>
-              <p class="eyebrow">ONTWIKKELING</p>
-              <h1>Mijn leerontwikkeling</h1>
-              <p class="dim">Inzicht in mijn voortgang, leeruitkomsten en ontwikkeling in deze opleiding.</p>
+              <h1>Mijn voortgang</h1>
+              <p class="dim">Overzicht van je leeruitkomsten, voortgang per fase en behaalde punten in de opleiding.</p>
             </div>
             <span id="catalogTotalPill" class="pill">48 LEERUITKOMSTEN</span>
+          </div>
+
+          <div class="catalog-progress-legend" aria-label="Betekenis van de voortgangskleuren">
+            <div><strong>Voortgangsfasen</strong><span>Zo lees je jouw voortgang per leeruitkomst.</span></div>
+            <ul>
+              <li class="catalog-score" data-level="todo"><span aria-hidden="true"></span><b>0–&lt;55%</b> Aandacht nodig</li>
+              <li class="catalog-score" data-level="active"><span aria-hidden="true"></span><b>55–&lt;75%</b> In ontwikkeling</li>
+              <li class="catalog-score" data-level="completed"><span aria-hidden="true"></span><b>75–100%</b> Bekwaam</li>
+            </ul>
           </div>
 
           {{-- Eén samenvatting toont de totale voortgang en de drie statussen. --}}
           <div class="development-metrics">
             <article><span class="dev-metric-icon">◎</span><div><small>Totaal leeruitkomsten</small><strong id="devTotal">0</strong></div></article>
-            <article><span class="dev-metric-icon">✓</span><div><small>Afgerond</small><strong id="catalogCompletedCount">0</strong></div><b id="devCompletedPct"></b></article>
-            <article><span class="dev-metric-icon purple">▥</span><div><small>Lopend</small><strong id="catalogActiveCount">0</strong></div><b id="devActivePct"></b></article>
-            <article><span class="dev-metric-icon amber">⌛</span><div><small>Nog te starten</small><strong id="catalogTodoCount">0</strong></div><b id="devTodoPct"></b></article>
+            <article data-level="completed"><span class="dev-metric-icon">✓</span><div><small>Bekwaam</small><strong id="catalogCompletedCount">0</strong></div><b id="devCompletedPct"></b></article>
+            <article data-level="active"><span class="dev-metric-icon" data-icon="progress" aria-hidden="true"></span><div><small>In ontwikkeling</small><strong id="catalogActiveCount">0</strong></div><b id="devActivePct"></b></article>
+            <article data-level="todo"><span class="dev-metric-icon">⌛</span><div><small>Aandacht nodig</small><strong id="catalogTodoCount">0</strong></div><b id="devTodoPct"></b></article>
           </div>
           <div class="development-insights">
-            <article class="development-panel"><h2>Totale voortgang</h2><div class="development-total"><div id="catalogProgressRing" class="learning-progress-ring"><strong id="catalogProgressPercent">0%</strong></div><div><strong id="catalogProgressTitle"></strong><p id="catalogProgressText"></p><div class="bar"><span id="catalogProgressBar"></span></div></div></div></article>
-            <article class="development-panel"><h2>Voortgang per vaardigheid</h2><div id="developmentSkills"></div></article>
-            <article class="development-panel"><h2>Punten per fase</h2><p class="dim small">Behaalde punten in jouw opleiding</p><div id="developmentPhasePoints"></div></article>
+            <article class="development-panel"><h2 id="catalogProgressTitle">Totale voortgang</h2><div class="development-total"><div id="catalogProgressRing" class="learning-progress-ring"><strong id="catalogProgressPercent">0%</strong></div><div><strong id="catalogSkillCount"></strong><p id="catalogProgressText"></p><div class="bar"><span id="catalogProgressBar"></span></div></div></div></article>
+            <article class="development-panel"><h2>Voortgang per categorie</h2><div id="developmentSkills"></div></article>
+            <article class="development-panel"><h2>Faseoverzicht</h2><div id="developmentPhasePoints"></div></article>
           </div>
 
           {{-- De fasekeuze bepaalt welke voortgang en leeruitkomsten worden getoond. --}}
@@ -267,9 +276,9 @@
             <label class="label">Status
               <select id="catalogArchiveFilter" class="input" onchange="renderCatalog()">
                 <option value="all">Alle statussen</option>
-                <option value="completed">Afgerond</option>
-                <option value="active">Bezig</option>
-                <option value="todo">Nog te doen</option>
+                <option value="completed">Bekwaam (75–100%)</option>
+                <option value="active">In ontwikkeling (55–&lt;75%)</option>
+                <option value="todo">Aandacht nodig (0–&lt;55%)</option>
                 <option value="archived">Gearchiveerde leeruitkomsten</option>
               </select>
             </label>
@@ -339,8 +348,9 @@
               </div>
               <div class="detail-stat">
                 <span>▥ Status</span>
-                <b id="detailStatus">Nog niet gestart</b>
+                <b id="detailStatus" data-level="todo">Aandacht nodig</b>
               </div>
+              <p id="detailStatusDescription" class="dim small">Extra ontwikkeling nodig</p>
               <div id="outcomeArchiveNotice" class="outcome-archive-notice hidden">
                 <span>✓</span>
                 <div><b>Deze leeruitkomst is gearchiveerd</b><small>Alle punten, reflecties en feedback zijn bewaard.</small></div>
@@ -553,7 +563,7 @@
           <section class="hours-summary-card" aria-label="Samenvatting punten">
             <div id="hoursProgressRing" class="hours-progress-ring"><strong id="hoursProgressPercent">0%</strong></div>
             <div class="hours-total">
-              <div><strong id="hoursYearTotal">0</strong><span> / <b id="hoursTarget">800</b> punten</span></div>
+              <div><strong id="hoursYearTotal">0</strong><span> / <b id="hoursTarget">1.200</b> punten</span></div>
               <p id="hoursYearPercentage">van de puntendoelstelling behaald</p>
             </div>
             <div class="xp-level-summary"><span class="xp-star">☆</span><div><h2 id="xpLevelTitle">Level laden…</h2><p id="xpLevelName">Jouw ontwikkeling</p><div class="xp-track"><span id="xpLevelBar"></span></div><strong id="xpLevelProgress"></strong></div><button type="button" class="xp-help" onclick="openXpHelp()">ⓘ Hoe verdien ik XP?</button></div>

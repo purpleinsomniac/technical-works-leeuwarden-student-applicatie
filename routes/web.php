@@ -90,6 +90,7 @@ Route::middleware(['auth', EnforceMaintenanceMode::class])->group(function (): v
     });
 
     Route::middleware('role:student')->group(function (): void {
+        Route::get('/student/punten/voortgang', [StudentDashboardController::class, 'pointProgress'])->name('student.points.progress');
         Route::post('/mijn-challenges/synchroniseren', function (\Illuminate\Http\Request $request, \App\Services\ChallengeService $challenges) {
             return response()->json($challenges->sync($request->user()));
         })->name('challenges.sync');

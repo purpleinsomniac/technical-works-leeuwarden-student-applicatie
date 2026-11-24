@@ -15,11 +15,11 @@ function renderDashboard() {
     .map((x) => '<button class="tab ' + (phase === x[0] ? "active" : "") + '" onclick="choose(\'' + x[0] + "')\">" + x[1] + "</button>")
     .join("");
 
-  document.getElementById("phasePercent").textContent = current[2] + "%";
+  document.getElementById("phasePercent").textContent = pointPercentLabel(current[2]);
   document.getElementById('dashboardPhaseTitle').textContent = 'Voortgang in de ' + current[1].toLowerCase();
   document.getElementById("phaseProgressLabel").textContent = "van de " + current[1].toLowerCase() + " behaald";
 
-  document.getElementById("phaseBar").innerHTML = '<span style="width:' + current[2] + '%"></span>';
+  document.getElementById("phaseBar").innerHTML = '<span style="width:' + pointPercentLabel(current[2]) + '"></span>';
   const work = currentWorkByPhase[phase];
   document.getElementById("currentWorkTitle").textContent = work?.title || "Nog geen opdracht";
   document.getElementById("currentWorkMeta").textContent = (work?.type || "Geen actieve opdracht") + " · " + current[1];
@@ -47,10 +47,10 @@ function renderDashboard() {
         "')\"><span>" +
         esc(outcome.short) +
         '</span><span class="bar"><span style="width:' +
-        outcome.pct +
-        '%"></span></span><b>' +
-        outcome.pct +
-        "%</b></button>",
+        pointPercentLabel(outcome.pct) +
+        '"></span></span><b>' +
+        pointPercentLabel(outcome.pct) +
+        "</b></button>",
     )
     .join("");
 

@@ -12,7 +12,7 @@ class ProjectPoints
         return $this->allocation($user)['outcomes'];
     }
 
-    public function allocation(User $user): array
+    public function allocation(User $user, array $outcomeTargets = []): array
     {
         $points = [];
         $projects = [];
@@ -40,7 +40,8 @@ class ProjectPoints
                 foreach ($shares as &$share) { if ($remaining > 0) { $share['points']++; $remaining--; } }
                 unset($share);
                 foreach ($linked as $outcome) {
-                    $amount = min($shares[$outcome->id]['points'], max(0,$this->norm($outcome)-($points[$outcome->id]??0)));
+                    $target = $outcomeTargets[$outcome->id] ?? $this->norm($outcome);
+                    $amount = min($shares[$outcome->id]['points'], max(0, $target - ($points[$outcome->id] ?? 0)));
                     $points[$outcome->id] = ($points[$outcome->id]??0)+$amount;
                     $projects[$project->id] += $amount;
                 }

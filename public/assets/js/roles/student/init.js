@@ -50,4 +50,45 @@ if (window.LARAVEL_USER) {
   renderFeedback();
   updateHoursProcessingReadState();
   initializeStudentNavigation();
+  window.addEventListener("focus", refreshPointProgress);
+  window.setInterval(() => {
+    if (!document.hidden) refreshPointProgress();
+  }, 10000);
+}
+
+let pointRefreshInProgress = false;
+let pointRefreshQueued = false;
+
+// Haal ook wijzigingen van de docent op zonder een open detailpagina te sluiten.
+async function refreshPointProgress() {
+  const url = studentData.pointProgressUrl;
+  if (!url) return;
+  if (pointRefreshInProgress) {
+    pointRefreshQueued = true;
+    return;
+  }
+  pointRefreshInProgress = true;
+
+  try {
+    const snapshot = await apiRequest(url);
+    if (!Array.isArray(snapshot.outcomes) || !Array.isArray(snapshot.phases)) return;
+    if (JSON.stringify(outcomes) === JSON.stringify(snapshot.outcomes) &&
+        JSON.stringify(phases) === JSON.stringify(snapshot.phases)) return;
+
+    outcomes.splice(0, outcomes.length, ...snapshot.outcomes);
+    phases.splice(0, phases.length, ...snapshot.phases);
+    renderDashboard();
+    renderCatalog();
+    if (!document.getElementById("hours").classList.contains("hidden")) renderHours(false);
+    const currentOutcome = outcomes.find((item) => item.code === currentOutcomeCode);
+    if (currentOutcome) renderOutcomePoints(currentOutcome);
+  } catch {
+    // Behoud de laatste meting als de verbinding tijdelijk wegvalt.
+  } finally {
+    pointRefreshInProgress = false;
+    if (pointRefreshQueued) {
+      pointRefreshQueued = false;
+      refreshPointProgress();
+    }
+  }
 }

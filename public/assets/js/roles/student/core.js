@@ -41,6 +41,9 @@ async function apiRequest(url, options = {}) {
   if (changesData && !syncsChallenges && typeof syncChallenges === "function") {
     syncChallenges();
   }
+  if (changesData && !syncsChallenges && typeof refreshPointProgress === "function" && url !== window.LARAVEL_SAVE_URL) {
+    refreshPointProgress();
+  }
   return body;
 }
 

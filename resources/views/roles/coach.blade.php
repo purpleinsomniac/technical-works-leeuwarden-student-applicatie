@@ -129,7 +129,7 @@
             </div>
             <label class="label coach-field">
               Uren
-              <input class="input" name="gevalideerde_uren" type="number" min="0" max="10000" value="{{ $outcome['hours'] }}" required>
+              <input class="input" name="gevalideerde_uren" type="number" min="0" max="80" step="10" value="{{ $outcome['hours'] }}" required>
             </label>
             <label class="label coach-field">
               Status

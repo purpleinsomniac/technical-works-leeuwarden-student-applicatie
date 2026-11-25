@@ -13,7 +13,7 @@ function show(page, force = false) {
 
   const activeRoute = activeView?.dataset.roleSection || page;
   document.querySelectorAll("[data-route]").forEach((button) => {
-    const active = button.dataset.route === activeRoute;
+    const active = button.dataset.route === activeRoute || button.dataset.route === page;
     button.classList.toggle("active", active);
     if (active) button.setAttribute("aria-current", "page");
     else button.removeAttribute("aria-current");
@@ -137,6 +137,59 @@ function sidebarIcon(name) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
 }
 
+function setSidebarCreatorsOpen(open, restoreFocus = true) {
+  const button = document.getElementById("sidebarCreatorsButton");
+  const modal = document.getElementById("sidebarCreatorsDetails");
+  const closeButton = document.getElementById("creatorsModalClose");
+  if (!button || !modal) return;
+
+  button.setAttribute("aria-expanded", String(open));
+  modal.classList.toggle("hidden", !open);
+  modal.setAttribute("aria-hidden", String(!open));
+  document.body.classList.toggle("account-modal-open", open);
+
+  if (open) {
+    window.setTimeout(() => closeButton?.focus(), 0);
+  } else if (restoreFocus) {
+    button.focus();
+  }
+}
+
+function initializeSidebarCreators() {
+  const button = document.getElementById("sidebarCreatorsButton");
+  const modal = document.getElementById("sidebarCreatorsDetails");
+  if (!button || !modal || button.dataset.initialized === "true") return;
+
+  button.dataset.initialized = "true";
+  button.addEventListener("click", () => {
+    setSidebarCreatorsOpen(button.getAttribute("aria-expanded") !== "true");
+  });
+
+  modal.addEventListener("click", (event) => {
+    if (event.target.closest("[data-creators-close]")) setSidebarCreatorsOpen(false);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const isOpen = button.getAttribute("aria-expanded") === "true";
+    if (event.key === "Escape" && isOpen) {
+      setSidebarCreatorsOpen(false);
+    }
+    if (event.key === "Tab" && isOpen) {
+      const focusable = [...modal.querySelectorAll('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')]
+        .filter((element) => element.getClientRects().length);
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+  });
+}
+
 function initializeRole({ label, routes }) {
   document.getElementById("roleLabel").textContent = label;
   document.getElementById("actor").textContent = window.LARAVEL_USER.name;
@@ -144,6 +197,7 @@ function initializeRole({ label, routes }) {
   initializeSidebarAccount();
   const logoutIcon = document.querySelector(".sidebar-logout .nav-icon");
   if (logoutIcon) logoutIcon.innerHTML = sidebarIcon("logout");
+  initializeSidebarCreators();
 
   document.getElementById("nav").innerHTML = routes
     .map(([title, page]) => `<button class="nav" data-route="${page}" onclick="show('${page}')"><span class="nav-icon" aria-hidden="true">${sidebarIcon(sidebarRouteIcons[page])}</span><span class="nav-label">${title}</span></button>`)

@@ -1,52 +1,26 @@
 // Navigatie, iconen en algemene interfacefuncties.
 
-// -----------------------------------------------------------------------------
-// Navigatie en algemene interface
-// -----------------------------------------------------------------------------
-const routes = {
-  student: [
-    ["Dashboard", "studentDashboard", "dashboard"],
-    ["Leeruitkomsten", "learningOutcomes", "outcomes"],
-    ["Projecten", "assignments", "assignment"],
-    ["Punten", "hours", "clock"],
-    ["Leerdoelen", "goals", "target"],
-    ["Reflecties", "reflections", "reflection"],
-    ["Feedback", "feedback", "feedback"],
-    ["Instellingen", "dashboardSettings", "settings"],
-  ],
-  coach: [
-    ["Studenten", "coachStudents"],
-    ["Studentdetail", "coachStudent"],
-  ],
-  manager: [
-    ["Groepsoverzicht", "managerGroups"],
-    ["Rapportages", "managerReports"],
-  ],
-  admin: [
-    ["Verwerking", "adminProcessing"],
-    ["Logboek", "adminLog"],
-  ],
-};
+const studentNavigation = [
+  ["Dashboard", "studentDashboard", "dashboard"],
+  ["Leeruitkomsten", "learningOutcomes", "outcomes"],
+  ["Projecten", "assignments", "assignment"],
+  ["Punten", "hours", "clock"],
+  ["Leerdoelen", "goals", "target"],
+  ["Reflecties", "reflections", "reflection"],
+  ["Feedback", "feedback", "feedback"],
+  ["Instellingen", "dashboardSettings", "settings"],
+];
 
-const names = {
-  student: "Student",
-  coach: "SLB'er / coach",
-  manager: "Teamleider",
-  admin: "Beheerder",
-};
-
-let role = window.LARAVEL_USER?.role || "student",
-  phase = "OF",
-  reflectionPhaseFilter = "all",
-  feedbackPhaseFilter = "all",
-  currentOutcomeCode = null,
-  reflectionReturnToOutcome = false,
-  feedbackReturnToOutcome = false,
-  catalogPage = 1,
-  selectedAssignmentId = null,
-  outcomeReturnPage = "learningOutcomes";
+let phase = studentData.currentPhase || "OF";
+let reflectionPhaseFilter = "all";
+let feedbackPhaseFilter = "all";
+let currentOutcomeCode = null;
+let reflectionReturnToOutcome = false;
+let feedbackReturnToOutcome = false;
+let selectedAssignmentId = null;
 const archivedOutcomesKey = "archived-learning-outcomes";
 
+// Scherm tekst af voordat die als onderdeel van HTML wordt weergegeven.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // Eén herbruikbare iconenverzameling voor de navigatie en dashboardkaarten.
@@ -68,25 +42,26 @@ const iconPaths = Object.freeze({
   logout: '<path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10"/>',
 });
 
+// Haal het gevraagde pictogram op voor de weergave.
 function uiIcon(name) {
   const paths = iconPaths[name] || iconPaths.dashboard;
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + "</svg>";
 }
 
+// Vul de pictogrammen in op de aangewezen plekken.
 function applyUiIcons(scope = document) {
   scope.querySelectorAll("[data-icon]").forEach((element) => {
     if (!element.firstElementChild) element.innerHTML = uiIcon(element.dataset.icon);
   });
 }
 
-function login() {
-  role = window.LARAVEL_USER?.role || "student";
-
-  document.getElementById("roleLabel").textContent = names[role];
-
-  document.getElementById("actor").textContent = window.LARAVEL_USER?.name || names[role];
-  document.getElementById("sidebarRole").textContent = names[role];
-  document.getElementById("sidebarAvatar").textContent = (window.LARAVEL_USER?.name || names[role])
+// Vul de zijbalk met de gegevens van de ingelogde student.
+function initializeStudentNavigation() {
+  const studentName = window.LARAVEL_USER?.name || "Student";
+  document.getElementById("roleLabel").textContent = "Student";
+  document.getElementById("actor").textContent = studentName;
+  document.getElementById("sidebarRole").textContent = "Student";
+  document.getElementById("sidebarAvatar").textContent = studentName
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -96,38 +71,32 @@ function login() {
 
   document
     .getElementById("processingNotification")
-    .classList.toggle("hidden", role !== "student" || hourApprovals.length === 0);
+    .classList.toggle("hidden", hourApprovals.length === 0);
 
-  document.getElementById("nav").innerHTML = routes[role]
-    .map(
-      ([label, page, icon]) =>
-        '<button class="nav ' +
-        (page === "dashboardSettings" ? "settings-nav" : "") +
-        '" data-route="' +
-        page +
-        '" onclick="show(\'' +
-        page +
-        "')\"><span class=\"nav-icon\" aria-hidden=\"true\">" +
-        window.RoleApp.sidebarIcon(icon) +
-        '</span><span class="nav-label">' +
-        label +
-        "</span></button>",
-    )
+  document.getElementById("nav").innerHTML = studentNavigation
+    .map(([label, page, icon]) => {
+      const settingsClass = page === "dashboardSettings" ? "settings-nav" : "";
+      return '<button class="nav ' + settingsClass + '" data-route="' + page +
+        '" onclick="show(\'' + page + '\')">' +
+        '<span class="nav-icon" aria-hidden="true">' + window.RoleApp.sidebarIcon(icon) + '</span>' +
+        '<span class="nav-label">' + label + '</span></button>';
+    })
     .join("");
   applyUiIcons();
   initializeSidebarAccount();
-  show(routes[role][0][1]);
+  show("studentDashboard");
 }
 
+// Wissel van weergave en houd het bijbehorende hoofdmenu-item actief.
 function show(page) {
-  // Het inlogscherm heeft in de MVC-structuur een eigen Blade-view.
-  // Op het dashboard bestaat daarom alleen de applicatiecontainer.
-  document.getElementById("app")?.classList.toggle("hidden", page === "login");
+  document.querySelectorAll(".view").forEach((view) => view.classList.toggle("hidden", view.id !== page));
 
-  document.querySelectorAll(".view").forEach((x) => x.classList.toggle("hidden", x.id !== page));
-
-  const navigationPage = page === "outcomeDetail" ? "learningOutcomes" : page === "assignmentDetail" ? "assignments" : page;
-  document.querySelectorAll("[data-route]").forEach((x) => x.classList.toggle("active", x.dataset.route === navigationPage));
+  let navigationPage = page;
+  if (page === "outcomeDetail") navigationPage = "learningOutcomes";
+  if (page === "assignmentDetail") navigationPage = "assignments";
+  document.querySelectorAll("[data-route]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.route === navigationPage);
+  });
   if (page === "assignments") renderAssignments();
   if (page === "hours") renderHours();
   if (page === "dashboardSettings") renderDashboardSettings();
@@ -136,6 +105,7 @@ function show(page) {
 }
 
 let hintTimer = null;
+// Toon een tijdelijke bevestiging of foutmelding onder in beeld.
 function hint(s) {
   const x = document.getElementById("hint");
   clearTimeout(hintTimer);

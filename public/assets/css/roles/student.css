@@ -6,7 +6,7 @@
  *
  * Indeling:
  * 01. Basis en leeruitkomstencatalogus
- * 02. Eerste responsive aanpassingen
+ * 02. Aanpassingen voor smalle schermen
  * 03. Reflectieoverzicht
  * 04. Voortgang op het dashboard
  * 05. Leerdoelen, uren en leeruitkomstdetails
@@ -21,7 +21,7 @@
  * 14. Historie bij een leeruitkomst
  * 15. Detailvensters voor reflectie en feedback
  * 16. Dashboardactiviteit en notificaties
- * 17. Jaaroverzicht en urenregistraties
+ * 17. Puntenoverzicht en registraties
  * 18. Archiveren van leeruitkomsten
  * 19. Tijdelijke bevestigingsmelding
  */
@@ -45,12 +45,36 @@
 .development-panel h2 { font-size: 16px; margin-bottom:15px; }
 .development-total { display:flex; align-items:center; gap:18px; }
 .development-total > div:last-child { flex:1; font-size: 13px; }
-.development-total p { color:#688092; margin:5px 0 10px; }
+.development-total .bar { margin-top:10px; }
 .development-total .learning-progress-ring { width:82px; height:82px; flex:none; }
-.development-total .learning-progress-ring strong { font-size:22px; }
+.development-total .learning-progress-ring strong { font-size:16px; }
 .development-skill { display:grid; grid-template-columns:75px 1fr 32px; gap:10px; align-items:center; margin:18px 0; font-size: 13px; }
 .development-skill.soft .bar span,.development-group.soft .bar span { background:#9460eb; }
 .development-phase-points { display:flex; justify-content:space-between; gap:12px; padding:6px 0; font-size: 13px; color:#5b7586; }
+#learningOutcomes .development-insights { margin-block: 14px; }
+#learningOutcomes .development-panel { min-width: 0; box-shadow: 0 3px 10px #25497110; }
+#learningOutcomes .development-panel h2 { font-size: 16px; }
+#learningOutcomes .development-skill .bar span { background: var(--catalog-level-color); }
+#developmentPhasePoints .development-phase-points {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-bottom-color: #e5edf5;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+#developmentPhasePoints .development-phase-points.selected { background: #e0faf0; border-color: #abead9; }
+#developmentPhasePoints .development-phase-points b { white-space: nowrap; }
+.catalog-phase-icon { display: grid; place-items: center; color: #008b66; }
+.catalog-phase-icon svg { width: 18px; height: 18px; }
+.theme-dark #developmentPhasePoints .development-phase-points { border-bottom-color: #2b4552; }
+.theme-dark #developmentPhasePoints .development-phase-points.selected { background: #1a4943; border-color: #367569; }
 #learningOutcomes #catalogList { display:grid; width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; border:0; background:transparent; overflow:visible; }
 .development-group { min-width:0; border:1px solid #dce7ef; border-radius:13px; background:#fff; overflow:hidden; }
 .development-group > summary { display:flex; align-items:center; gap:9px; padding:14px; cursor:pointer; list-style:none; }
@@ -67,7 +91,86 @@
 @media(max-width:600px) { .development-skill-link { grid-template-columns:18px minmax(0,1fr) 65px 12px; } }
 .development-status { width:18px; height:18px; display:grid; place-items:center; border:1.5px solid #b2c2ce; border-radius:50%; font-size: 13px; }
 .development-status.completed { border-color:#0caf7d; color:#0a9a70; }
-.development-status.active { border-color:#9a6aee; color:#9a6aee; }
+.development-status.active { border-color:#b58a19; color:#916811; }
+.development-status.todo { border-color:#c75353; color:#a82c2c; }
+
+/* Compact overzicht van soft skills en hard skills. */
+#learningOutcomes #catalogList {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 12px;
+  align-items: start;
+}
+#catalogList .development-group {
+  background: #f8fafc;
+  border-color: #d8e4f1;
+  box-shadow: 0 3px 9px #25497116;
+}
+#catalogList .development-group > summary { padding: 8px 11px; flex-wrap: wrap; }
+#catalogList .development-group h2 { font-size: 16px; }
+#catalogList .development-group > summary > small { background: #e5eefb; color: #233951; }
+.catalog-skill-icon, .catalog-outcome-icon { display: grid; place-items: center; flex: none; }
+.catalog-skill-icon { width: 29px; height: 29px; border-radius: 8px; background: #d8f9e8; color: #008c44; }
+.catalog-skill-icon svg { width: 19px; height: 19px; }
+.catalog-outcome-icon { width: 20px; height: 20px; color: #9550e9; }
+.catalog-outcome-icon svg { width: 17px; height: 17px; }
+#catalogList .development-skill-link {
+  grid-template-columns: 20px minmax(0, 1fr) minmax(90px, 27%) minmax(44px, auto) 9px;
+  gap: 7px;
+  padding: 5px 10px;
+  border-color: #e5edf5;
+}
+#catalogList .development-outcome-title { gap: 0; line-height: 1.25; }
+#catalogList .development-outcome-title strong { font-size: 12px; }
+#catalogList .development-outcome-title small { font-size: 10px; }
+#catalogList .development-points { font-weight: 650; }
+#catalogList .development-row-bar { gap: 8px; }
+#catalogList .development-row-bar .bar { background: #dde6f1; height: 7px; }
+#catalogList .development-row-bar .bar > span { background: var(--catalog-level-color); border-radius: inherit; }
+#learningOutcomes [data-level="todo"] { --catalog-level-color:#e73742; --catalog-level-tint:#ffe3e6; --catalog-level-ink:#8e1422; }
+#learningOutcomes [data-level="active"] { --catalog-level-color:#e9ad00; --catalog-level-tint:#fff0c7; --catalog-level-ink:#684500; }
+#learningOutcomes [data-level="completed"] { --catalog-level-color:#009e55; --catalog-level-tint:#d0f8dc; --catalog-level-ink:#08522d; }
+.catalog-score {
+  min-width: 39px;
+  padding: 2px 6px;
+  border-radius: 99px;
+  color: var(--catalog-level-ink);
+  background: var(--catalog-level-tint);
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+.catalog-progress-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 0 0 16px;
+  padding: 11px 16px;
+  border: 1px solid #b8ded1;
+  border-radius: 11px;
+  background: #e9f6f1;
+  font-size: 12px;
+}
+.catalog-progress-legend > div { display:grid; gap:1px; }
+.catalog-progress-legend > div strong { font-size:15px; }
+.catalog-progress-legend ul { display:flex; flex-wrap:wrap; gap:7px 12px; list-style:none; margin:0; padding:0; }
+.catalog-progress-legend li { display:flex; align-items:center; gap:6px; padding:5px 10px; }
+.catalog-progress-legend li > span { width:10px; height:10px; border-radius:50%; background:var(--catalog-level-color); }
+#learningOutcomes .learning-catalog-head { align-items:center; justify-content:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:14px; }
+#learningOutcomes .learning-catalog-head .pill { margin:0 0 0 auto; background:#e1f5eb; border-color:#b8ded1; color:#095638; }
+.catalog-heading-icon { display:grid; place-items:center; flex:none; width:45px; height:45px; border-radius:12px; color:#097856; background:#d9f1e8; }
+.catalog-heading-icon svg, .development-metrics .dev-metric-icon svg { width:24px; height:24px; }
+#learningOutcomes .development-metrics article[data-level] .dev-metric-icon,
+#learningOutcomes .development-metrics article[data-level] > b { background:var(--catalog-level-tint); color:var(--catalog-level-ink); }
+.theme-dark #catalogList .development-group, .theme-dark .catalog-progress-legend { background:#142b36; border-color:#2b4552; }
+.theme-dark #catalogList .development-skill-link { border-color:#2b4552; }
+.theme-dark #catalogList .development-skill-link:hover { background:#203c48; }
+@media (max-width: 600px) {
+  #catalogList .development-skill-link { grid-template-columns:20px minmax(0, 1fr) auto 9px; }
+  #catalogList .development-row-bar { grid-column:2; }
+  #catalogList .development-points { grid-column:3; grid-row:1 / 3; }
+  #catalogList .development-chevron { grid-column:4; grid-row:1 / 3; }
+}
 .development-outcome-title { display:flex; flex-direction:column; min-width:0; gap:4px; }
 .development-outcome-title strong { font-size: 13px; color:#203b50; }
 .development-outcome-title small { font-size: 10px; color:#718596; overflow-wrap:anywhere; }
@@ -80,7 +183,8 @@
 .theme-dark .development-group,.theme-dark .development-panel,.theme-dark .development-metrics article { background:#142b36; border-color:#2b4552; }
 .theme-dark .development-metrics strong,.theme-dark .development-outcome-title strong { color:#e3eff5; }
 .theme-dark .development-table-head,.theme-dark .development-outcome-body { background:#193340; }
-@media(max-width:1150px) { .development-metrics { grid-template-columns:1fr 1fr; } .development-insights { grid-template-columns:1fr; } #learningOutcomes #catalogList { grid-template-columns:1fr; } }
+@media(max-width:1150px) { .development-metrics { grid-template-columns:1fr 1fr; } }
+@media(max-width:1250px) { .development-insights { grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr)); } }
 @media(max-width:600px) { .development-metrics { gap:8px; } .development-metrics article { padding:10px; gap:7px; } .development-outcome > summary { grid-template-columns:18px minmax(0,1fr) 65px 12px; } .development-row-bar { grid-column:2; } .development-points { grid-column:3; grid-row:1/3; } .development-chevron { grid-column:4; grid-row:1/3; } .development-table-head { display:none; } }
 #outcomes { display: grid; gap: 0; }
 #outcomes .card:nth-child(2) .bar span { background: #8a7bcc; }
@@ -1249,7 +1353,7 @@ body { background: #f3f6f9; }
 .registration-outcome-group button strong { font-size: 13px; }
 .registration-outcome-group button small { color: #748a99; font-size: 11px; }
 
-/* Logout action remains specific to the student sidebar layout. */
+/* Opmaak van de uitlogknop onder het accountblok in de zijbalk. */
 .side .foot .sidebar-logout { gap: 13px; min-height: 39px; margin-top: 5px; padding-left: 15px; color: #e6f0f3; }
 .side .foot .sidebar-logout:hover { background: rgba(18, 82, 104, 0.55); color: #fff; }
 
@@ -1379,7 +1483,7 @@ body { background: #f3f6f9; }
 .dashboard-assignment-card .card-link,
 .dashboard-attention-card .card-link { margin-top: auto; }
 
-/* Twee ruime kolommen houden het dashboard leesbaar zonder veel scrollen. */
+/* Basisindeling voor de widgets. Verderop staan de specifieke regels voor het dashboard. */
 .dashboard-widget-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 250px; gap: 14px; margin-top: 14px; }
 .dashboard-panel { display: flex; box-sizing: border-box; height: 100%; min-height: 250px; max-height: 250px; min-width: 0; flex-direction: column; border: 1px solid #dfe8ed; border-radius: 14px; background: #fff; padding: 19px; overflow: hidden; }
 .dashboard-panel-head { display: flex; min-height: 34px; align-items: center; flex-direction: row; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
@@ -2036,16 +2140,14 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 .theme-dark .badge-gallery-card.locked { background:#192e39; border-color:#324652; }
 .theme-dark .badge-gallery-card h3 { color:#e1f0f3; }
 @media(max-width:600px) { .badge-gallery { grid-template-columns:1fr; } }
+/* De dashboardweergave toont een korte takenlijst naast de leerdoelen. */
 .week-plan-preview { display:grid; gap:5px; padding:0; margin:9px 0; list-style:none; min-width:0; }
 .week-plan-preview li { display:flex; gap:8px; align-items:center; color:#665735; font-size:12px; min-width:0; }
 .week-plan-preview li > span:first-child { color:#b58b36; flex:none; }
 .week-plan-preview li > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .week-plan-preview li.done > span:last-child { text-decoration:line-through; opacity:.65; }
 .week-plan-preview .week-plan-more { font-size:10px; color:#8c7957; }
-.dashboard-primary-grid:has(.week-plan-preview:not(:empty)) { grid-auto-rows:minmax(250px,auto); }
 .theme-dark .week-plan-preview li { color:#d6c39f; }
-.dashboard-primary-grid:has(.dashboard-current-goals) { grid-auto-rows:minmax(290px,auto); }
-.dashboard-primary-grid .dashboard-current-goals { height:auto; min-height:290px; max-height:none; overflow:visible; background:linear-gradient(135deg,#edf8f4,#fff); border-color:#cce6dd; padding:20px; }
 .dashboard-goals-caption { margin:5px 0 0; font-size:11px; color:#6a867f; }
 .dashboard-current-goals .dashboard-action-list { display:grid; align-content:start; gap:9px; min-height:0; max-height:none; overflow:visible; flex:1; margin:14px 0; }
 .dashboard-current-goals .dashboard-action-row { display:grid; grid-template-columns:28px minmax(0,1fr) 12px; align-items:start; gap:10px; padding:12px; border:1px solid #dcebe5; border-radius:10px; background:#ffffffd9; }
@@ -2059,11 +2161,11 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 .dashboard-week-card .week-plan-preview { margin:0; gap:8px; }
 .dashboard-week-card .week-plan-preview li { padding:9px 12px; border:1px solid #eee5d3; border-radius:9px; background:#ffffffc9; font-size:13px; }
 .dashboard-week-card .week-plan-preview .week-plan-more { border:0; background:transparent; padding:0 3px; font-size:11px; }
-.theme-dark .dashboard-primary-grid .dashboard-current-goals { background:#16332c; border-color:#31564a; }
 .theme-dark .dashboard-current-goals .dashboard-action-row { background:#1b3b32; border-color:#355b4b; }
 .theme-dark .dashboard-current-goals .dashboard-action-row strong { color:#d7eee6; }
 .theme-dark .dashboard-week-card { background:#332e22; border-color:#514735; }
 .theme-dark .dashboard-week-card .week-plan-preview li { background:#3b3427; border-color:#514735; }
+/* Opmaak voor de fasekeuze en kaarten op het studentdashboard. */
 #studentDashboard .dashboard-phase-tabs { width:min(100%,760px); grid-auto-rows:42px; background:#f7faff; border:1px solid #e0e8f0; border-radius:99px; overflow:hidden; margin-bottom:20px; }
 #studentDashboard .dashboard-phase-tabs .tab { height:42px; min-height:42px; padding:8px 12px; font-size:13px; }
 #studentDashboard .dashboard-phase-tabs .tab.active { background:#ddf6ec; color:#087953; border-radius:99px; box-shadow:inset 0 -3px #14956e; }
@@ -2424,6 +2526,9 @@ body.goal-wizard-open::after { content:''; position:fixed; inset:0; background:r
 .outcome-detail-stats .detail-stat > span { font-size:12px; color:#5d7587; }
 .outcome-detail-stats .detail-stat > b { font-size:12px; }
 #detailStatus { border-radius:99px; padding:6px 10px; background:#def8ed; color:#087359; }
+#detailStatus[data-level="active"] { background:#fff0bc; color:#705000; }
+#detailStatus[data-level="todo"] { background:#fde3e3; color:#9e2929; }
+#detailStatus[data-level="pending"] { background:#e5eef8; color:#314e6b; }
 .outcome-detail-actions { display:grid; grid-template-columns:1.15fr 1fr; gap:8px; margin:12px 0 18px; }
 .outcome-detail-actions .button { min-width:0; margin:0; padding:10px 7px; font-size:11px; border-radius:9px; }
 .outcome-detail-stats .outcome-reflections-compact,.outcome-detail-stats .outcome-feedback-compact { border:0; padding:14px 12px; margin:14px -8px 0; border-radius:14px; background:linear-gradient(120deg,#eff8f6,#f5f8fa); }

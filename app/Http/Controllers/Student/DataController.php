@@ -3,25 +3,32 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-
+use App\Models\ApplicationSetting;
 use App\Models\Assignment;
 use App\Models\AssignmentFile;
-use App\Models\ApplicationSetting;
 use App\Models\Feedback;
 use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
 use App\Models\Reflection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Throwable;
 
 class DataController extends Controller
 {
+    // Gebruik dezelfde validatie voor nieuwe en bestaande reflecties.
     public function storeReflection(Request $request, ?Reflection $reflection = null): JsonResponse
     {
         $this->requireStudent($request);
-        if ($reflection?->exists) abort_unless($reflection->gebruiker_id === $request->user()->id, 403);
+        $editing = $reflection?->exists;
+        if ($editing) {
+            abort_unless($reflection->gebruiker_id === $request->user()->id, 403);
+        }
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'assignmentId' => ['nullable', 'integer', Rule::exists('opdrachten', 'id')->where('gebruiker_id', $request->user()->id)],
@@ -32,12 +39,17 @@ class DataController extends Controller
             'next' => ['required', 'string', 'min:10', 'max:3000'],
         ]);
         $outcome = LearningOutcome::where('code', $data['code'])->firstOrFail();
-        if (!empty($data['assignmentId'])) {
+        if (! empty($data['assignmentId'])) {
             $project = $request->user()->assignments()->with('learningOutcomes')->findOrFail($data['assignmentId']);
-            abort_unless($project->learningOutcomes->contains('id',$outcome->id) && $project->learningOutcomes->sortBy('id')->first()?->studiefase_id === $outcome->studiefase_id, 422, 'Kies een leeruitkomst die bij dit project hoort.');
+            // Net als in het projectoverzicht bepaalt de eerste gekoppelde leeruitkomst de fase.
+            $projectPhaseId = $project->learningOutcomes->sortBy('id')->first()?->studiefase_id;
+            abort_unless(
+                $project->learningOutcomes->contains('id', $outcome->id) && $projectPhaseId === $outcome->studiefase_id,
+                422,
+                'Kies een leeruitkomst die bij dit project hoort.',
+            );
         }
 
-        $editing = $reflection?->exists;
         $reflection = ($reflection ?? new Reflection())->fill([
             'opdracht_id' => $data['assignmentId'] ?? null,
             'gebruiker_id' => $request->user()->id,
@@ -50,9 +62,10 @@ class DataController extends Controller
         ]);
         $reflection->save();
 
-        return response()->json($this->reflectionPayload($reflection->load('learningOutcome')), $editing ? 200 : 201);
+        return response()->json(StudentPayload::reflection($reflection->load('learningOutcome')), $editing ? 200 : 201);
     }
 
+    // Archiveer een eigen reflectie zodat de student deze later kan herstellen.
     public function destroyReflection(Request $request, Reflection $reflection): JsonResponse
     {
         abort_unless($reflection->gebruiker_id === $request->user()->id, 403);
@@ -61,6 +74,7 @@ class DataController extends Controller
         return response()->json(['deleted' => true]);
     }
 
+    // Sla feedback voor de ingelogde student op bij de gekozen leeruitkomst.
     public function storeFeedback(Request $request): JsonResponse
     {
         $this->requireStudent($request);
@@ -87,13 +101,15 @@ class DataController extends Controller
             'volgende_stap' => $data['action'],
         ]);
 
-        return response()->json($this->feedbackPayload($feedback->load(['author', 'learningOutcome'])), 201);
+        return response()->json(StudentPayload::feedback($feedback->load(['author', 'learningOutcome'])), 201);
     }
 
+    // Verwijder alleen eigen feedback die nog niet is beoordeeld.
     public function destroyFeedback(Request $request, Feedback $feedback): JsonResponse
     {
         abort_unless($feedback->student_id === $request->user()->id, 403);
-        \Illuminate\Support\Facades\DB::transaction(function () use ($feedback): void {
+        // Vergrendel het bericht tijdens de controle, zodat beoordelen en verwijderen niet tegelijk gebeuren.
+        DB::transaction(function () use ($feedback): void {
             $record = Feedback::whereKey($feedback->id)->lockForUpdate()->firstOrFail();
             abort_if($record->processed_confirmed_at !== null, 422, 'Beoordeelde feedback kan niet worden verwijderd omdat er uren of XP aan gekoppeld zijn.');
             $record->delete();
@@ -102,6 +118,7 @@ class DataController extends Controller
         return response()->json(['deleted' => true]);
     }
 
+    // Maak een actief leerdoel en gebruik het begin van de omschrijving als titel.
     public function storeGoal(Request $request): JsonResponse
     {
         $this->requireStudent($request);
@@ -119,22 +136,10 @@ class DataController extends Controller
             'status' => 'actief',
         ]);
 
-        return response()->json([
-            'id' => $goal->id,
-            'title' => $goal->onderwerp,
-            'description' => $goal->omschrijving,
-            'status' => $goal->status,
-            'code' => $outcome->code,
-            'outcome' => $outcome->titel,
-            'phaseCode' => match ($outcome->studyPhase?->naam) {
-                'Verdiepingsfase' => 'VF',
-                'Afrondingsfase' => 'AF',
-                default => 'OF',
-            },
-            'phase' => $outcome->studyPhase?->naam,
-        ], 201);
+        return response()->json(StudentPayload::goal($goal->setRelation('learningOutcome', $outcome)), 201);
     }
 
+    // Zet een eigen project klaar voor beoordeling als de huidige status dit toelaat.
     public function submitAssignment(Request $request, Assignment $assignment): JsonResponse
     {
         $this->requireStudent($request);
@@ -145,6 +150,7 @@ class DataController extends Controller
         return response()->json(['id' => $assignment->id, 'status' => $assignment->status]);
     }
 
+    // Maak een eigen project dat op beoordeling wacht weer bewerkbaar.
     public function reopenAssignment(Request $request, Assignment $assignment): JsonResponse
     {
         $this->requireStudent($request);
@@ -155,6 +161,7 @@ class DataController extends Controller
         return response()->json(['id' => $assignment->id, 'status' => $assignment->status]);
     }
 
+    // Controleer het bestand met de ingestelde limieten voordat het wordt opgeslagen.
     public function storeAssignmentFile(Request $request, Assignment $assignment): JsonResponse
     {
         $this->requireStudent($request);
@@ -172,25 +179,30 @@ class DataController extends Controller
         ]);
 
         $upload = $request->file('file');
-        $directory = storage_path('app/private/opdrachten/'.$assignment->id);
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
+        // Gebruik een unieke opslagnaam en bewaar de originele naam voor de student.
         $extension = strtolower($upload->getClientOriginalExtension());
         $storedName = (string) Str::uuid().($extension ? '.'.$extension : '');
-        $upload->move($directory, $storedName);
+        $disk = Storage::disk('local');
+        // Schrijf naar privéopslag. Een OneDrive-map kan schrijfbaar zijn ondanks het alleen-lezenkenmerk.
+        $path = $disk->putFileAs('opdrachten/'.$assignment->id, $upload, $storedName);
+        abort_if($path === false, 503, 'Het bestand kon niet worden opgeslagen. Probeer het opnieuw.');
 
-        $file = $assignment->files()->create([
-            'originele_naam' => $upload->getClientOriginalName(),
-            'opslagpad' => 'opdrachten/'.$assignment->id.'/'.$storedName,
-            'mime_type' => $upload->getClientMimeType(),
-            'bestandsgrootte' => filesize($directory.DIRECTORY_SEPARATOR.$storedName),
-        ]);
+        try {
+            $file = $assignment->files()->create([
+                'originele_naam' => $upload->getClientOriginalName(),
+                'opslagpad' => $path,
+                'mime_type' => $upload->getClientMimeType(),
+                'bestandsgrootte' => $upload->getSize(),
+            ]);
+        } catch (Throwable $exception) {
+            $disk->delete($path);
+            throw $exception;
+        }
 
-        return response()->json($this->assignmentFilePayload($file), 201);
+        return response()->json(StudentPayload::assignmentFile($file), 201);
     }
 
+    // Lever het privébestand pas na controle van de projecteigenaar.
     public function downloadAssignmentFile(Request $request, AssignmentFile $assignmentFile)
     {
         $this->requireStudent($request);
@@ -203,6 +215,7 @@ class DataController extends Controller
         ]);
     }
 
+    // Controleer het eigendom en verwijder het bestand van het project.
     public function destroyAssignmentFile(Request $request, AssignmentFile $assignmentFile): JsonResponse
     {
         $this->requireStudent($request);
@@ -218,52 +231,9 @@ class DataController extends Controller
         return response()->json(['deleted' => true]);
     }
 
+    // Weiger API-verzoeken van accounts zonder studentrol.
     private function requireStudent(Request $request): void
     {
         abort_unless($request->user()->rol === 'student', 403);
-    }
-
-    private function reflectionPayload(Reflection $reflection): array
-    {
-        return [
-            'id' => (string) $reflection->id,
-            'title' => $reflection->onderwerp,
-            'assignmentId' => $reflection->opdracht_id,
-            'code' => $reflection->learningOutcome->code,
-            'situation' => $reflection->situatie,
-            'good' => $reflection->wat_ging_goed,
-            'improve' => $reflection->wat_kan_beter,
-            'next' => $reflection->volgende_stap,
-            'date' => $reflection->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
-        ];
-    }
-
-    private function feedbackPayload(Feedback $feedback): array
-    {
-        return [
-            'id' => (string) $feedback->id,
-            'type' => $feedback->type,
-            'person' => $feedback->persoon ?: $feedback->author->naam,
-            'title' => $feedback->onderwerp,
-            'code' => $feedback->learningOutcome->code,
-            'positive' => $feedback->wat_ging_goed,
-            'improve' => $feedback->wat_kan_beter,
-            'action' => $feedback->volgende_stap,
-            'awardedHours' => $feedback->awarded_hours,
-            'confirmedAt' => $feedback->processed_confirmed_at?->toIso8601String(),
-            'date' => $feedback->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
-        ];
-    }
-
-    private function assignmentFilePayload(AssignmentFile $file): array
-    {
-        return [
-            'id' => $file->id,
-            'name' => $file->originele_naam,
-            'size' => $file->bestandsgrootte,
-            'mime' => $file->mime_type,
-            'downloadUrl' => route('assignments.files.download', $file),
-            'uploadedAt' => $file->created_at->locale('nl')->translatedFormat('j F Y \o\m H:i'),
-        ];
     }
 }

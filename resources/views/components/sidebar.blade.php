@@ -40,30 +40,10 @@
       @csrf
       <button class="nav sidebar-logout" type="submit"><span class="nav-icon" data-icon="logout" aria-hidden="true"></span><span>Uitloggen</span></button>
     </form>
-    <button id="sidebarCreatorsButton" class="product-credit" type="button" aria-expanded="false" aria-controls="sidebarCreatorsDetails">
-      <span>Product of</span>
-      <strong>Technical Works Leeuwarden</strong>
-    </button>
+    @include('components.team-credits-trigger')
   </div>
 </aside>
-
-<div id="sidebarCreatorsDetails" class="account-modal creators-modal hidden" aria-hidden="true">
-  <button class="account-modal-backdrop" type="button" tabindex="-1" data-creators-close aria-label="Makersvenster sluiten"></button>
-  <section class="account-modal-dialog creators-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="creatorsModalTitle">
-    <header class="account-modal-header">
-      <div>
-        <h2 id="creatorsModalTitle">De makers van deze website</h2>
-      </div>
-      <button id="creatorsModalClose" class="account-modal-close" type="button" data-creators-close aria-label="Makersvenster sluiten">×</button>
-    </header>
-    <ul class="creators-list">
-      <li><span class="creators-avatar" aria-hidden="true">GH</span><strong>Gerben Harder</strong></li>
-      <li><span class="creators-avatar" aria-hidden="true">GN</span><strong>Gilano Nash</strong></li>
-      <li><span class="creators-avatar" aria-hidden="true">RH</span><strong>Ruben Huizenga</strong></li>
-      <li><span class="creators-avatar" aria-hidden="true">WR</span><strong>Wesley Rinsma</strong></li>
-    </ul>
-  </section>
-</div>
+@include('components.team-credits')
 
 <div id="sidebarAccountDetails" class="account-modal hidden" aria-hidden="true">
   <button class="account-modal-backdrop" type="button" tabindex="-1" data-account-close aria-label="Profielvenster sluiten"></button>

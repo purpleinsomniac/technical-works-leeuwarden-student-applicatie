@@ -25,9 +25,9 @@ class ProgressController extends Controller
             'Je kunt alleen de voortgang bijwerken van studenten uit je eigen groepen.',
         );
 
-        // Controleer of uren en status binnen de toegestane waarden vallen.
+        // Nul betekent dat er nog geen punten zijn toegekend.
         $data = $request->validate([
-            'gevalideerde_uren' => ['required', 'integer', 'min:0', 'max:10000'],
+            'gevalideerde_uren' => ['required', 'integer', 'min:0', 'max:80', 'multiple_of:10'],
             'status' => ['required', Rule::in(['niet_gestart', 'gestart', 'in_ontwikkeling', 'behaald'])],
         ]);
 

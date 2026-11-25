@@ -9,6 +9,7 @@ function weekMonday(value = new Date()) {
 
 const weekPlanKey = 'weekly-plan';
 
+// Lees de taken voor de geselecteerde week.
 function weekTasks() {
   try {
     const tasks = JSON.parse(loadLocalState(weekPlanKey) || '[]');
@@ -18,6 +19,7 @@ function weekTasks() {
   }
 }
 
+// Toon een korte samenvatting van de taken op het dashboard.
 function renderWeekPlanSummary() {
   const monday = weekMonday();
   const tasks = weekTasks().filter((task) => task.week === monday);
@@ -42,6 +44,7 @@ function renderWeekPlanSummary() {
   document.getElementById('weekPlanPreview').innerHTML = preview.join('');
 }
 
+// Open de weekplanning met de bijbehorende taken.
 function openWeekPlan() {
   document.getElementById('weekPlanDate').value = weekMonday();
   renderWeekPlan();
@@ -50,6 +53,7 @@ function openWeekPlan() {
   document.getElementById('weekTaskText').focus();
 }
 
+// Sluit het scherm met de weekplanning.
 function closeWeekPlan() {
   document.getElementById('weekPlanModal').classList.add('hidden');
   document.body.classList.remove('account-modal-open');
@@ -75,11 +79,13 @@ function renderWeekPlan() {
   renderWeekPlanSummary();
 }
 
+// Bewaar de taken voor de week en werk de weergave bij.
 function persistWeekTasks(tasks) {
   saveLocalState(weekPlanKey, JSON.stringify(tasks));
   renderWeekPlan();
 }
 
+// Voeg een geldige taak toe aan de geselecteerde week.
 function addWeekTask(event) {
   event.preventDefault();
   const field = document.getElementById('weekTaskText');
@@ -96,10 +102,12 @@ function addWeekTask(event) {
   field.focus();
 }
 
+// Wissel de taak tussen open en afgerond.
 function toggleWeekTask(id) {
   persistWeekTasks(weekTasks().map((task) => task.id === id ? { ...task, done: !task.done } : task));
 }
 
+// Haal de gekozen taak uit de weekplanning.
 function deleteWeekTask(id) {
   persistWeekTasks(weekTasks().filter((task) => task.id !== id));
 }

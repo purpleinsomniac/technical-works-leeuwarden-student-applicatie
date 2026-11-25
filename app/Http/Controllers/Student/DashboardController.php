@@ -10,11 +10,13 @@ use App\Models\LearningGoal;
 use App\Models\LearningOutcome;
 use App\Models\Reflection;
 use App\Models\User;
-use App\Services\ProjectPoints;
+use App\Services\AcademicYear;
+use App\Services\LearningProgress;
 use App\Services\StudentPointTargets;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class DashboardController extends RoleDashboardController
 {
@@ -50,51 +52,52 @@ class DashboardController extends RoleDashboardController
         );
     }
 
+    // Geef bijgewerkte punten terug zodat het dashboard ze opnieuw kan tonen.
     public function pointProgress(Request $request): JsonResponse
     {
-        [$outcomes, , $phaseTotals] = $this->pointData($request->user());
+        [$outcomes, , $phaseTotals, $yearPoints] = $this->pointData($request->user());
 
         return response()->json([
             'outcomes' => $outcomes,
             'phases' => $this->phaseRows($phaseTotals),
+            'educationProgress' => $this->educationProgress($outcomes),
+            'yearPoints' => $yearPoints,
         ])->header('Cache-Control', 'no-store');
     }
 
+    // Verzamel beoordelingen, projectpunten en totalen per fase en leerjaar.
     private function pointData(User $user): array
     {
-        $pointService = app(ProjectPoints::class);
         $catalog = LearningOutcome::query()
-            ->with([
-                'studyPhase',
-                'progress' => fn ($query) => $query->where('gebruiker_id', $user->id),
-            ])
+            ->with('studyPhase')
             ->orderBy('code')
             ->get();
-        $targets = app(StudentPointTargets::class)->forOutcomes($catalog);
-        $allocation = $pointService->allocation($user, $targets);
-        $outcomes = $catalog->map(function ($outcome) use ($allocation, $targets): array {
-                $progress = $outcome->progress->first();
-                $target = $targets[$outcome->id] ?? 0;
-                $projectPoints = $allocation['outcomes'][$outcome->id] ?? 0;
-                $validatedPoints = max(0, (int) $progress?->gevalideerde_uren);
-                $hours = min($target, $projectPoints + $validatedPoints);
-                $percentage = StudentPointTargets::percentage($hours, $target);
+        $snapshot = app(LearningProgress::class)->snapshot($user, $catalog);
+        $outcomes = $catalog->map(function ($outcome) use ($snapshot): array {
+            $score = $snapshot['outcomes'][$outcome->id];
+            $progress = $score['review'];
+            $target = $score['target'];
+            $hours = $score['earned'];
+            $percentage = $score['percentage'];
 
-                return [
-                    'id' => $outcome->id,
-                    'code' => $outcome->code,
-                    'phase' => StudentPayload::phaseCode($outcome->studyPhase?->naam),
-                    'kind' => $outcome->type,
-                    'number' => (int) preg_replace('/\D+/', '', str($outcome->code)->afterLast('_')->value()),
-                    'description' => $outcome->omschrijving,
-                    'pct' => $percentage,
-                    'hours' => $hours,
-                    'target' => $target,
-                    'short' => $outcome->titel,
-                    'status' => $hours >= $target ? 'behaald' : ($hours > 0 ? 'in_ontwikkeling' : 'niet_gestart'),
-                    'updatedAt' => $progress?->updated_at?->locale('nl')->translatedFormat('j F Y'),
-                ];
-            })
+            return [
+                'id' => $outcome->id,
+                'code' => $outcome->code,
+                'phase' => StudentPayload::phaseCode($outcome->studyPhase?->naam),
+                'kind' => $outcome->type,
+                'number' => (int) preg_replace('/\D+/', '', str($outcome->code)->afterLast('_')->value()),
+                'description' => $outcome->omschrijving,
+                'pct' => $percentage,
+                'hours' => $hours,
+                'target' => $target,
+                'short' => $outcome->titel,
+                'status' => $hours >= $target ? 'behaald' : ($hours > 0 ? 'in_ontwikkeling' : 'niet_gestart'),
+                'assessmentState' => $hours > 0 || ($progress && $progress->status !== 'niet_gestart')
+                    ? 'assessed'
+                    : (isset($snapshot['allocation']['startedOutcomes'][$outcome->id]) ? 'pending' : 'not_started'),
+                'updatedAt' => $progress?->updated_at?->locale('nl')->translatedFormat('j F Y'),
+            ];
+        })
             ->values();
 
         $phaseTotals = [];
@@ -106,9 +109,40 @@ class DashboardController extends RoleDashboardController
             ];
         }
 
-        return [$outcomes, $allocation, $phaseTotals];
+        $allocation = $snapshot['allocation'];
+        $today = now();
+        $currentYear = (int) $user->leerjaar;
+        $yearPoints = [];
+        foreach ($allocation['registrations'] as $id => $registration) {
+            $year = AcademicYear::forDate($registration['date'], $currentYear, $today);
+            $phase = StudentPayload::phaseCode($registration['phase']);
+            if ($year !== null) {
+                $yearPoints[$year][$phase] = ($yearPoints[$year][$phase] ?? 0) + $allocation['projects'][$id];
+            }
+        }
+        // Tel bij beoordelingen alleen punten die boven op de projectpunten zijn verdiend.
+        foreach ($outcomes as $outcome) {
+            $review = $snapshot['outcomes'][$outcome['id']]['review'];
+            $year = AcademicYear::forDate($review?->updated_at, $currentYear, $today);
+            if ($year !== null) {
+                $phase = $outcome['phase'];
+                $additional = $outcome['hours'] - ($allocation['outcomes'][$outcome['id']] ?? 0);
+                $yearPoints[$year][$phase] = ($yearPoints[$year][$phase] ?? 0) + $additional;
+            }
+        }
+        return [$outcomes, $allocation, $phaseTotals, $yearPoints];
     }
 
+    // Bereken het totaal voor de hele opleiding op basis van de leeruitkomsten.
+    private function educationProgress(Collection $outcomes): array
+    {
+        $points = (int) $outcomes->sum('hours');
+        $target = 3 * StudentPointTargets::PHASE_TARGET;
+
+        return ['points' => $points, 'target' => $target, 'percentage' => StudentPointTargets::percentage($points, $target)];
+    }
+
+    // Zet de fasetotalen in de volgorde waarin het dashboard ze verwacht.
     private function phaseRows(array $totals): array
     {
         return [
@@ -121,7 +155,8 @@ class DashboardController extends RoleDashboardController
     // Verzamel uitsluitend de gegevens van de ingelogde student.
     private function studentData(User $user): array
     {
-        [$outcomes, $allocation, $phaseTotals] = $this->pointData($user);
+        [$outcomes, $allocation, $phaseTotals, $yearPoints] = $this->pointData($user);
+        $today = now();
         $coachName = User::query()->where('rol', 'coach')->value('naam') ?? 'Coach';
 
         // Sorteer projecten op deadline, met projecten zonder deadline achteraan.
@@ -210,7 +245,10 @@ class DashboardController extends RoleDashboardController
             'goalInsights' => ['activities' => $activities],
             'hourApprovals' => $hourApprovals,
             'phases' => $this->phaseRows($phaseTotals),
+            'educationProgress' => $this->educationProgress($outcomes),
+            'currentPhase' => StudentPayload::phaseCode($user->studyPhase?->naam),
             'phasePointTarget' => StudentPointTargets::PHASE_TARGET,
+            'yearPoints' => $yearPoints,
             'pointProgressUrl' => route('student.points.progress', absolute: false),
             // Alleen afgeronde projecten verschijnen als puntenregistratie.
             'records' => $assignments->where('status', 'completed')->map(fn (array $assignment): array => [
@@ -221,25 +259,24 @@ class DashboardController extends RoleDashboardController
                 'outcomeCodes' => $assignment['outcomeCodes'],
                 'phases' => $assignment['phases'],
                 'hours' => $assignment['hours'],
-                'year' => 1,
+                'year' => AcademicYear::forDate($allocation['registrations'][$assignment['id']]['date'] ?? null, (int) $user->leerjaar, $today),
                 'date' => $assignment['registeredAt'] ?? 'Datum onbekend',
                 'dateIso' => $assignment['registeredAtIso'],
                 'approver' => $coachName.' · coach',
             ])->values(),
-            'hoursByYear' => [
-                1 => [
-                    'total' => array_sum(array_column($phaseTotals, 'hours')),
-                    'orientation' => $phaseTotals['OF']['hours'],
-                    'deepening' => $phaseTotals['VF']['hours'],
-                    'completion' => $phaseTotals['AF']['hours'],
-                ],
-                2 => ['total' => 0, 'orientation' => 0, 'deepening' => 0, 'completion' => 0],
-                3 => ['total' => 0, 'orientation' => 0, 'deepening' => 0, 'completion' => 0],
-                4 => ['total' => 0, 'orientation' => 0, 'deepening' => 0, 'completion' => 0],
-            ],
+            'hoursByYear' => collect([1, 2, 3, 4])->mapWithKeys(function (int $year) use ($yearPoints): array {
+                $points = $yearPoints[$year] ?? [];
+                return [$year => [
+                    'total' => array_sum($points),
+                    'orientation' => $points['OF'] ?? 0,
+                    'deepening' => $points['VF'] ?? 0,
+                    'completion' => $points['AF'] ?? 0,
+                ]];
+            })->all(),
         ];
     }
 
+    // Zet het project en de gekoppelde gegevens om naar de velden voor het dashboard.
     private function assignmentPayload(Assignment $assignment, array $allocation): array
     {
         // Alleen leeruitkomsten uit de fase van de eerste koppeling horen bij dit project.
@@ -256,8 +293,8 @@ class DashboardController extends RoleDashboardController
             'phases' => $firstOutcome ? [$phase] : [],
             'dueDate' => $assignment->inleverdatum?->locale('nl')->translatedFormat('j F Y'),
             'dueDateIso' => $assignment->inleverdatum?->format('Y-m-d'),
-            'registeredAt' => $assignment->updated_at?->locale('nl')->translatedFormat('j F Y'),
-            'registeredAtIso' => $assignment->updated_at?->format('Y-m-d'),
+            'registeredAt' => ($assignment->completed_at ?? $assignment->updated_at)?->locale('nl')->translatedFormat('j F Y'),
+            'registeredAtIso' => ($assignment->completed_at ?? $assignment->updated_at)?->format('Y-m-d'),
             'hours' => $allocation['projects'][$assignment->id] ?? 0,
             'maxPoints' => $allocation['maximums'][$assignment->id] ?? 0,
             'outcomeCodes' => $assignment->learningOutcomes

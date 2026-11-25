@@ -337,9 +337,15 @@ class DashboardController extends RoleDashboardController
                 $memberships = $groupMemberships->get($student->id, collect());
                 $activity = $latestActivity->get($student->id);
                 $activityDate = $activity ? \Carbon\Carbon::parse($activity['at'])->timezone('Europe/Berlin') : null;
+                $scores = app(\App\Services\LearningProgress::class)->snapshot($student)['outcomes'];
+                $educationPercentage = \App\Services\StudentPointTargets::percentage(
+                    array_sum(array_column($scores, 'earned')),
+                    3 * \App\Services\StudentPointTargets::PHASE_TARGET,
+                );
 
                 return [
                     'id' => $student->id,
+                    'educationPercentage' => $educationPercentage,
                     'name' => $student->naam,
                     'studentNumber' => $student->studentnummer,
                     'year' => $student->leerjaar,

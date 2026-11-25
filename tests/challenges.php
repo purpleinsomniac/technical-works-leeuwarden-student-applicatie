@@ -48,7 +48,7 @@ $project->update(['type'=>'Samenwerkingsopdracht','inleverdatum'=>now()->addDay(
 App\Models\AssignmentFile::create(['opdracht_id'=>$project->id,'originele_naam'=>'bewijs.pdf','opslagpad'=>'test.pdf','mime_type'=>'application/pdf','bestandsgrootte'=>100]);
 App\Models\Reflection::create(['gebruiker_id'=>$user->id,'opdracht_id'=>$project->id,'leeruitkomst_id'=>$outcome->id,'onderwerp'=>'Terugblik','situatie'=>'Onze samenwerking','wat_ging_goed'=>'Taken verdelen','wat_kan_beter'=>'Meer afstemmen','volgende_stap'=>'Overleg plannen']);
 $metric = new ReflectionMethod(ChallengeService::class,'metric');
-foreach (['evidence'=>1,'on_time_projects'=>1,'project_reflections'=>1,'team_reflections'=>1,'skill_balance'=>2,'phase_percentage'=>50] as $type=>$expected) {
+foreach (['evidence'=>1,'on_time_projects'=>1,'project_reflections'=>1,'team_reflections'=>1,'skill_balance'=>2,'phase_percentage'=>26] as $type=>$expected) {
     check($metric->invoke($service,$user,$type,'Oriëntatiefase') === $expected, 'Onjuiste voortgang voor '.$type);
     check($metric->invoke($service,$user,$type,'Verdiepingsfase') === 0, 'Voortgang mag niet meetellen in een andere fase: '.$type);
 }

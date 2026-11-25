@@ -1,11 +1,11 @@
-// Puntenoverzicht, registraties, meldingen en challenges.
-let hoursPhaseFilter = "OF";
+// Puntenoverzicht, registraties, meldingen en uitdagingen.
+let hoursPhaseFilter = studentData.currentPhase || "OF";
 let hoursPage = 1;
 let selectedRegistrationRecord = null;
 let challengeState = null;
 let challengeSyncBusy = false;
 
-// Laat de server de challengevoortgang bijwerken en voorkom overlappende verzoeken.
+// Vraag de server om de uitdagingen bij te werken, één verzoek tegelijk.
 async function syncChallenges() {
   if (challengeSyncBusy || !window.LARAVEL_API?.challengeSync) return;
   challengeSyncBusy = true;
@@ -26,6 +26,7 @@ async function syncChallenges() {
   } finally { challengeSyncBusy = false; }
 }
 
+// Open het venster met uitdagingen en hun voortgang.
 function openChallengeDetail() {
   const modal = document.getElementById('challengeModal');
   challengeListFilter = 'recommended';
@@ -36,15 +37,18 @@ function openChallengeDetail() {
 }
 let challengeListFilter = 'recommended';
 let challengeShowAll = false;
+// Pas het gekozen filter toe op de uitdagingen.
 function selectChallengeFilter(filter) {
   challengeListFilter = filter;
   challengeShowAll = false;
   renderChallengeDetail();
 }
+// Wissel tussen de verkorte en volledige lijst met uitdagingen.
 function toggleAllChallenges() {
   challengeShowAll = !challengeShowAll;
   renderChallengeDetail();
 }
+// Toon de huidige en volgende uitdagingen met de voortgang.
 function renderChallengeDetail() {
   const active = challengeState?.active;
   document.getElementById('challengeDetailTitle').textContent = active?.title || 'Alle challenges voltooid';
@@ -63,7 +67,7 @@ function renderChallengeDetail() {
   document.getElementById('challengeActiveReward').textContent = active ? '+' + active.reward + ' XP' : '';
   const history = challengeState?.history || [];
   document.getElementById('challengeHistory').innerHTML = history.map((item) => '<li>' + esc(item.title) + ' · ' + esc(item.phase) + ' · +' + item.reward + ' XP · Voltooid</li>').join('') || '<li>Je hebt nog geen challenges voltooid.</li>';
-  // Sluit de huidige en afgeronde challenges uit van de lijst met volgende uitdagingen.
+  // Laat bij de volgende uitdagingen alleen zien wat nog beschikbaar komt.
   const finished = new Set(history.filter((item) => item.phase === challengeState?.phase).map((item) => Number(item.challenge_id)));
   let upcoming = (challengeState?.catalog || []).filter((item) => !finished.has(Number(item.id)) && Number(item.id) !== Number(active?.challenge_id));
   if (challengeListFilter === 'nearly') upcoming = upcoming.filter((item) => item.target > 0 && item.progress / item.target >= .75).sort((a,b) => b.progress/b.target - a.progress/a.target);
@@ -80,34 +84,31 @@ function renderChallengeDetail() {
     button.setAttribute('aria-pressed', String(selected));
   });
 }
+// Sluit het venster met uitdagingen.
 function closeChallengeDetail() { document.getElementById('challengeModal').classList.add('hidden'); }
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeChallengeDetail(); });
 window.addEventListener('focus', syncChallenges);
 
-// Tel de punten op voor het gekozen jaar en de gekozen fase.
+// Toon de opgebouwde punten voor de hele gekozen fase.
 function renderHours(refreshChallenges = true) {
-  const selected = document.getElementById("hoursYear").value;
-  const isTotal = selected === "total";
   const target = phasePointTarget;
   const phaseProgress = phases.find(([code]) => code === hoursPhaseFilter);
-  // De bestaande puntenregistraties vallen onder leerjaar één.
-  const phasePoints = isTotal || Number(selected) === 1 ? phaseProgress?.[3] ?? 0 : 0;
+  const phasePoints = phaseProgress?.[3] ?? 0;
   const remaining = Math.max(0, target - phasePoints);
-  const percentage = isTotal || Number(selected) === 1 ? phaseProgress?.[2] ?? 0 : 0;
-  const periodLabel = isTotal ? "Totaal opleiding" : "Leerjaar " + selected;
-
-  document.getElementById("registrationsYear").textContent = periodLabel;
+  const percentage = target ? 100 * phasePoints / target : 0;
   document.getElementById("hoursYearTotal").textContent = phasePoints.toLocaleString("nl-NL");
   document.getElementById("hoursTarget").textContent = target.toLocaleString("nl-NL");
-  document.getElementById("hoursProgressPercent").textContent = pointPercentLabel(percentage);
+  document.getElementById("hoursProgressPercent").textContent = target ? pointPercentLabel(percentage) : "–";
   document.getElementById("hoursProgressRing").style.setProperty("--hours-progress", displayPointPercent(percentage) * 3.6 + "deg");
-  document.getElementById("hoursYearPercentage").textContent = hoursPhaseName(hoursPhaseFilter) + ' · ' + (remaining === 0 ? 'Puntendoel behaald' : 'Nog ' + remaining.toLocaleString('nl-NL') + ' punten nodig');
+  document.getElementById("hoursYearPercentage").textContent = studentPhaseName(hoursPhaseFilter) +
+    (remaining === 0 ? ' · Fasedoel behaald' : '');
 
-  renderHoursRegistrations(selected, periodLabel);
+  renderHoursRegistrations();
   renderXp();
   if (refreshChallenges) syncChallenges();
 }
 
+// Werk het level, de XP en de balk naar het volgende level bij.
 function renderXp() {
   const xp = challengeState?.xp || 0;
   const level = Math.floor(xp / 1000) + 1;
@@ -115,31 +116,33 @@ function renderXp() {
   document.getElementById('xpLevelTitle').textContent = 'Level ' + level;
   const titles = ['Nieuwkomer', 'Ontdekker', 'Aanpakker', 'Probleemoplosser', 'Projectbouwer', 'Zelfstandig specialist', 'Projectprofessional', 'Innovator', 'Expert', 'Meester'];
   document.getElementById('xpLevelName').textContent = titles[level - 1] || 'Meester · rang ' + (level - 9);
-  document.getElementById('xpLevelProgress').textContent = xp.toLocaleString('nl-NL') + ' / ' + (level * 1000).toLocaleString('nl-NL') + ' XP';
-  document.getElementById('xpHelpProgress').textContent = document.getElementById('xpLevelProgress').textContent;
+  document.getElementById('xpLevelProgress').textContent = progress.toLocaleString('nl-NL') + ' / 1.000 XP tot level ' + (level + 1);
+  document.getElementById('xpHelpProgress').textContent = document.getElementById('xpLevelProgress').textContent +
+    ' · ' + xp.toLocaleString('nl-NL') + ' XP totaal';
   document.getElementById('xpLevelBar').style.width = (progress / 10) + '%';
-  document.getElementById('xpHelpBar').style.width = Math.min(100, xp / (level * 1000) * 100) + '%';
+  document.getElementById('xpHelpBar').style.width = (progress / 10) + '%';
   document.getElementById('xpRemaining').textContent = 'Nog ' + (1000 - progress) + ' XP tot level ' + (level + 1) + '!';
 }
 
+// Open de uitleg over XP.
 function openXpHelp() {
   document.getElementById('xpHelpPanel').classList.remove('hidden');
   document.getElementById('xpHelpPanel').querySelector('button').focus();
 }
+// Sluit de uitleg over XP.
 function closeXpHelp() { document.getElementById('xpHelpPanel').classList.add('hidden'); }
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeXpHelp(); });
 
 // Toon de gefilterde projectregistraties per pagina.
-function renderHoursRegistrations(selected, periodLabel) {
+function renderHoursRegistrations() {
   const search = document.getElementById("hoursSearch").value.trim().toLowerCase();
   const sort = document.getElementById("hoursSort").value;
   const perPage = Number(document.getElementById("hoursPerPage").value);
   let filtered = records.filter((record) => {
-    const periodMatches = selected === "total" || Number(record.year) === Number(selected);
-    const phaseMatches = hoursPhaseFilter === "all" || (record.phases || []).includes(hoursPhaseFilter);
+    const phaseMatches = (record.phases || []).includes(hoursPhaseFilter);
     const linked = (record.outcomeCodes || []).map((code) => outcomes.find((outcome) => outcome.code === code)).filter(Boolean);
     const searchable = [record.title, record.type, record.description, ...linked.flatMap((outcome) => [outcome.short, outcome.code])].join(" ").toLowerCase();
-    return periodMatches && phaseMatches && (!search || searchable.includes(search));
+    return phaseMatches && (!search || searchable.includes(search));
   });
 
   filtered.sort((left, right) => {
@@ -160,15 +163,15 @@ function renderHoursRegistrations(selected, periodLabel) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-selected", String(active));
   });
-  document.getElementById("registrationsYear").textContent = periodLabel;
   document.getElementById("hoursResultCount").textContent = filtered.length ? start + " – " + end + " van " + filtered.length + " registraties" : "0 registraties";
   document.getElementById("hoursList").innerHTML = visibleRecords.length
     ? visibleRecords.map(renderHoursRow).join("")
-    : '<div class="hours-empty"><span>⌕</span><h3>Geen registraties gevonden</h3><p>Pas de periode, fase of zoekproject aan.</p></div>';
+    : '<div class="hours-empty"><span>⌕</span><h3>Geen registraties gevonden</h3><p>Kies een andere fase of pas je zoekterm aan.</p></div>';
   document.getElementById("hoursPagination").innerHTML = renderHoursPagination(pageCount);
-  keepPaginationPosition('hoursList', [selected, hoursPhaseFilter, search, sort, perPage]);
+  keepPaginationPosition('hoursList', [hoursPhaseFilter, search, sort, perPage]);
 }
 
+// Zoek de leeruitkomsten die bij de registratie horen.
 function registrationOutcomes(record) {
   const project = assignments.find((item) => Number(item.id) === Number(record.assignmentId));
   const phaseCode = project?.phase || record.phases?.[0];
@@ -177,45 +180,47 @@ function registrationOutcomes(record) {
     .filter((outcome) => outcome && outcome.phase === phaseCode);
 }
 
+// Maak een rij met de datum, omschrijving en punten van de registratie.
 function renderHoursRow(record) {
   const index = records.indexOf(record);
   const linked = registrationOutcomes(record);
-  const phaseBadges = (record.phases || []).map((code) => '<span class="hours-phase-badge ' + code + '">' + esc(hoursPhaseName(code)) + '</span>').join("");
+  const phaseBadges = (record.phases || []).map((code) => '<span class="hours-phase-badge ' + code + '">' + esc(studentPhaseName(code)) + '</span>').join("");
   const outcomeChips = linked.slice(0, 2).map((outcome) =>
-    '<span class="hours-outcome-chip ' + esc(outcome.phase) + '" title="' + esc(outcome.short + ' · ' + hoursPhaseName(outcome.phase)) + '">' + uiIcon("outcomes") + esc(outcome.short) + '</span>',
+    '<span class="hours-outcome-chip ' + esc(outcome.phase) + '" title="' + esc(outcome.short + ' · ' + studentPhaseName(outcome.phase)) + '">' + uiIcon("outcomes") + esc(outcome.short) + '</span>',
   ).join("") + (linked.length > 2 ? '<span class="hours-outcome-more" title="' + esc(linked.slice(2).map((outcome) => outcome.short).join(', ')) + '">+' + (linked.length - 2) + '</span>' : '');
 
   return '<button type="button" class="hours-registration-row" onclick="openHourRegistration(' + index + ')">' +
-    '<span class="hours-assignment-cell"><span class="hours-assignment-icon">' + assignmentIcon(record) + '</span><span><strong>' + esc(record.title) + '</strong><small>' + esc(record.type) + ' · Leerjaar ' + record.year + '</small></span></span>' +
+    '<span class="hours-assignment-cell"><span class="hours-assignment-icon">' + assignmentIcon(record) + '</span><span><strong>' + esc(record.title) + '</strong><small>' + esc(record.type) + '</small></span></span>' +
     '<span class="hours-phase-cell">' + phaseBadges + '</span>' +
     '<span class="hours-outcome-cell">' + outcomeChips + '</span>' +
     '<strong class="hours-value"><span>' + Number(record.hours).toLocaleString("nl-NL") + ' punten</span></strong>' +
     '<span class="hours-date">' + uiIcon('calendar') + esc(record.date) + '</span><span class="hours-chevron" aria-hidden="true">›</span></button>';
 }
 
+// Toon de paginaknoppen bij de registraties.
 function renderHoursPagination(pageCount) {
   return pageButtons(hoursPage, pageCount, 'goToHoursPage');
 }
 
+// Ga na een filterwijziging terug naar de eerste pagina.
 function resetHoursAndRender() {
   hoursPage = 1;
   renderHours();
 }
 
+// Werk het puntenoverzicht bij voor de gekozen fase.
 function selectHoursPhase(phaseCode) {
   hoursPhaseFilter = phaseCode;
   resetHoursAndRender();
 }
 
+// Open de gekozen pagina van het registratieoverzicht.
 function goToHoursPage(page) {
   hoursPage = page;
   renderHours();
 }
 
-function hoursPhaseName(code) {
-  return studentPhaseName(code);
-}
-
+// Open de registratie met het gekoppelde project en de leeruitkomsten.
 function openHourRegistration(index) {
   const record = records[index];
   const linked = registrationOutcomes(record);
@@ -224,8 +229,7 @@ function openHourRegistration(index) {
   document.getElementById("registrationDetailType").textContent = record.type;
   document.getElementById("registrationDetailDescription").textContent = record.description || "";
   document.getElementById("registrationDetailHours").textContent = Number(record.hours).toLocaleString("nl-NL") + " punten";
-  document.getElementById("registrationDetailYear").textContent = "Leerjaar " + record.year;
-  document.getElementById("registrationDetailPhase").textContent = (record.phases || []).map(hoursPhaseName).join(" · ");
+  document.getElementById("registrationDetailPhase").textContent = (record.phases || []).map((code) => studentPhaseName(code)).join(" · ");
   document.getElementById("registrationDetailDate").textContent = record.date;
   document.getElementById("registrationDetailApprover").textContent = record.approver;
   document.getElementById("registrationDetailOutcomeList").innerHTML = renderRegistrationOutcomeGroups(linked);
@@ -234,31 +238,36 @@ function openHourRegistration(index) {
   requestAnimationFrame(() => document.querySelector("#registrationDetailModal .modal-close").focus());
 }
 
+// Groepeer de gekoppelde leeruitkomsten per fase.
 function renderRegistrationOutcomeGroups(linked) {
   return ["OF", "VF", "AF"].map((phaseCode) => {
     const phaseOutcomes = linked.filter((outcome) => outcome.phase === phaseCode);
     if (!phaseOutcomes.length) return "";
-    return '<section class="registration-outcome-group"><span class="hours-phase-badge ' + phaseCode + '">' + esc(hoursPhaseName(phaseCode)) + '</span>' +
+    return '<section class="registration-outcome-group"><span class="hours-phase-badge ' + phaseCode + '">' + esc(studentPhaseName(phaseCode)) + '</span>' +
       phaseOutcomes.map((outcome) => '<button type="button" onclick="openRegistrationOutcome(\'' + esc(outcome.code) + '\')"><span><strong>' + esc(outcome.short) + '</strong><small>' + esc(outcome.code) + '</small></span><span aria-hidden="true">›</span></button>').join("") + '</section>';
   }).join("");
 }
 
+// Sluit het detailvenster en maak de pagina weer scrollbaar.
 function closeRegistrationDetail() {
   document.getElementById("registrationDetailModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
 }
 
+// Open de leeruitkomst uit de geselecteerde registratie.
 function openRegistrationOutcome(code) {
   closeRegistrationDetail();
   if (code) openOutcome(code);
 }
 
+// Open het project uit de geselecteerde registratie.
 function openRegistrationAssignment() {
   const assignmentId = selectedRegistrationRecord?.assignmentId;
   closeRegistrationDetail();
   if (assignmentId) openAssignment(assignmentId);
 }
 
+// Toon de recente meldingen over verwerkte punten.
 function renderHourApprovals() {
   const totalHours = hourApprovals.reduce((total, approval) => total + Number(approval.hours || 0), 0);
   const latestDate = hourApprovals[0]?.date || "—";
@@ -297,6 +306,7 @@ function renderHourApprovals() {
     : '<p class="dashboard-empty">Er zijn nog geen gevalideerde punten.</p>';
 }
 
+// Open het overzicht met meldingen over punten.
 function openHoursApprovalModal() {
   show("studentDashboard");
   document.getElementById("hoursApprovalModal").classList.remove("hidden");
@@ -304,6 +314,7 @@ function openHoursApprovalModal() {
   requestAnimationFrame(() => document.querySelector("#hoursApprovalModal .modal-close").focus());
 }
 
+// Sluit het overzicht met meldingen over punten.
 function closeHoursApprovalModal() {
   document.getElementById("hoursApprovalModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
@@ -328,6 +339,7 @@ function updateHoursProcessingReadState() {
   button.classList.toggle("hidden", isRead);
 }
 
+// Bewaar welke melding de student als laatste heeft gelezen.
 function markHoursProcessingRead() {
   saveLocalState(hoursProcessingReadKey, "true");
   updateHoursProcessingReadState();

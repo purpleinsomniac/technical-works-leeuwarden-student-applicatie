@@ -3,15 +3,18 @@
 const studentData = window.LARAVEL_DATA || {};
 const phasePointTarget = studentData.phasePointTarget || 1200;
 
+// Rond voor weergave af op stappen van vijf procent.
 function displayPointPercent(value) {
   const percentage = Math.max(0, Math.min(100, Number(value) || 0));
   return Math.round(percentage / 5) * 5;
 }
 
+// Geef het afgeronde percentage weer met een procentteken.
 function pointPercentLabel(value) {
   return displayPointPercent(value) + "%";
 }
 
+// Bepaal de vaardigheidsstatus bij het percentage.
 function competencyLevel(percentage) {
   if (percentage >= 75) return { key: "completed", label: "Bekwaam", detail: "Voldoende zelfstandig beheerst" };
   if (percentage >= 55) return { key: "active", label: "In ontwikkeling", detail: "Basis aanwezig, verbetering nodig" };
@@ -46,6 +49,13 @@ const currentWorkByPhase = Object.fromEntries(phases.map(([phaseCode]) => {
   return [phaseCode, assignment];
 }));
 
+// Zoek de naam bij de fasecode en gebruik zo nodig de opgegeven terugvalwaarde.
 function studentPhaseName(code, fallback = code) {
   return phases.find(([phaseCode]) => phaseCode === code)?.[1] || fallback;
+}
+
+// Tel de berichten of reflecties die aan leeruitkomsten in de gekozen fase hangen.
+function countItemsInPhase(items, phaseCode) {
+  if (phaseCode === "all") return items.length;
+  return items.filter((item) => outcomes.find((outcome) => outcome.code === item.code)?.phase === phaseCode).length;
 }

@@ -1,4 +1,6 @@
 // Initialisatie en archivering van leeruitkomsten.
+
+// Lees de opgeslagen archiefkeuze en vang ongeldige gegevens op.
 function getArchivedOutcomes() {
   try {
     const saved = JSON.parse(loadLocalState(archivedOutcomesKey) || "[]");
@@ -8,6 +10,7 @@ function getArchivedOutcomes() {
   }
 }
 
+// Toon de archiefactie die past bij de huidige leeruitkomst.
 function updateOutcomeArchiveControls() {
   const archived = getArchivedOutcomes().includes(currentOutcomeCode);
   const button = document.getElementById("archiveOutcomeButton");
@@ -39,7 +42,7 @@ function toggleOutcomeArchive() {
 if (window.LARAVEL_USER) {
   renderGoalOptions();
   initializeGoals();
-  renderReflectionOptions();
+  updateReflectionOutcomeOptions();
   showReflectionOutcomePreview();
   updateFeedbackOutcomeOptions();
   renderDashboard();
@@ -73,10 +76,13 @@ async function refreshPointProgress() {
     const snapshot = await apiRequest(url);
     if (!Array.isArray(snapshot.outcomes) || !Array.isArray(snapshot.phases)) return;
     if (JSON.stringify(outcomes) === JSON.stringify(snapshot.outcomes) &&
-        JSON.stringify(phases) === JSON.stringify(snapshot.phases)) return;
+        JSON.stringify(phases) === JSON.stringify(snapshot.phases) &&
+        JSON.stringify(studentData.yearPoints) === JSON.stringify(snapshot.yearPoints)) return;
 
     outcomes.splice(0, outcomes.length, ...snapshot.outcomes);
     phases.splice(0, phases.length, ...snapshot.phases);
+    studentData.educationProgress = snapshot.educationProgress;
+    studentData.yearPoints = snapshot.yearPoints;
     renderDashboard();
     renderCatalog();
     if (!document.getElementById("hours").classList.contains("hidden")) renderHours(false);

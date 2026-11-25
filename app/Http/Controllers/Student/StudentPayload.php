@@ -34,6 +34,7 @@ final class StudentPayload
         return $data;
     }
 
+    // Zet het feedbackbericht om naar de velden die het studentenscherm gebruikt.
     public static function feedback(Feedback $feedback): array
     {
         return [
@@ -51,6 +52,7 @@ final class StudentPayload
         ];
     }
 
+    // Zet het leerdoel om naar de velden die het studentenscherm gebruikt.
     public static function goal(LearningGoal $goal): array
     {
         $outcome = $goal->learningOutcome;

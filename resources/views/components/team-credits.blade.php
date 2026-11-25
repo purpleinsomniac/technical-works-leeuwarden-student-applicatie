@@ -16,7 +16,7 @@
       ['name' => 'Ruben Huizenga', 'role' => 'Applicatiebeheerder', 'github' => 'purpleinsomniac'],
     ] as $maker)
       <li>
-        <details class="team-credits-person">
+        <details class="team-credits-person" @if ($loop->first) open @endif>
           <summary>
             <span class="team-credits-avatar" aria-hidden="true">
               <svg viewBox="0 0 32 32" fill="currentColor">
@@ -25,7 +25,7 @@
               </svg>
             </span>
             <span>{{ $maker['name'] }}</span>
-            <span class="team-credits-chevron" aria-hidden="true">›</span>
+            <span class="team-credits-chevron" aria-hidden="true"></span>
           </summary>
           <div class="team-credits-contribution">
             <p>Gewerkt aan: <strong>{{ $maker['role'] }}</strong></p>

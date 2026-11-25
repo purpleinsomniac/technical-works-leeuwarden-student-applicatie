@@ -1,10 +1,12 @@
 // Leeruitkomsten, detailweergave en catalogusfilters.
 
+// Haal het puntenmaximum voor de leeruitkomst op.
 function outcomePointTarget(outcome) {
   const target = Number(outcome.target);
   return target > 0 ? target.toLocaleString('nl-NL') + ' punten' : 'Nog niet vastgesteld';
 }
 
+// Bepaal welke praktische uitleg bij de leeruitkomst wordt getoond.
 function practicalExplanation(outcome) {
   let independence = "zelfstandig";
   if (outcome.phase === "OF") independence = "onder begeleiding";
@@ -33,6 +35,7 @@ function openOutcome(code) {
   updateOutcomeArchiveControls();
 }
 
+// Toon de punten en voortgang van de geopende leeruitkomst.
 function renderOutcomePoints(outcome) {
   const points = Number(outcome.hours);
   const target = Number(outcome.target);
@@ -44,15 +47,18 @@ function renderOutcomePoints(outcome) {
 
   const level = competencyLevel(getOutcomeProgress(outcome));
   const status = document.getElementById("detailStatus");
-  status.textContent = level.label;
-  status.dataset.level = level.key;
-  document.getElementById("detailStatusDescription").textContent = level.detail;
+  const assessed = !outcome.assessmentState || outcome.assessmentState === 'assessed';
+  status.textContent = assessed ? level.label : outcome.assessmentState === 'pending' ? 'Nog niet beoordeeld' : 'Nog niet gestart';
+  status.dataset.level = assessed ? level.key : 'pending';
+  document.getElementById("detailStatusDescription").textContent = assessed ? level.detail : '';
 }
 
+// Keer vanuit de leeruitkomst terug naar de vorige weergave.
 function backFromOutcome() {
   show("learningOutcomes");
 }
 
+// Zet het percentage om naar een geldig getal tussen 0 en 100.
 function getOutcomeProgress(outcome) {
   const percentage = Number(outcome.pct);
   return Number.isFinite(percentage) ? Math.max(0, Math.min(100, percentage)) : 0;
@@ -63,6 +69,7 @@ function getOutcomeStatus(outcome) {
   return competencyLevel(getOutcomeProgress(outcome)).key;
 }
 
+// Selecteer een fase en vernieuw het leeruitkomstenoverzicht.
 function selectCatalogPhase(selectedPhase) {
   document.getElementById("catalogPhase").value = selectedPhase;
   renderCatalog();
@@ -79,17 +86,14 @@ function renderCatalogSummary(selectedPhase, phaseOutcomes) {
     if (status === "active") active++;
   }
   const todo = total - completed - active;
-  const selected = phases.find(([code]) => code === selectedPhase);
-  const percentage = selected?.[2] ?? 0;
-  const earned = selected?.[3] ?? 0;
+  const percentage = total ? completed * 100 / total : 0;
 
   document.getElementById("catalogTotalPill").textContent = total + " LEERUITKOMSTEN";
   document.getElementById("catalogProgressTitle").textContent = "Totale voortgang · " + studentPhaseName(selectedPhase, "Fase");
   document.getElementById("catalogSkillCount").textContent = completed + " van de " + total + " leeruitkomsten bekwaam";
-  document.getElementById("catalogProgressPercent").textContent = pointPercentLabel(percentage);
-  document.getElementById("catalogProgressText").textContent = earned + " / " + phasePointTarget.toLocaleString("nl-NL") + " punten";
-  document.getElementById("catalogProgressBar").style.width = pointPercentLabel(percentage);
-  document.getElementById("catalogProgressRing").style.setProperty("--catalog-progress", displayPointPercent(percentage) * 3.6 + "deg");
+  document.getElementById("catalogProgressPercent").textContent = percentage.toLocaleString("nl-NL", { maximumFractionDigits: 2 }) + "%";
+  document.getElementById("catalogProgressBar").style.width = percentage + "%";
+  document.getElementById("catalogProgressRing").style.setProperty("--catalog-progress", percentage * 3.6 + "deg");
   document.getElementById("catalogCompletedCount").textContent = completed;
   document.getElementById("catalogActiveCount").textContent = active;
   document.getElementById("catalogTodoCount").textContent = todo;
@@ -116,6 +120,7 @@ function renderCatalogSummary(selectedPhase, phaseOutcomes) {
   }).join('');
 }
 
+// Maak een tabblad per fase en markeer de gekozen fase.
 function renderCatalogPhaseTabs(selectedPhase) {
   document.getElementById("catalogPhaseTabs").innerHTML = phases
     .map(
@@ -162,24 +167,19 @@ function renderCatalog() {
 
   document.getElementById("catalogList").innerHTML = ['Softskills', 'Hardskills'].map((kind) => {
     const items = filtered.filter((outcome) => outcome.kind === kind);
-    const earned = items.reduce((sum, item) => sum + Number(item.hours), 0);
-    const target = items.reduce((sum, item) => sum + Number(item.target), 0);
-    const progress = target ? Math.floor(10000 * earned / target) / 100 : 0;
     const isSoftSkill = kind === 'Softskills';
     const rows = items.map(renderCatalogOutcome).join('');
-    const groupLevel = competencyLevel(progress);
 
     return '<details class="development-group ' + (isSoftSkill ? 'soft' : 'hard') + '" open>' +
       '<summary><span class="catalog-skill-icon" aria-hidden="true">' + uiIcon(isSoftSkill ? 'target' : 'layout') + '</span>' +
       '<h2>' + (isSoftSkill ? 'Soft skills' : 'Hard skills') + '</h2>' +
-      '<small>' + items.length + ' leeruitkomsten</small>' +
-      '<span class="catalog-score catalog-group-score" data-level="' + groupLevel.key + '"' +
-      ' title="' + groupLevel.label + '">Gemiddeld: <b>' + pointPercentLabel(progress) + '</b></span></summary>' +
+      '<small>' + items.length + ' leeruitkomsten</small></summary>' +
       (rows || '<p class="development-empty">Geen leeruitkomsten voor deze filters.</p>') +
       '</details>';
   }).join('');
 }
 
+// Maak een rij met de naam, status en score van de leeruitkomst.
 function renderCatalogOutcome(outcome) {
   const progress = getOutcomeProgress(outcome);
   const level = competencyLevel(progress);

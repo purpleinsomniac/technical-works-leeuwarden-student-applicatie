@@ -12,7 +12,6 @@
           <div class="dashboard-welcome">
             <div>
               <h1>Goed bezig, {{ $frontendUser['name'] }} <span class="wave">👋</span></h1>
-              <p>Hier zie je waar je staat en wat je volgende stap is.</p>
             </div>
             <button class="dashboard-settings-shortcut" type="button" onclick="show('dashboardSettings')">
               <span class="ui-icon" data-icon="settings" aria-hidden="true"></span>
@@ -256,7 +255,7 @@
             <article data-level="todo"><span class="dev-metric-icon">⌛</span><div><small>Aandacht nodig</small><strong id="catalogTodoCount">0</strong></div><b id="devTodoPct"></b></article>
           </div>
           <div class="development-insights">
-            <article class="development-panel"><h2 id="catalogProgressTitle">Totale voortgang</h2><div class="development-total"><div id="catalogProgressRing" class="learning-progress-ring"><strong id="catalogProgressPercent">0%</strong></div><div><strong id="catalogSkillCount"></strong><p id="catalogProgressText"></p><div class="bar"><span id="catalogProgressBar"></span></div></div></div></article>
+            <article class="development-panel"><h2 id="catalogProgressTitle">Totale voortgang</h2><div class="development-total"><div id="catalogProgressRing" class="learning-progress-ring"><strong id="catalogProgressPercent">0%</strong></div><div><strong id="catalogSkillCount"></strong><div class="bar"><span id="catalogProgressBar"></span></div></div></div></article>
             <article class="development-panel"><h2>Voortgang per categorie</h2><div id="developmentSkills"></div></article>
             <article class="development-panel"><h2>Faseoverzicht</h2><div id="developmentPhasePoints"></div></article>
           </div>
@@ -549,28 +548,19 @@
               <h1>Punten</h1>
               <p>Bekijk je voortgang, verdien punten met projecten en volg je level.</p>
             </div>
-            <label class="year-selector">Periode
-              <select id="hoursYear" class="input" onchange="resetHoursAndRender()">
-                <option value="1">Leerjaar 1</option>
-                <option value="2">Leerjaar 2</option>
-                <option value="3">Leerjaar 3</option>
-                <option value="4">Leerjaar 4</option>
-                <option value="total">Totaal opleiding</option>
-              </select>
-            </label>
           </header>
 
           <section class="hours-summary-card" aria-label="Samenvatting punten">
             <div id="hoursProgressRing" class="hours-progress-ring"><strong id="hoursProgressPercent">0%</strong></div>
             <div class="hours-total">
-              <div><strong id="hoursYearTotal">0</strong><span> / <b id="hoursTarget">1.200</b> punten</span></div>
+              <div><strong id="hoursYearTotal">0</strong><span id="hoursTargetGroup"> / <b id="hoursTarget"></b></span><span> punten</span></div>
               <p id="hoursYearPercentage">van de puntendoelstelling behaald</p>
             </div>
             <div class="xp-level-summary"><span class="xp-star">☆</span><div><h2 id="xpLevelTitle">Level laden…</h2><p id="xpLevelName">Jouw ontwikkeling</p><div class="xp-track"><span id="xpLevelBar"></span></div><strong id="xpLevelProgress"></strong></div><button type="button" class="xp-help" onclick="openXpHelp()">ⓘ Hoe verdien ik XP?</button></div>
           </section>
 
           <div class="xp-challenge"><span class="xp-star">◎</span><div><h2>Actieve challenge</h2><p>Behaal 100 punten in de verdiepingsfase.</p></div><div><strong id="xpChallengeProgress"></strong><div class="xp-track"><span id="xpChallengeBar"></span></div></div><button class="button dark" type="button" onclick="selectHoursPhase('VF'); document.getElementById('hoursList').scrollIntoView({behavior:'smooth'})">Bekijk challenge →</button></div>
-          {{-- Challengevenster met voortgang, volgende uitdagingen en afgeronde challenges. --}}
+          {{-- Toon de huidige, volgende en afgeronde uitdagingen. --}}
           <div id="challengeModal" class="goal-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="challengeDetailTitle">
             <button class="goal-detail-backdrop" type="button" tabindex="-1" aria-label="Challenge sluiten" onclick="closeChallengeDetail()"></button>
             <section class="goal-detail-dialog challenge-redesign">
@@ -612,7 +602,7 @@
           <section class="hours-registration-card">
             <div class="hours-registration-head">
               <div>
-                <h2><span data-icon="assignment" class="points-heading-icon"></span>Registraties in <span id="registrationsYear">Leerjaar 1</span></h2>
+                <h2><span data-icon="assignment" class="points-heading-icon"></span>Registraties</h2>
                 <p>Bekijk je geregistreerde punten. Klik op een registratie om het project en de leeruitkomsten te bekijken.</p>
               </div>
               <label>Sorteer op
@@ -653,7 +643,6 @@
             </div>
             <div class="registration-hours-banner"><span>Goedgekeurde punten</span><strong id="registrationDetailHours"></strong></div>
             <div class="registration-detail-grid">
-              <div><span>Leerjaar</span><b id="registrationDetailYear"></b></div>
               <div><span>Fase</span><b id="registrationDetailPhase"></b></div>
               <div><span>Gevalideerd op</span><b id="registrationDetailDate"></b></div>
               <div><span>Goedgekeurd door</span><b id="registrationDetailApprover"></b></div>

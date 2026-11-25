@@ -1,4 +1,4 @@
-// Gedeelde Laravel-opslag en beveiligde API-aanroepen.
+// Voorkeuren opslaan en gegevens uitwisselen met de server.
 
 // Ververs bij het openen de lokale opslag met de voorkeuren van dit account.
 const persistentKeys = [
@@ -35,7 +35,7 @@ async function apiRequest(url, options = {}) {
     const validationMessage = Object.values(body.errors || {}).flat()[0];
     throw new Error(validationMessage || body.message || "Opslaan is mislukt.");
   }
-  // Werk challenges bij na een wijziging. Sla het challengeverzoek zelf over.
+  // Werk uitdagingen bij na een wijziging, behalve als dit verzoek dat al doet.
   const changesData = options.method && options.method !== "GET";
   const syncsChallenges = url === window.LARAVEL_API?.challengeSync;
   if (changesData && !syncsChallenges && typeof syncChallenges === "function") {
@@ -62,6 +62,7 @@ function pageButtons(page, total, handler) {
   }).join('');
   return arrow('Vorige pagina', page - 1, page === 1, '‹') + pages + arrow('Volgende pagina', page + 1, page === total, '›');
 }
+// Werk de lijst bij en zet de pagina terug op dezelfde scrollpositie.
 function paginateWithoutScrolling(render) {
   const position = {left:window.scrollX, top:window.scrollY, behavior:'instant'};
   render();
@@ -84,6 +85,7 @@ function keepPaginationPosition(id, filterKey) {
   list.style.minHeight = height + 'px';
 }
 
+// Lees een studentvoorkeur uit de browseropslag.
 function loadLocalState(key) {
   if (!window.LARAVEL_USER) return localStorage.getItem(key);
   return localStorage.getItem("laravel-" + window.LARAVEL_USER.id + "-" + key);
@@ -92,6 +94,7 @@ let syncTimer;
 let stateSyncBusy = false;
 const pendingStateChanges = new Map();
 
+// Lees opgeslagen JSON en vang ongeldige gegevens op.
 function parseStoredState(value) {
   try {
     return JSON.parse(value);

@@ -181,8 +181,7 @@
   </section>
   @php
     $directoryStudents = collect($roleData)->map(function (array $student): array {
-      $target = collect($student['outcomes'])->sum(fn (array $outcome): int => (int) $outcome['target']);
-      $student['directoryProgress'] = $target > 0 ? min(100, (int) round($student['hours'] / $target * 100)) : null;
+      $student['directoryProgress'] = (int) round($student['educationPercentage']);
       return $student;
     });
     $attentionStudents = $directoryStudents->filter(fn (array $student): bool => $student['directoryProgress'] !== null && $student['directoryProgress'] < 40)->sortBy('directoryProgress')->values();
@@ -227,7 +226,7 @@
     $coachProgressBands = collect($roleData)->map(function (array $student): string {
         $targetHours = collect($student['outcomes'])->sum(fn (array $outcome): int => (int) $outcome['target']);
         if ($targetHours === 0) return 'unknown';
-        $percentage = min(100, (int) round(($student['hours'] / $targetHours) * 100));
+        $percentage = (int) round($student['educationPercentage']);
         return $percentage < 40 ? 'red' : ($percentage < 75 ? 'yellow' : 'green');
     })->countBy();
   @endphp
@@ -312,7 +311,7 @@
         {{-- Open het volledige studentprofiel vanuit de compacte groepslijst. --}}
         @foreach ($roleData as $student)
           @php($studentTargetHours = collect($student['outcomes'])->sum(fn (array $outcome): int => (int) $outcome['target']))
-          @php($studentProgress = $studentTargetHours > 0 ? min(100, (int) round(($student['hours'] / $studentTargetHours) * 100)) : 0)
+          @php($studentProgress = (int) round($student['educationPercentage']))
           @php($studentProgressBand = $studentTargetHours === 0 ? 'unknown' : ($studentProgress < 40 ? 'red' : ($studentProgress < 75 ? 'yellow' : 'green')))
           @php($studentProgressLabel = ['red' => 'Rood', 'yellow' => 'Geel', 'green' => 'Groen', 'unknown' => 'Geen norm'][$studentProgressBand])
           <a
@@ -656,7 +655,7 @@
 {{-- Toon per student een alleen-lezen detailoverzicht, zonder een nieuw verzoek te hoeven laden. --}}
 @foreach ($roleData as $student)
   @php($studentTargetHours = collect($student['outcomes'])->sum(fn (array $outcome): int => (int) $outcome['target']))
-  @php($studentProgress = $studentTargetHours > 0 ? min(100, (int) round(($student['hours'] / $studentTargetHours) * 100)) : 0)
+  @php($studentProgress = (int) round($student['educationPercentage']))
   <section id="coachStudent-{{ $student['id'] }}" class="view hidden coach-page coach-student-detail" data-role-section="coachGroups" data-student-id="{{ $student['id'] }}" data-coach-target-hours="{{ $studentTargetHours }}" aria-labelledby="coachStudentTitle-{{ $student['id'] }}">
     @php($completedOutcomes = collect($student['outcomes'])->where('status', 'behaald')->count())
     <div class="coach-student-detail-top">

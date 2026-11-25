@@ -17,16 +17,27 @@ class ProjectPoints
         $points = [];
         $projects = [];
         $maxProjects = [];
+        $startedOutcomes = [];
+        $registrations = [];
         foreach ($user->assignments()->with('learningOutcomes.studyPhase')->orderBy('id')->get() as $project) {
             $linked = $project->learningOutcomes->sortBy('id')->values();
             $phaseId = $linked->first()?->studiefase_id;
             $linked = $linked->where('studiefase_id', $phaseId)->values();
             $projects[$project->id] = 0;
             if ($linked->isEmpty()) continue;
+            if (in_array($project->status, ['active', 'review', 'completed'], true)) {
+                foreach ($linked as $outcome) {
+                    $startedOutcomes[$outcome->id] = true;
+                }
+            }
             $maximum = min(80, (int) $linked->sum(fn ($outcome) => min(20, $outcome->pivot->max_points)));
             $maxProjects[$project->id] = $maximum;
             // Punten tellen pas mee nadat het project is afgerond.
             if ($project->status !== 'completed') continue;
+            $registrations[$project->id] = [
+                'phase' => $linked->first()->studyPhase?->naam,
+                'date' => $project->completed_at ?? $project->updated_at,
+            ];
             $total = max(0, min((int) $project->gevalideerde_uren, $maximum));
             if ($maximum > 0) {
                 $shares = [];
@@ -60,7 +71,8 @@ class ProjectPoints
                 }
             }
         }
-        return ['outcomes' => $points, 'projects' => $projects, 'maximums'=>$maxProjects];
+        return ['outcomes' => $points, 'projects' => $projects, 'maximums'=>$maxProjects, 'startedOutcomes' => $startedOutcomes,
+            'registrations' => $registrations];
     }
 
     public function norm($outcome): int

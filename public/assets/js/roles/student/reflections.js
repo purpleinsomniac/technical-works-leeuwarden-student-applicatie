@@ -1,18 +1,22 @@
 // Reflecties tonen, koppelen aan projecten of leeruitkomsten, en beheren.
 let reflectionTypeFilter = 'all';
+// Pas het vaardigheidsfilter voor leeruitkomsten toe.
 function selectReflectionOutcomeFilter(kind) {
   document.getElementById(kind === 'Softskills' ? 'reflectionHardOutcome' : 'reflectionSoftOutcome').value = 'all';
   renderReflections();
 }
 let reflectionSkillFilter = 'Hardskills';
+// Stel het vaardigheidstype voor de reflectie in.
 function selectReflectionSkill(kind) {
   reflectionSkillFilter = kind;
   renderReflectionOutcomePicker();
 }
+// Koppel de gekozen leeruitkomst aan de reflectie.
 function chooseReflectionOutcome(code) {
   document.getElementById('reflectionOutcome').value = code;
   showReflectionOutcomePreview();
 }
+// Toon de beschikbare leeruitkomsten in het reflectieformulier.
 function renderReflectionOutcomePicker() {
   const select = document.getElementById('reflectionOutcome');
   const allowed = new Set([...select.options].map((option) => option.value));
@@ -27,6 +31,7 @@ function renderReflectionOutcomePicker() {
   const list = available.filter((item) => item.kind === reflectionSkillFilter && (item.short + ' ' + item.code).toLowerCase().includes(search));
   document.getElementById('reflectionOutcomePicker').innerHTML = list.map((item) => '<button type="button" aria-pressed="' + (select.value === item.code) + '" class="reflection-outcome-option ' + (select.value === item.code ? 'selected' : '') + '" onclick="chooseReflectionOutcome(\'' + item.code + '\')"><span class="nav-icon" aria-hidden="true">' + uiIcon(item.kind === 'Hardskills' ? 'layout' : 'feedback') + '</span><span><strong>' + esc(item.short) + '</strong><small>' + esc(item.code) + '</small></span><i aria-hidden="true">' + (select.value === item.code ? '✓' : '') + '</i></button>').join('') || '<p class="dim">Geen leeruitkomsten gevonden. Kies een andere vaardigheid, fase of project.</p>';
 }
+// Vernieuw het overzicht met het gekozen reflectiefilter.
 function selectReflectionType(type) { reflectionTypeFilter = type; renderReflections(); }
 // Pas de keuzevelden aan voor een reflectie bij een project of leeruitkomst.
 function updateReflectionLinkType() {
@@ -45,6 +50,7 @@ function updateReflectionLinkType() {
   if ([...outcomeSelect.options].some((option) => option.value === previousOutcome)) outcomeSelect.value = previousOutcome;
   showReflectionOutcomePreview();
 }
+// Werk de reflectiekeuzes bij voor het gekozen project.
 function selectReflectionProject() {
   const project = assignments.find((item) => Number(item.id) === Number(document.getElementById('reflectionProject').value));
   if (project) document.getElementById('reflectionPhase').value = project.phase;
@@ -52,10 +58,12 @@ function selectReflectionProject() {
 }
 let reflections = copyStudentList("reflections");
 
+// Geef de actieve reflecties terug voor de overzichten.
 function getReflections() {
   return reflections.filter((item) => !item.deleted);
 }
 
+// Toon de reflecties bij de geopende leeruitkomst.
 function renderOutcomeReflections() {
   if (!currentOutcomeCode) return;
   const list = getReflections().filter((item) => item.code === currentOutcomeCode),
@@ -79,6 +87,7 @@ function renderOutcomeReflections() {
 let reflectionDetailTrigger = null;
 let selectedReflectionId = null;
 let editingReflectionId = null;
+// Toon de gekozen reflectie en onthoud waar deze is geopend.
 function openOutcomeReflectionDetail(id, fromList = false) {
   const item = reflections.find((reflection) => String(reflection.id) === String(id));
   if (!item) return;
@@ -111,6 +120,7 @@ function openOutcomeReflectionDetail(id, fromList = false) {
   requestAnimationFrame(() => modal.querySelector('.modal-close').focus({preventScroll:true}));
 }
 
+// Sluit de reflectie en keer terug naar de lijst of leeruitkomst.
 function closeOutcomeReflectionDetail() {
   document.getElementById("outcomeReflectionDetailModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
@@ -127,6 +137,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !document.getElementById('outcomeReflectionDetailModal').classList.contains('hidden')) closeOutcomeReflectionDetail();
 });
 
+// Open een nieuw formulier bij de huidige leeruitkomst.
 function openReflectionForCurrentOutcome() {
   const outcome = outcomes.find((o) => o.code === currentOutcomeCode);
   show("reflections");
@@ -139,6 +150,7 @@ function openReflectionForCurrentOutcome() {
   openReflectionForm(true);
 }
 
+// Vul het reflectieoverzicht met de huidige filters.
 function renderReflections() {
   if (reflectionPhaseFilter === 'all') reflectionPhaseFilter = 'OF';
   const phaseCode = reflectionPhaseFilter;
@@ -164,7 +176,7 @@ function renderReflections() {
   const reflectionTotal = getReflections().length;
   document.getElementById('reflectionCount').textContent = reflectionTotal + (reflectionTotal === 1 ? ' reflectie' : ' reflecties');
   document.getElementById('reflectionPhaseFilter').innerHTML = phases.map(([code,name]) => {
-    const count = getReflectionCountForPhase(getReflections(),code);
+    const count = countItemsInPhase(getReflections(),code);
     return '<button type="button" aria-pressed="' + (code === phaseCode) + '" class="reflection-filter-button ' + (code === phaseCode ? 'active' : '') + '" onclick="filterReflectionsByPhase(\'' + code + '\')"><i class="reflection-phase-icon" aria-hidden="true">' + (code === 'OF' ? '✓' : code === 'VF' ? '◇' : '⚑') + '</i><span class="reflection-phase-copy"><strong>' + esc(name) + '</strong><small>' + count + ' ' + (count === 1 ? 'reflectie' : 'reflecties') + '</small></span><i class="reflection-phase-indicator" aria-hidden="true"></i></button>';
   }).join('');
   document.getElementById('reflectionLatestTitle').textContent = current[0]?.title || 'Nog geen reflectie';
@@ -188,11 +200,13 @@ async function restoreReflection(id) {
     hint('De reflectie is hersteld.');
   } catch(error) { hint(error.message); }
 }
+// Begin een nieuwe reflectie in de gekozen fase.
 function newReflectionInPhase() {
   document.getElementById('reflectionPhase').value = reflectionPhaseFilter;
   updateReflectionOutcomeOptions();
   openReflectionForm();
 }
+// Open een recente reflectie die bij de gekozen fase past.
 function openLatestReflection() {
   const item = getReflections().find((item)=>outcomes.find((outcome)=>outcome.code === item.code)?.phase === reflectionPhaseFilter);
   if (!item) { newReflectionInPhase(); return; }
@@ -205,14 +219,7 @@ function openLatestReflection() {
   openOutcomeReflectionDetail(item.id, true);
 }
 
-function getReflectionCountForPhase(list, phaseCode) {
-  if (phaseCode === "all") return list.length;
-  return list.filter((item) => {
-    const outcome = outcomes.find((o) => o.code === item.code);
-    return outcome && outcome.phase === phaseCode;
-  }).length;
-}
-
+// Selecteer de fase en vernieuw het reflectieoverzicht.
 function filterReflectionsByPhase(phaseCode) {
   reflectionPhaseFilter = phaseCode;
   renderReflections();
@@ -259,10 +266,7 @@ async function saveReflection(event) {
   }
 }
 
-function renderReflectionOptions() {
-  updateReflectionOutcomeOptions();
-}
-
+// Werk de beschikbare leeruitkomsten bij voor het gekozen filter.
 function updateReflectionOutcomeOptions() {
   const phaseCode = document.getElementById("reflectionPhase").value,
     select = document.getElementById("reflectionOutcome"),
@@ -279,6 +283,7 @@ function updateReflectionOutcomeOptions() {
   showReflectionOutcomePreview();
 }
 
+// Toon de gegevens van de gekozen leeruitkomst.
 function showReflectionOutcomePreview() {
   renderReflectionOutcomePicker();
   const outcome = outcomes.find((o) => o.code === document.getElementById("reflectionOutcome").value),
@@ -297,6 +302,7 @@ function showReflectionOutcomePreview() {
     "</p>";
 }
 
+// Open het formulier en onthoud waar de student vandaan komt.
 function openReflectionForm(returnToOutcome = false) {
   if (!returnToOutcome) document.getElementById('reflectionPhase').value = reflectionPhaseFilter === 'all' ? 'OF' : reflectionPhaseFilter;
   reflectionReturnToOutcome = returnToOutcome;
@@ -307,6 +313,7 @@ function openReflectionForm(returnToOutcome = false) {
   requestAnimationFrame(() => document.getElementById("reflectionTitle").focus());
 }
 
+// Sluit het formulier en herstel de vorige weergave.
 function closeReflectionForm() {
   editingReflectionId = null;
   document.getElementById("reflectionForm").classList.add("hidden");
@@ -316,6 +323,7 @@ function closeReflectionForm() {
   reflectionReturnToOutcome = false;
 }
 
+// Vul het formulier met de gegevens van de gekozen reflectie.
 function editSelectedReflection() {
   const item = getReflections().find((entry) => String(entry.id) === String(selectedReflectionId));
   if (!item) return;

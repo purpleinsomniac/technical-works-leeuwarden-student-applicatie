@@ -15,13 +15,16 @@ class ChallengeService
             return $user->learningGoals()->whereHas('learningOutcome.studyPhase', fn ($q) => $q->where('naam',$phase))
                 ->when($type === 'goals_completed', fn ($q) => $q->where('status','afgerond'))->count();
         }
-        if (in_array($type, ['skill_balance','phase_percentage'], true)) {
-            $service = app(ProjectPoints::class);
-            $points = $service->forStudent($user);
-            $outcomes = \App\Models\LearningOutcome::with('studyPhase')->whereHas('studyPhase', fn ($q) => $q->where('naam',$phase))->get();
+        if (in_array($type, ['skill_balance','phase_percentage','points'], true)) {
+            $catalog = \App\Models\LearningOutcome::with('studyPhase')->get();
+            $outcomes = $catalog->filter(fn ($outcome) => $outcome->studyPhase?->naam === $phase);
+            $scores = app(LearningProgress::class)->snapshot($user, $catalog)['outcomes'];
+            $points = array_map(fn ($score) => $score['earned'], $scores);
             if ($type === 'skill_balance') return $outcomes->filter(fn ($o) => ($points[$o->id] ?? 0) > 0)->pluck('type')->filter(fn ($kind) => in_array($kind,['Softskills','Hardskills'],true))->unique()->count();
-            $target = $outcomes->sum(fn ($o) => $service->norm($o));
-            return $target ? min(100,(int) floor(100 * $outcomes->sum(fn ($o) => $points[$o->id] ?? 0) / $target)) : 0;
+            $earned = (int) $outcomes->sum(fn ($o) => $points[$o->id] ?? 0);
+            if ($type === 'points') return $earned;
+            $target = (int) $outcomes->sum(fn ($o) => $scores[$o->id]['target']);
+            return (int) StudentPointTargets::percentage($earned, $target);
         }
         if (in_array($type, ['evidence','on_time_projects','project_reflections','team_reflections'], true)) {
             $projects = $user->assignments()->where('status','completed')->with(['learningOutcomes.studyPhase','files'])->orderBy('id')->get()
@@ -33,10 +36,6 @@ class ChallengeService
         }
         if ($type === 'feedback') {
             return \App\Models\Feedback::where('student_id', $user->id)->whereNotNull('processed_confirmed_at')->whereHas('learningOutcome.studyPhase', fn ($q) => $q->where('naam', $phase))->count();
-        }
-        if ($type === 'points') {
-            $points = app(ProjectPoints::class)->forStudent($user);
-            return (int) \App\Models\LearningOutcome::whereHas('studyPhase', fn ($q) => $q->where('naam', $phase))->get()->sum(fn ($outcome) => $points[$outcome->id] ?? 0);
         }
         if ($type === 'projects') {
             return Assignment::where('gebruiker_id', $user->id)->where('status', 'completed')->with('learningOutcomes.studyPhase')->get()
@@ -55,11 +54,10 @@ class ChallengeService
             foreach ($user->assignments()->where('status', 'completed')->get() as $project) {
                 $rewards[] = ['user_id'=>$user->id,'source'=>'project','source_id'=>$project->id,'amount'=>150,'created_at'=>now()];
             }
-            $pointService = app(ProjectPoints::class);
-            $points = $pointService->forStudent($user);
-            foreach (\App\Models\LearningOutcome::with('studyPhase')->get() as $outcome) {
-                if (($points[$outcome->id] ?? 0) >= $pointService->norm($outcome)) {
-                    $rewards[] = ['user_id'=>$user->id,'source'=>'outcome','source_id'=>$outcome->id,'amount'=>75,'created_at'=>now()];
+            // Neem ook beoordelingen mee die niet via een project zijn geregistreerd.
+            foreach (app(LearningProgress::class)->snapshot($user)['outcomes'] as $outcomeId => $score) {
+                if ($score['target'] > 0 && $score['earned'] >= $score['target']) {
+                    $rewards[] = ['user_id'=>$user->id,'source'=>'outcome','source_id'=>$outcomeId,'amount'=>75,'created_at'=>now()];
                 }
             }
             foreach ($user->reflections()->get() as $reflection) {

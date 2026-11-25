@@ -1,4 +1,4 @@
-// Leerdoelen, badges en de driestappenwizard.
+// Leerdoelen, badges en het formulier in drie stappen.
 let goalWizardStep = 1;
 let goalStatusFilter = 'actief';
 let goalListPage = 1;
@@ -50,6 +50,7 @@ function goalInsightData() {
   return { activities, badges };
 }
 
+// Vul de kaarten met mijlpalen, badges en recente activiteiten.
 function renderGoalInsights() {
   const { activities, badges } = goalInsightData();
   document.getElementById('goalBadges').innerHTML = badges.slice(0, 3).map((badge) => '<span class="goal-badge ' + (badge.earned ? 'earned' : 'locked') + '" title="' + esc(badge.description) + '"><i>' + badge.icon + '</i><b>' + esc(badge.title) + '</b><small>' + (badge.earned ? '✓' : '○') + '</small></span>').join('');
@@ -64,6 +65,7 @@ function renderGoalInsights() {
 
   const activeWeeks = new Set(activities.map((item) => mondayTime(item.date)));
   const currentMonday = mondayTime(new Date());
+  // Bereken de begindatum van een eerdere week.
   function weekBefore(weeksAgo) {
     const date = new Date(currentMonday);
     date.setDate(date.getDate() - weeksAgo * 7);
@@ -84,6 +86,7 @@ function renderGoalInsights() {
   document.getElementById('goalStreakCopy').textContent = streak ? 'Je leert ' + streak + ' weken op rij. Goed bezig!' : 'Maak deze week een nieuwe stap.';
   document.getElementById('goalStreak').innerHTML = recentWeeks.join('') + '<strong>' + streak + '<small>weken</small></strong>';
 }
+// Open het detailvenster van de gekozen kaart.
 function openGoalInsight(type) {
   const { activities, badges } = goalInsightData();
   document.getElementById('goalInsightTitle').textContent = type === 'badges' ? 'Jouw badges' : 'Recente activiteit';
@@ -93,18 +96,22 @@ function openGoalInsight(type) {
   document.getElementById('goalInsightModal').classList.remove('hidden');
   document.querySelector('#goalInsightModal .modal-close').focus();
 }
+// Sluit het detailvenster en laat het doelenoverzicht staan.
 function closeGoalInsight() { document.getElementById('goalInsightModal')?.classList.add('hidden'); }
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeGoalInsight(); });
 let goalItems = copyStudentList("goals");
 
+// Haal de fasecode op waarmee het leerdoel wordt ingedeeld.
 function goalPhaseCode(goal) {
   return goal.phaseCode || outcomes.find((outcome) => outcome.code === goal.code)?.phase || "OF";
 }
 
+// Toon de oriëntatiefase als de fasecode onbekend is.
 function goalPhaseName(code) {
   return studentPhaseName(code, "Oriëntatiefase");
 }
 
+// Geef de tekst en opmaak die bij de doelstatus horen.
 function goalStatusMeta(status) {
   if (status === "actief") return { label: "Actief", className: "active" };
   return { label: "Afgerond", className: "completed" };
@@ -194,6 +201,7 @@ function renderGoalList() {
   keepPaginationPosition(list.id, [selectedPhase, goalStatusFilter, search]);
 }
 
+// Toon de fasen waaruit de student kan kiezen.
 function renderGoalPhaseChoices() {
   const container = document.getElementById("goalPhaseChoices");
   const select = document.getElementById("goalPhase");
@@ -214,12 +222,14 @@ function renderGoalPhaseChoices() {
     .join("");
 }
 
+// Bewaar de gekozen fase en werk de leeruitkomsten bij.
 function selectGoalPhase(code) {
   document.getElementById("goalPhase").value = code;
   renderGoalPhaseChoices();
   renderGoalOptions();
 }
 
+// Toon de leeruitkomsten die bij de gekozen fase passen.
 function renderGoalOptions() {
   const select = document.getElementById("goalCodes");
   const phaseSelect = document.getElementById("goalPhase");
@@ -253,11 +263,13 @@ function renderGoalOptions() {
   showGoalOutcomePreview();
 }
 
+// Bewaar de gekozen leeruitkomst en laat de keuze zien.
 function selectGoalOutcome(code) {
   document.getElementById("goalCodes").value = code;
   renderGoalOptions();
 }
 
+// Laat de gegevens van de geselecteerde leeruitkomst zien.
 function showGoalOutcomePreview() {
   const preview = document.getElementById("goalOutcomePreview");
   const outcome = outcomes.find((item) => item.code === document.getElementById("goalCodes")?.value);
@@ -285,6 +297,7 @@ function setGoalWizardStep(step) {
   if (goalWizardStep === 3) renderGoalOptions();
 }
 
+// Controleer de huidige invoer voordat de volgende stap opent.
 function nextGoalStep() {
   const message = document.getElementById("goalMessage");
   if (goalWizardStep === 1 && document.getElementById("goalText").value.trim().length < 10) {
@@ -295,15 +308,18 @@ function nextGoalStep() {
   setGoalWizardStep(goalWizardStep + 1);
 }
 
+// Ga terug naar de vorige stap van het formulier.
 function previousGoalStep() {
   setGoalWizardStep(goalWizardStep - 1);
 }
 
+// Toon hoeveel tekens de student heeft ingevuld.
 function updateGoalTextCount() {
   const field = document.getElementById("goalText");
   document.getElementById("goalTextCount").textContent = field?.value.length || 0;
 }
 
+// Breng het open formulier in beeld voor de student.
 function focusGoalWizard() {
   document.getElementById('goalWizard').classList.remove('hidden');
   document.body.classList.add('goal-wizard-open');
@@ -311,10 +327,12 @@ function focusGoalWizard() {
   document.getElementById('goalText').focus();
 }
 
+// Open het overzicht met bestaande leerdoelen.
 function showGoalOverview() {
   selectGoalStatus('actief');
 }
 
+// Pas het statusfilter toe en begin bij de eerste pagina.
 function selectGoalStatus(status) {
   goalStatusFilter = status;
   ['goalOverviewTab', 'goalCompletedTab'].forEach((id, index) => {
@@ -324,9 +342,13 @@ function selectGoalStatus(status) {
   });
   resetGoalPage();
 }
+// Begin weer op de eerste pagina nadat een filter is gewijzigd.
 function resetGoalPage() { goalListPage = 1; renderGoalList(); }
+// Open de gekozen pagina van het doelenoverzicht.
 function setGoalPage(page) { goalListPage = Math.max(1, page); renderGoalList(); }
+// Pas het fasefilter toe op het doelenoverzicht.
 function selectGoalListPhase(phase) { document.getElementById('goalListPhase').value = phase; resetGoalPage(); }
+// Sluit het formulier en controleer of er nog invoer openstaat.
 function closeGoalWizard(force = false) {
   if (goalSaving) return;
   if (!force && document.getElementById('goalText').value.trim() && !window.confirm('Je hebt nog niet opgeslagen. Wil je het leerdoel sluiten en je invoer verwijderen?')) return;
@@ -349,12 +371,14 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+// Bereid de doelkeuzes en de beginweergave voor.
 function initializeGoals() {
   renderGoalList();
   renderGoalPhaseChoices();
   setGoalWizardStep(goalWizardStep);
 }
 
+// Toon de details van het gekozen leerdoel.
 function openGoalDetail(id) {
   selectedGoalId = id;
   const goal = goalItems.find((item) => Number(item.id) === Number(id));
@@ -376,11 +400,13 @@ function openGoalDetail(id) {
   modal.querySelector(".modal-close")?.focus();
 }
 
+// Sluit het detailvenster en herstel het scrollen van de pagina.
 function closeGoalDetail() {
   document.getElementById("goalDetailModal")?.classList.add("hidden");
   document.body.classList.remove("account-modal-open");
 }
 
+// Open de leeruitkomst die aan het doel gekoppeld is.
 function openGoalLinkedOutcome() {
   const goal = goalItems.find((item) => Number(item.id) === Number(selectedGoalId));
   if (!goal || !outcomes.some((item) => item.code === goal.code)) return;

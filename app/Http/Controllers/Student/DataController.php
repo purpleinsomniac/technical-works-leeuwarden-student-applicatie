@@ -63,6 +63,7 @@ class DataController extends Controller
         return response()->json(StudentPayload::reflection($reflection->load('learningOutcome')), $editing ? 200 : 201);
     }
 
+    // Archiveer een eigen reflectie zodat de student deze later kan herstellen.
     public function destroyReflection(Request $request, Reflection $reflection): JsonResponse
     {
         abort_unless($reflection->gebruiker_id === $request->user()->id, 403);
@@ -101,10 +102,11 @@ class DataController extends Controller
         return response()->json(StudentPayload::feedback($feedback->load(['author', 'learningOutcome'])), 201);
     }
 
+    // Verwijder alleen eigen feedback die nog niet is beoordeeld.
     public function destroyFeedback(Request $request, Feedback $feedback): JsonResponse
     {
         abort_unless($feedback->student_id === $request->user()->id, 403);
-        // Controleer de beoordeling onder een lock, zodat verwijderen en beoordelen niet tegelijk slagen.
+        // Vergrendel het bericht tijdens de controle, zodat beoordelen en verwijderen niet tegelijk gebeuren.
         DB::transaction(function () use ($feedback): void {
             $record = Feedback::whereKey($feedback->id)->lockForUpdate()->firstOrFail();
             abort_if($record->processed_confirmed_at !== null, 422, 'Beoordeelde feedback kan niet worden verwijderd omdat er uren of XP aan gekoppeld zijn.');
@@ -208,6 +210,7 @@ class DataController extends Controller
         ]);
     }
 
+    // Controleer het eigendom en verwijder het bestand van het project.
     public function destroyAssignmentFile(Request $request, AssignmentFile $assignmentFile): JsonResponse
     {
         $this->requireStudent($request);
@@ -223,6 +226,7 @@ class DataController extends Controller
         return response()->json(['deleted' => true]);
     }
 
+    // Weiger API-verzoeken van accounts zonder studentrol.
     private function requireStudent(Request $request): void
     {
         abort_unless($request->user()->rol === 'student', 403);

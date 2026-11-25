@@ -11,7 +11,7 @@ const studentNavigation = [
   ["Instellingen", "dashboardSettings", "settings"],
 ];
 
-let phase = "OF";
+let phase = studentData.currentPhase || "OF";
 let reflectionPhaseFilter = "all";
 let feedbackPhaseFilter = "all";
 let currentOutcomeCode = null;
@@ -20,6 +20,7 @@ let feedbackReturnToOutcome = false;
 let selectedAssignmentId = null;
 const archivedOutcomesKey = "archived-learning-outcomes";
 
+// Scherm tekst af voordat die als onderdeel van HTML wordt weergegeven.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // Eén herbruikbare iconenverzameling voor de navigatie en dashboardkaarten.
@@ -41,11 +42,13 @@ const iconPaths = Object.freeze({
   logout: '<path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10"/>',
 });
 
+// Haal het gevraagde pictogram op voor de weergave.
 function uiIcon(name) {
   const paths = iconPaths[name] || iconPaths.dashboard;
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + "</svg>";
 }
 
+// Vul de pictogrammen in op de aangewezen plekken.
 function applyUiIcons(scope = document) {
   scope.querySelectorAll("[data-icon]").forEach((element) => {
     if (!element.firstElementChild) element.innerHTML = uiIcon(element.dataset.icon);

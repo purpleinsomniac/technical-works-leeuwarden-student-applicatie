@@ -55,7 +55,7 @@ try {
     check(Feedback::reviewableBy($coach)->whereKey($feedback->id)->exists(), 'Student feedback must reach the assigned coach');
     $controller = app(FeedbackReviewController::class);
     $challenges = app(ChallengeService::class);
-    foreach ([-1, 1.5, 10001, null, 'abc'] as $invalid) {
+    foreach ([-1, 1, 1.5, 15, 90, 10001, null, 'abc'] as $invalid) {
         try { $controller(reviewRequest($coach, $invalid), $feedback, $challenges); }
         catch (ValidationException) { continue; }
         throw new RuntimeException('Invalid hour value accepted');
@@ -64,14 +64,14 @@ try {
     $outsider->email = 'feedback-test-'.bin2hex(random_bytes(5)).'@example.test';
     $outsider->studentnummer = null;
     $outsider->save();
-    denied(fn () => $controller(reviewRequest($outsider, 3), $feedback, $challenges), 403);
-    denied(fn () => $controller(reviewRequest($student, 3), $feedback, $challenges), 403);
-    $controller(reviewRequest($coach, 3), $feedback, $challenges);
-    check((int) $progress->fresh()->gevalideerde_uren === 13, 'Hour award must be additive');
+    denied(fn () => $controller(reviewRequest($outsider, 10), $feedback, $challenges), 403);
+    denied(fn () => $controller(reviewRequest($student, 10), $feedback, $challenges), 403);
+    $controller(reviewRequest($coach, 10), $feedback, $challenges);
+    check((int) $progress->fresh()->gevalideerde_uren === 20, 'Hour award must be additive');
     check($progress->fresh()->status === 'in_ontwikkeling', 'Review must preserve learning-outcome status');
-    check($feedback->fresh()->awarded_hours === 3 && (int) $feedback->fresh()->reviewed_by === $coach->id, 'Review audit record missing');
-    $controller(reviewRequest($coach, 99), $feedback, $challenges);
-    check((int) $progress->fresh()->gevalideerde_uren === 13, 'Repeated submission duplicated hours');
+    check($feedback->fresh()->awarded_hours === 10 && (int) $feedback->fresh()->reviewed_by === $coach->id, 'Review audit record missing');
+    $controller(reviewRequest($coach, 10), $feedback, $challenges);
+    check((int) $progress->fresh()->gevalideerde_uren === 20, 'Repeated submission duplicated hours');
     $xp = DB::table('activity_xp')->where('user_id', $student->id)->where('source', 'feedback')->where('source_id', $feedback->id);
     check($xp->count() === 1 && (int) $xp->sum('amount') === 40, 'Feedback XP must be granted exactly once');
     denied(fn () => app(DataController::class)->destroyFeedback($request, $feedback->fresh()), 422);
@@ -79,32 +79,32 @@ try {
     $zero = $feedback->replicate(['processed_confirmed_at', 'awarded_hours', 'reviewed_by']);
     $zero->save();
     $controller(reviewRequest($coach, 0), $zero, $challenges);
-    check($zero->fresh()->awarded_hours === 0 && (int) $progress->fresh()->gevalideerde_uren === 13, 'Zero-hour review failed');
+    check($zero->fresh()->awarded_hours === 0 && (int) $progress->fresh()->gevalideerde_uren === 20, 'Zero-hour review failed');
     $failed = $zero->replicate(['processed_confirmed_at', 'awarded_hours', 'reviewed_by']);
     $failed->save();
     $failingSync = new class extends ChallengeService {
         public function sync(User $user): array { throw new RuntimeException('Simulated XP failure'); }
     };
-    try { $controller(reviewRequest($coach, 2), $failed, $failingSync); }
+    try { $controller(reviewRequest($coach, 10), $failed, $failingSync); }
     catch (RuntimeException $exception) { check($exception->getMessage() === 'Simulated XP failure', 'Unexpected failure'); }
-    check($failed->fresh()->processed_confirmed_at === null && (int) $progress->fresh()->gevalideerde_uren === 13, 'A failed review must roll back both hours and confirmation');
+    check($failed->fresh()->processed_confirmed_at === null && (int) $progress->fresh()->gevalideerde_uren === 20, 'A failed review must roll back both hours and confirmation');
     $progress->update(['gevalideerde_uren' => 10000]);
-    try { $controller(reviewRequest($coach, 1), $failed, $challenges); throw new RuntimeException('Hour limit not enforced'); }
+    try { $controller(reviewRequest($coach, 10), $failed, $challenges); throw new RuntimeException('Hour limit not enforced'); }
     catch (ValidationException) {}
 
     $given = $failed->replicate();
     $given->type = 'given';
     $given->save();
-    denied(fn () => $controller(reviewRequest($coach, 1), $given, $challenges), 403);
+    denied(fn () => $controller(reviewRequest($coach, 10), $given, $challenges), 403);
     $newOutcome = $outcome->replicate();
     $newOutcome->code = 'FEEDBACK_TEST_'.bin2hex(random_bytes(5));
     $newOutcome->save();
     $missingProgress = $failed->replicate();
     $missingProgress->leeruitkomst_id = $newOutcome->id;
     $missingProgress->save();
-    $controller(reviewRequest($coach, 2), $missingProgress, $challenges);
+    $controller(reviewRequest($coach, 10), $missingProgress, $challenges);
     $newProgress = Progress::where('gebruiker_id', $student->id)->where('leeruitkomst_id', $newOutcome->id)->firstOrFail();
-    check((int) $newProgress->gevalideerde_uren === 2 && $newProgress->status === 'gestart', 'Missing progress must be created safely');
+    check((int) $newProgress->gevalideerde_uren === 10 && $newProgress->status === 'gestart', 'Missing progress must be created safely');
 
     Auth::login($coach);
     $coachRequest = reviewRequest($coach, 0);
@@ -120,7 +120,7 @@ try {
     Auth::login($student);
     $studentView = app(App\Http\Controllers\Student\DashboardController::class)($request);
     $payload = collect($studentView->getData()['frontendData']['feedback'])->firstWhere('id', (string) $feedback->id);
-    check($payload['awardedHours'] === 3 && $payload['confirmedAt'] !== null, 'Student cannot see awarded hours');
+    check($payload['awardedHours'] === 10 && $payload['confirmedAt'] !== null, 'Student cannot see awarded hours');
     echo "PASS: feedback linkage, validation, permissions, additive/zero awards, duplicate protection, XP, atomic rollback, hour limit, history and student visibility.\n";
 } finally {
     DB::rollBack();

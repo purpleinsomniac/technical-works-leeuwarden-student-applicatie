@@ -1,10 +1,12 @@
 // Studentdashboard en persoonlijke dashboardinstellingen.
 
+// Bewaar de gekozen fase en werk het dashboard bij.
 function choose(p) {
   phase = p;
   renderDashboard();
 }
 
+// Vul het dashboard met gegevens voor de geselecteerde studiefase.
 function renderDashboard() {
   const current = phases.find((item) => item[0] === phase) || phases[0];
   if (!current) return;
@@ -14,23 +16,20 @@ function renderDashboard() {
     .map((x) => '<button class="tab ' + (phase === x[0] ? "active" : "") + '" onclick="choose(\'' + x[0] + "')\">" + x[1] + "</button>")
     .join("");
 
-  document.getElementById("phasePercent").textContent = current[2] + "%";
+  document.getElementById("phasePercent").textContent = pointPercentLabel(current[2]);
   document.getElementById('dashboardPhaseTitle').textContent = 'Voortgang in de ' + current[1].toLowerCase();
   document.getElementById("phaseProgressLabel").textContent = "van de " + current[1].toLowerCase() + " behaald";
 
-  document.getElementById("phaseBar").innerHTML = '<span style="width:' + current[2] + '%"></span>';
-  const work = currentWorkByPhase[phase] || {
-    title: "Nog geen opdracht",
-    type: "Geen actieve opdracht",
-    code: "",
-  };
-  document.getElementById("currentWorkTitle").textContent = work.title;
-  document.getElementById("currentWorkMeta").textContent = work.type + " · " + current[1];
+  document.getElementById("phaseBar").innerHTML = '<span style="width:' + pointPercentLabel(current[2]) + '"></span>';
+  const work = currentWorkByPhase[phase];
+  document.getElementById("currentWorkTitle").textContent = work?.title || "Nog geen opdracht";
+  document.getElementById("currentWorkMeta").textContent = (work?.type || "Geen actieve opdracht") + " · " + current[1];
   const currentProject = assignments.find((item) => item.phase === phase && item.status !== 'completed');
   document.getElementById('dashboardCurrentProjectButton').onclick = () => currentProject ? openAssignment(currentProject.id) : show('assignments');
 
-  const nextDeadline = assignments
-    .filter((assignment) => assignment.status !== 'completed')
+  const openAssignments = assignments.filter((assignment) => assignment.status !== 'completed');
+  // Sorteer een kopie voor de eerstvolgende deadline, zodat de overzichtslijst haar volgorde houdt.
+  const nextDeadline = [...openAssignments]
     .sort((a, b) => String(a.dueDateIso || '9999-12-31').localeCompare(String(b.dueDateIso || '9999-12-31')))[0];
   document.getElementById('nextDeadlineDate').textContent = nextDeadline?.dueDate || 'Nog geen deadline';
   document.getElementById('nextDeadlineTitle').textContent = nextDeadline?.title || 'Je hebt op dit moment geen openstaande projecten.';
@@ -49,10 +48,10 @@ function renderDashboard() {
         "')\"><span>" +
         esc(outcome.short) +
         '</span><span class="bar"><span style="width:' +
-        outcome.pct +
-        '%"></span></span><b>' +
-        outcome.pct +
-        "%</b></button>",
+        pointPercentLabel(outcome.pct) +
+        '"></span></span><b>' +
+        pointPercentLabel(outcome.pct) +
+        "</b></button>",
     )
     .join("");
 
@@ -76,8 +75,7 @@ function renderDashboard() {
         .join("")
     : '<p class="dashboard-empty">Nog geen actieve leerdoelen in deze fase. Maak een leerdoel aan via Alle leerdoelen.</p>';
 
-  document.getElementById("dashboardDeadlineList").innerHTML = assignments
-    .filter((assignment) => assignment.status !== "completed")
+  document.getElementById("dashboardDeadlineList").innerHTML = openAssignments
     .slice(0, 3)
     .map(
       (assignment) =>
@@ -107,10 +105,10 @@ function renderDashboard() {
   applyDashboardPreferences();
 }
 
-// -----------------------------------------------------------------------------
 // Persoonlijke dashboardinstellingen
-// -----------------------------------------------------------------------------
 const dashboardSettingsKey = "ontwikkeling-dashboard-instellingen";
+const notificationSettingsKey = "notification-settings";
+const settingsStateKeys = [dashboardSettingsKey, notificationSettingsKey];
 const defaultDashboardPreferences = Object.freeze({
   compact: false,
   darkMode: false,
@@ -125,18 +123,26 @@ const defaultDashboardPreferences = Object.freeze({
   feedback: true,
   deadlines: true,
 });
-document.addEventListener("student-state-saved", (event) => {
-  if (!event.detail.keys.some((key) => [dashboardSettingsKey,'notification-settings'].includes(key))) return;
-  if ([dashboardSettingsKey,'notification-settings'].some((key) => pendingStateChanges.has(key))) return;
-  setSettingsSaveStatus('saved');
-  if (event.detail.keys.includes('notification-settings')) document.dispatchEvent(new CustomEvent('notification-preferences-saved', {detail:{email_notifications:notificationPreferences.email_notifications,platform_notifications:notificationPreferences.platform_notifications}}));
+document.addEventListener("student-state-saved", ({ detail: { keys } }) => {
+  if (!settingsStateKeys.some((key) => keys.includes(key))) return;
+  // Een bevestiging voor een eerdere wijziging mag de nieuwste opslagstatus niet overschrijven.
+  if (settingsStateKeys.some((key) => pendingStateChanges.has(key))) return;
+  setSettingsSaveStatus("saved");
+  if (keys.includes(dashboardSettingsKey)) applyDashboardPreferences();
+  if (keys.includes(notificationSettingsKey)) {
+    const { email_notifications, platform_notifications } = notificationPreferences;
+    document.dispatchEvent(new CustomEvent("notification-preferences-saved", {
+      detail: { email_notifications, platform_notifications },
+    }));
+  }
 });
-document.addEventListener('student-state-pending', (event) => {
-  if (event.detail.keys.some((key) => [dashboardSettingsKey,'notification-settings'].includes(key))) setSettingsSaveStatus('pending');
+document.addEventListener("student-state-pending", ({ detail: { keys } }) => {
+  if (settingsStateKeys.some((key) => keys.includes(key))) setSettingsSaveStatus("pending");
 });
-document.addEventListener('student-state-save-failed', () => {
-  if ([dashboardSettingsKey,'notification-settings'].some((key) => pendingStateChanges.has(key))) setSettingsSaveStatus('error');
+document.addEventListener("student-state-save-failed", () => {
+  if (settingsStateKeys.some((key) => pendingStateChanges.has(key))) setSettingsSaveStatus("error");
 });
+// Laat zien of de voorkeuren worden opgeslagen of al bewaard zijn.
 function setSettingsSaveStatus(status) {
   const title = document.getElementById('settingsSaveTitle');
   if (!title) return;
@@ -147,19 +153,25 @@ function setSettingsSaveStatus(status) {
   document.getElementById('settingsRetrySave').classList.toggle('hidden', status !== 'error');
 }
 
-function getDashboardPreferences() {
+// Vul ontbrekende voorkeuren aan en lees ook instellingen uit oudere versies.
+function getDashboardPreferences(forDisplay = true) {
   try {
     const saved = JSON.parse(loadLocalState(dashboardSettingsKey) || "{}");
     const preferences = { ...defaultDashboardPreferences, ...(saved && typeof saved === "object" ? saved : {}) };
     if (!saved?.theme) preferences.theme = saved?.darkMode ? 'dark' : 'light';
     if (!saved?.density) preferences.density = saved?.compact ? 'compact' : 'standard';
-    preferences.accent = normalizeAccentColor(preferences.accent, preferences.accent_updated_at);
+    if (forDisplay) {
+      preferences.accent = normalizeAccentColor(preferences.accent, preferences.accent_updated_at, preferences.accent_changed);
+    } else {
+      delete preferences.accent_updated_at;
+    }
     return preferences;
   } catch {
     return { ...defaultDashboardPreferences };
   }
 }
 
+// Pas het thema, de dichtheid en zichtbare widgets direct toe op de weergave.
 function applyDashboardPreferences() {
   const dashboard = document.getElementById("studentDashboard");
   if (!dashboard) return;
@@ -176,6 +188,7 @@ function applyDashboardPreferences() {
   }
 }
 
+// Vul de instellingen met de huidige voorkeuren.
 function renderDashboardSettings() {
   const preferences = getDashboardPreferences();
   const fields = {
@@ -195,17 +208,19 @@ function renderDashboardSettings() {
 }
 
 const settingsAccentColors = {teal:'#009b87', blue:'#168bed', purple:'#6840e8', pink:'#df238b', orange:'#fa7900', amber:'#efb014', green:'#78b915'};
-function normalizeAccentColor(value, updatedAt) {
+// Toon de persoonlijke kleur als die nieuwer is dan de algemene kleur.
+function normalizeAccentColor(value, updatedAt, pending) {
   const globalAccentUpdatedAt = Number(window.LARAVEL_APPLICATION_THEME?.globalAccentUpdatedAt || 0);
   const accent = Object.prototype.hasOwnProperty.call(settingsAccentColors, value)
     ? settingsAccentColors[value]
     : typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
   // Persoonlijke kleuren gelden alleen zolang ze nieuwer zijn dan de globale kleur.
-  return accent && Number(updatedAt || 0) > globalAccentUpdatedAt
+  return accent && (pending || Number(updatedAt || 0) > globalAccentUpdatedAt)
     ? accent
     : window.LARAVEL_APPLICATION_THEME?.accentColor || defaultDashboardPreferences.accent;
 }
 let settingsActiveTab = 'appearance';
+// Open het gekozen tabblad in de instellingen.
 function selectSettingsTab(tab) {
   settingsActiveTab = tab;
   document.querySelectorAll('[data-settings-tab]').forEach((button) => {
@@ -215,8 +230,9 @@ function selectSettingsTab(tab) {
   });
   document.querySelectorAll('[data-settings-panel]').forEach((panel) => panel.classList.toggle('hidden', panel.dataset.settingsPanel !== tab));
 }
+// Bewaar de wijziging en pas de weergave meteen aan.
 function updateAppearanceSetting(key, value) {
-  const preferences = {...getDashboardPreferences(), [key]:value};
+  const preferences = {...getDashboardPreferences(false), [key]:value};
   if (key === 'accent') preferences.accent_changed = true;
   preferences.darkMode = preferences.theme === 'dark';
   preferences.compact = preferences.density === 'compact';
@@ -224,6 +240,7 @@ function updateAppearanceSetting(key, value) {
   applyDashboardPreferences();
   renderAppearanceSettings();
 }
+// Controleer de ingevoerde kleur voordat deze wordt toegepast.
 function updateAppearanceAccentHex(input) {
   if (!/^#[0-9a-f]{6}$/i.test(input.value)) {
     input.setCustomValidity('Vul een hexkleur in, bijvoorbeeld #009B87.');
@@ -233,6 +250,7 @@ function updateAppearanceAccentHex(input) {
   input.setCustomValidity('');
   updateAppearanceSetting('accent', input.value.toLowerCase());
 }
+// Toon de huidige waarden in de vormgevingsinstellingen.
 function renderAppearanceSettings() {
   const preferences = getDashboardPreferences();
   const choices = (key, options) => options.map(([value,title,description]) => '<label class="settings-choice ' + (preferences[key] === value ? 'selected' : '') + '"><input type="radio" name="appearance-' + key + '" value="' + value + '" ' + (preferences[key] === value ? 'checked' : '') + ' onchange="updateAppearanceSetting(\'' + key + '\', this.value)">' + (key === 'theme' ? '<span class="theme-preview ' + value + '" aria-hidden="true"><i></i><b><em></em><em></em><em></em></b></span>' : '<span class="density-symbol" aria-hidden="true">☰</span>') + '<span><strong>' + title + '</strong><small>' + description + '</small></span></label>').join('');
@@ -242,15 +260,17 @@ function renderAppearanceSettings() {
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (getDashboardPreferences().theme === 'system') applyDashboardPreferences(); });
 
+// Bewaar de keuze voor een dashboardonderdeel en werk de weergave bij.
 function updateDashboardPreference(key, enabled) {
   if (!(key in defaultDashboardPreferences)) return;
-  const preferences = { ...getDashboardPreferences(), [key]: Boolean(enabled) };
+  const preferences = { ...getDashboardPreferences(false), [key]: Boolean(enabled) };
   if (key === 'compact') preferences.density = enabled ? 'compact' : 'standard';
   if (key === 'darkMode') preferences.theme = enabled ? 'dark' : 'light';
   saveLocalState(dashboardSettingsKey, JSON.stringify(preferences));
   applyDashboardPreferences();
 }
 
+// Zet de dashboardvoorkeuren terug op de standaardwaarden.
 function resetDashboardPreferences() {
   notificationPreferences = {...defaultNotificationPreferences};
   saveLocalState(dashboardSettingsKey, JSON.stringify(defaultDashboardPreferences));
@@ -262,15 +282,18 @@ function resetDashboardPreferences() {
 
 const defaultNotificationPreferences = {feedback:true,grades:true,deadlines:true,projects:false,goals:false,platform_notifications:true,email_notifications:true,weekly_summary:false,do_not_disturb:false,deadline_days:2};
 let notificationPreferences = {...defaultNotificationPreferences,...window.LARAVEL_NOTIFICATION_SETTINGS};
+// Bewaar de keuze voor het opgegeven meldingskanaal.
 function updateNotificationPreference(key, value) {
   notificationPreferences[key] = value;
   saveLocalState('notification-settings', JSON.stringify(notificationPreferences));
   applyNotificationPreferences();
 }
+// Pas de bewaarde meldingsvoorkeuren toe op de pagina.
 function applyNotificationPreferences() {
   const enabled = notificationPreferences.platform_notifications && notificationPreferences.grades && !notificationPreferences.do_not_disturb;
   document.getElementById('processingNotification')?.classList.toggle('hidden', !enabled);
 }
+// Toon de bewaarde keuzes voor meldingen in de instellingen.
 function renderNotificationSettings() {
   const rows = (items) => items.map(([key,title,description,icon]) => '<label class="notification-setting-row"><span class="notification-setting-icon">' + uiIcon(icon) + '</span><strong>' + title + '</strong><small>' + description + '</small><input type="checkbox" class="profile-switch" ' + (notificationPreferences[key] ? 'checked' : '') + ' onchange="updateNotificationPreference(\'' + key + '\',this.checked)"></label>').join('');
   document.getElementById('notificationTopicOptions').innerHTML = rows([

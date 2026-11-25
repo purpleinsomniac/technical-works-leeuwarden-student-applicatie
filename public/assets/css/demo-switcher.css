@@ -1,8 +1,10 @@
+/* Houd het demomenu rechtsonder bereikbaar, ook als de pagina scrolt. */
 .demo-account-switcher { position:fixed; right:20px; bottom:20px; z-index:2000; font-family:inherit; }
 .demo-account-switcher > summary { display:flex; align-items:center; gap:8px; padding:9px 12px; border:1px solid #52cbb5; border-radius:11px; background:linear-gradient(110deg,#006f64,#009979); color:#fff; box-shadow:0 6px 24px #073d4b35; font-size:11px; font-weight:750; cursor:pointer; list-style:none; }
 .demo-account-switcher > summary::-webkit-details-marker { display:none; }
 .demo-account-switcher > summary > span:first-child { font-size:20px; line-height:1; border-right:1px solid #ffffff65; padding-right:8px; }
 .demo-account-switcher > summary small { border-radius:99px; padding:4px 7px; color:#005b4e; background:#b5f1dd; font-size:9px; font-weight:800; }
+/* Open het paneel boven de knop en laat de lijst scrollen bij weinig ruimte. */
 .demo-account-panel { position:absolute; right:0; bottom:calc(100% + 10px); width:min(350px,calc(100vw - 32px)); max-height:calc(100dvh - 110px); overflow-y:auto; border:1px solid #e2ecef; border-radius:17px; padding:12px; background:linear-gradient(135deg,#fff,#fcfefe); color:#193a50; box-shadow:0 15px 55px #123e4b35; }
 .demo-account-panel header { padding:6px 6px 13px; }
 .demo-account-panel header strong { display:block; font-size:21px; color:#19384c; }

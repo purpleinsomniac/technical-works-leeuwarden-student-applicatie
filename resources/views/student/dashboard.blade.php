@@ -12,7 +12,6 @@
           <div class="dashboard-welcome">
             <div>
               <h1>Goed bezig, {{ $frontendUser['name'] }} <span class="wave">👋</span></h1>
-              <p>Hier zie je waar je staat en wat je volgende stap is.</p>
             </div>
             <button class="dashboard-settings-shortcut" type="button" onclick="show('dashboardSettings')">
               <span class="ui-icon" data-icon="settings" aria-hidden="true"></span>
@@ -22,7 +21,7 @@
 
           <div class="tabs dashboard-phase-tabs" id="phaseTabs" aria-label="Studiefase kiezen"></div>
 
-          {{-- De drie belangrijkste gegevens blijven altijd zichtbaar. --}}
+          {{-- Voortgang, huidig project en eerstvolgende deadline staan buiten de widgetinstellingen. --}}
           <div class="dashboard-primary-grid">
             <article class="dashboard-metric-card dashboard-progress-card">
               <div class="dashboard-card-heading">
@@ -53,12 +52,26 @@
               <div class="dim" id="nextDeadlineTitle">Je hebt op dit moment geen openstaande projecten.</div>
               <button id="dashboardNextDeadlineButton" class="card-link" type="button" onclick="show('assignments')">Bekijk project <span aria-hidden="true">→</span></button>
             </article>
-
-
           </div>
 
+          {{-- Weekplanning met datumkeuze, taakinvoer en takenlijst. --}}
+          <div id="weekPlanModal" class="goal-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="weekPlanTitle">
+            <button class="goal-detail-backdrop" type="button" tabindex="-1" aria-label="Weekplanning sluiten" onclick="closeWeekPlan()"></button>
+            <section class="goal-detail-dialog week-plan-dialog">
+              <button class="modal-close" type="button" aria-label="Weekplanning sluiten" onclick="closeWeekPlan()">×</button>
+              <h2 id="weekPlanTitle">To do van de week</h2>
+              <label class="label" for="weekPlanDate">Week van</label>
+              <input id="weekPlanDate" class="input" type="date" onchange="renderWeekPlan()">
+              <form onsubmit="addWeekTask(event)">
+                <label class="label" for="weekTaskText">Wat wil je deze week doen?</label>
+                <input id="weekTaskText" class="input" maxlength="200" required placeholder="Bijvoorbeeld: mijn projectdocumentatie afronden">
+                <button class="button dark" type="submit">＋ Taak toevoegen</button>
+              </form>
+              <div id="weekTaskList" class="week-task-list"></div>
+              <p id="weekPlanMessage" class="form-message" role="status"></p>
+            </section>
+          </div>
 
-          <div id="weekPlanModal" class="goal-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="weekPlanTitle"><button class="goal-detail-backdrop" type="button" tabindex="-1" aria-label="Weekplanning sluiten" onclick="closeWeekPlan()"></button><section class="goal-detail-dialog week-plan-dialog"><button class="modal-close" type="button" aria-label="Weekplanning sluiten" onclick="closeWeekPlan()">×</button><h2 id="weekPlanTitle">To do van de week</h2><label class="label" for="weekPlanDate">Week van</label><input id="weekPlanDate" class="input" type="date" onchange="renderWeekPlan()"><form onsubmit="addWeekTask(event)"><label class="label" for="weekTaskText">Wat wil je deze week doen?</label><input id="weekTaskText" class="input" maxlength="200" required placeholder="Bijvoorbeeld: mijn projectdocumentatie afronden"><button class="button dark" type="submit">＋ Taak toevoegen</button></form><div id="weekTaskList" class="week-task-list"></div><p id="weekPlanMessage" class="form-message" role="status"></p></section></div>
           {{-- Deze onderdelen kan de student via Instellingen tonen of verbergen. --}}
           <div class="dashboard-widget-grid">
             <section class="dashboard-panel dashboard-widget" data-dashboard-widget="outcomes">
@@ -87,7 +100,6 @@
                 <button class="card-link" type="button" onclick="openWeekPlan()">Mijn weekplanning →</button>
               </div>
               <div class="dim" id="attentionText">Maak je eigen planning voor deze week</div>
-              <span id="attentionCount" class="hidden"></span>
               <ul id="weekPlanPreview" class="week-plan-preview" aria-label="Planning deze week"></ul>
             </section>
 
@@ -114,7 +126,7 @@
             </section>
           </div>
 
-          {{-- Meldingenvenster voor nieuw verwerkte uren; de inhoud wordt door de dashboard-JavaScript gevuld. --}}
+          {{-- Puntenmelding met daarin de registraties en de optie om de melding als gelezen te markeren. --}}
           <div id="hoursApprovalModal" class="card hours-approval-modal hidden" role="dialog" aria-modal="true" aria-labelledby="hoursApprovalTitle">
             <div class="approval-modal-head">
               <div>
@@ -215,28 +227,37 @@
           </div>
         </section>
 
-        {{-- Doorzoekbare catalogus met filters, sortering en paginering voor leeruitkomsten. --}}
+        {{-- Catalogus met een fasekeuze, zoekveld en filters voor de leeruitkomsten. --}}
         <section id="learningOutcomes" class="view hidden">
           <div class="head learning-catalog-head">
+            <span class="catalog-heading-icon" data-icon="progress" aria-hidden="true"></span>
             <div>
-              <p class="eyebrow">ONTWIKKELING</p>
-              <h1>Mijn leerontwikkeling</h1>
-              <p class="dim">Inzicht in mijn voortgang, leeruitkomsten en ontwikkeling in deze opleiding.</p>
+              <h1>Mijn voortgang</h1>
+              <p class="dim">Overzicht van je leeruitkomsten, voortgang per fase en behaalde punten in de opleiding.</p>
             </div>
             <span id="catalogTotalPill" class="pill">48 LEERUITKOMSTEN</span>
+          </div>
+
+          <div class="catalog-progress-legend" aria-label="Betekenis van de voortgangskleuren">
+            <div><strong>Voortgangsfasen</strong><span>Zo lees je jouw voortgang per leeruitkomst.</span></div>
+            <ul>
+              <li class="catalog-score" data-level="todo"><span aria-hidden="true"></span><b>0–&lt;55%</b> Aandacht nodig</li>
+              <li class="catalog-score" data-level="active"><span aria-hidden="true"></span><b>55–&lt;75%</b> In ontwikkeling</li>
+              <li class="catalog-score" data-level="completed"><span aria-hidden="true"></span><b>75–100%</b> Bekwaam</li>
+            </ul>
           </div>
 
           {{-- Eén samenvatting toont de totale voortgang en de drie statussen. --}}
           <div class="development-metrics">
             <article><span class="dev-metric-icon">◎</span><div><small>Totaal leeruitkomsten</small><strong id="devTotal">0</strong></div></article>
-            <article><span class="dev-metric-icon">✓</span><div><small>Afgerond</small><strong id="catalogCompletedCount">0</strong></div><b id="devCompletedPct"></b></article>
-            <article><span class="dev-metric-icon purple">▥</span><div><small>Lopend</small><strong id="catalogActiveCount">0</strong></div><b id="devActivePct"></b></article>
-            <article><span class="dev-metric-icon amber">⌛</span><div><small>Nog te starten</small><strong id="catalogTodoCount">0</strong></div><b id="devTodoPct"></b></article>
+            <article data-level="completed"><span class="dev-metric-icon">✓</span><div><small>Bekwaam</small><strong id="catalogCompletedCount">0</strong></div><b id="devCompletedPct"></b></article>
+            <article data-level="active"><span class="dev-metric-icon" data-icon="progress" aria-hidden="true"></span><div><small>In ontwikkeling</small><strong id="catalogActiveCount">0</strong></div><b id="devActivePct"></b></article>
+            <article data-level="todo"><span class="dev-metric-icon">⌛</span><div><small>Aandacht nodig</small><strong id="catalogTodoCount">0</strong></div><b id="devTodoPct"></b></article>
           </div>
           <div class="development-insights">
-            <article class="development-panel"><h2>Totale voortgang</h2><div class="development-total"><div id="catalogProgressRing" class="learning-progress-ring"><strong id="catalogProgressPercent">0%</strong></div><div><strong id="catalogProgressTitle"></strong><p id="catalogProgressText"></p><div class="bar"><span id="catalogProgressBar"></span></div></div></div></article>
-            <article class="development-panel"><h2>Voortgang per vaardigheid</h2><div id="developmentSkills"></div></article>
-            <article class="development-panel"><h2>Punten per fase</h2><p class="dim small">Behaalde punten in jouw opleiding</p><div id="developmentPhasePoints"></div></article>
+            <article class="development-panel"><h2 id="catalogProgressTitle">Totale voortgang</h2><div class="development-total"><div id="catalogProgressRing" class="learning-progress-ring"><strong id="catalogProgressPercent">0%</strong></div><div><strong id="catalogSkillCount"></strong><div class="bar"><span id="catalogProgressBar"></span></div></div></div></article>
+            <article class="development-panel"><h2>Voortgang per categorie</h2><div id="developmentSkills"></div></article>
+            <article class="development-panel"><h2>Faseoverzicht</h2><div id="developmentPhasePoints"></div></article>
           </div>
 
           {{-- De fasekeuze bepaalt welke voortgang en leeruitkomsten worden getoond. --}}
@@ -249,19 +270,19 @@
             <label class="learning-search">
               <span class="learning-search-icon" aria-hidden="true">⌕</span>
               <span class="sr-only">Zoeken</span>
-              <input id="outcomeSearch" class="input" type="search" placeholder="Zoek op leeruitkomst, code of onderwerp…" oninput="resetCatalogAndRender()">
+              <input id="outcomeSearch" class="input" type="search" placeholder="Zoek op leeruitkomst, code of onderwerp…" oninput="renderCatalog()">
             </label>
             <label class="label">Status
-              <select id="catalogArchiveFilter" class="input" onchange="resetCatalogAndRender()">
+              <select id="catalogArchiveFilter" class="input" onchange="renderCatalog()">
                 <option value="all">Alle statussen</option>
-                <option value="completed">Afgerond</option>
-                <option value="active">Bezig</option>
-                <option value="todo">Nog te doen</option>
+                <option value="completed">Bekwaam (75–100%)</option>
+                <option value="active">In ontwikkeling (55–&lt;75%)</option>
+                <option value="todo">Aandacht nodig (0–&lt;55%)</option>
                 <option value="archived">Gearchiveerde leeruitkomsten</option>
               </select>
             </label>
             <label class="label">Sorteer op
-              <select id="catalogSort" class="input" onchange="resetCatalogAndRender()">
+              <select id="catalogSort" class="input" onchange="renderCatalog()">
                 <option value="standard">Standaard</option>
                 <option value="progress-desc">Meeste voortgang</option>
                 <option value="progress-asc">Minste voortgang</option>
@@ -282,7 +303,7 @@
             <nav id="catalogPagination" class="catalog-pagination" aria-label="Pagina's leeruitkomsten"></nav>
           </div>
         </section>
-        {{-- De JavaScript vult deze detailweergave met de gekozen leeruitkomst en persoonlijke voortgang. --}}
+        {{-- Detailweergave voor voortgang, reflecties en feedback bij de gekozen leeruitkomst. --}}
         <section id="outcomeDetail" class="view hidden">
           <button id="outcomeBackButton" class="mutedlink" type="button" onclick="backFromOutcome()">← Terug naar leeruitkomsten</button>
           <div class="head">
@@ -326,8 +347,9 @@
               </div>
               <div class="detail-stat">
                 <span>▥ Status</span>
-                <b id="detailStatus">Nog niet gestart</b>
+                <b id="detailStatus" data-level="todo">Aandacht nodig</b>
               </div>
+              <p id="detailStatusDescription" class="dim small">Extra ontwikkeling nodig</p>
               <div id="outcomeArchiveNotice" class="outcome-archive-notice hidden">
                 <span>✓</span>
                 <div><b>Deze leeruitkomst is gearchiveerd</b><small>Alle punten, reflecties en feedback zijn bewaard.</small></div>
@@ -459,7 +481,7 @@
           <nav id="assignmentPagination" class="hours-pagination project-pagination" aria-label="Pagina's projecten"></nav>
         </section>
 
-        {{-- Detailpagina van één project; de inhoud wordt vanuit student.js ingevuld. --}}
+        {{-- Projectspecificatie, gekoppelde leeruitkomsten en inleveracties voor het gekozen project. --}}
         <section id="assignmentDetail" class="view hidden">
           <button class="mutedlink" type="button" onclick="show('assignments')">← Terug naar projecten</button>
           <div class="head assignment-detail-head">
@@ -519,34 +541,26 @@
           </div>
         </section>
 
-        {{-- Urenoverzicht met filters per leerjaar en fase, plus details per registratie. --}}
+        {{-- Puntenoverzicht met fasefilters, XP en projectregistraties. --}}
         <section id="hours" class="view hidden hours-page">
           <header class="hours-page-head">
             <div>
               <h1>Punten</h1>
               <p>Bekijk je voortgang, verdien punten met projecten en volg je level.</p>
             </div>
-            <label class="year-selector">Periode
-              <select id="hoursYear" class="input" onchange="resetHoursAndRender()">
-                <option value="1">Leerjaar 1</option>
-                <option value="2">Leerjaar 2</option>
-                <option value="3">Leerjaar 3</option>
-                <option value="4">Leerjaar 4</option>
-                <option value="total">Totaal opleiding</option>
-              </select>
-            </label>
           </header>
 
           <section class="hours-summary-card" aria-label="Samenvatting punten">
             <div id="hoursProgressRing" class="hours-progress-ring"><strong id="hoursProgressPercent">0%</strong></div>
             <div class="hours-total">
-              <div><strong id="hoursYearTotal">0</strong><span> / <b id="hoursTarget">800</b> punten</span></div>
+              <div><strong id="hoursYearTotal">0</strong><span id="hoursTargetGroup"> / <b id="hoursTarget"></b></span><span> punten</span></div>
               <p id="hoursYearPercentage">van de puntendoelstelling behaald</p>
             </div>
             <div class="xp-level-summary"><span class="xp-star">☆</span><div><h2 id="xpLevelTitle">Level laden…</h2><p id="xpLevelName">Jouw ontwikkeling</p><div class="xp-track"><span id="xpLevelBar"></span></div><strong id="xpLevelProgress"></strong></div><button type="button" class="xp-help" onclick="openXpHelp()">ⓘ Hoe verdien ik XP?</button></div>
           </section>
 
           <div class="xp-challenge"><span class="xp-star">◎</span><div><h2>Actieve challenge</h2><p>Behaal 100 punten in de verdiepingsfase.</p></div><div><strong id="xpChallengeProgress"></strong><div class="xp-track"><span id="xpChallengeBar"></span></div></div><button class="button dark" type="button" onclick="selectHoursPhase('VF'); document.getElementById('hoursList').scrollIntoView({behavior:'smooth'})">Bekijk challenge →</button></div>
+          {{-- Toon de huidige, volgende en afgeronde uitdagingen. --}}
           <div id="challengeModal" class="goal-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="challengeDetailTitle">
             <button class="goal-detail-backdrop" type="button" tabindex="-1" aria-label="Challenge sluiten" onclick="closeChallengeDetail()"></button>
             <section class="goal-detail-dialog challenge-redesign">
@@ -588,7 +602,7 @@
           <section class="hours-registration-card">
             <div class="hours-registration-head">
               <div>
-                <h2><span data-icon="assignment" class="points-heading-icon"></span>Registraties in <span id="registrationsYear">Leerjaar 1</span></h2>
+                <h2><span data-icon="assignment" class="points-heading-icon"></span>Registraties</h2>
                 <p>Bekijk je geregistreerde punten. Klik op een registratie om het project en de leeruitkomsten te bekijken.</p>
               </div>
               <label>Sorteer op
@@ -629,7 +643,6 @@
             </div>
             <div class="registration-hours-banner"><span>Goedgekeurde punten</span><strong id="registrationDetailHours"></strong></div>
             <div class="registration-detail-grid">
-              <div><span>Leerjaar</span><b id="registrationDetailYear"></b></div>
               <div><span>Fase</span><b id="registrationDetailPhase"></b></div>
               <div><span>Gevalideerd op</span><b id="registrationDetailDate"></b></div>
               <div><span>Goedgekeurd door</span><b id="registrationDetailApprover"></b></div>
@@ -645,6 +658,7 @@
           </div>
         </section>
 
+        {{-- Leerdoelen per fase, met badges en recente activiteit. --}}
         <section id="goals" class="view hidden goals-page goals-redesign">
           <header class="goals-page-head">
             <div>
@@ -698,6 +712,7 @@
             <section class="goal-insight-card goal-next-step"><header><span class="goal-insight-icon" aria-hidden="true">◎</span><div><h2>Volgende stap</h2><p id="goalNextStepText"></p></div></header><button class="card-link" type="button" id="goalNextStepButton">Ga naar leerdoel →</button></section>
             <section class="goal-insight-card"><header><span class="goal-insight-icon" aria-hidden="true">◷</span><div><h2>Recente activiteit</h2></div><button type="button" onclick="openGoalInsight('activity')">Bekijk alles →</button></header><div id="goalRecentActivity" class="goal-recent-activity"></div></section>
           </div>
+            {{-- Begeleid de student van fasekeuze naar een leeruitkomst en omschrijving. --}}
             <section id="goalWizard" class="goals-panel goal-wizard-panel hidden" role="dialog" aria-modal="true" aria-labelledby="goalWizardTitle" tabindex="-1">
               <button class="modal-close goal-wizard-close" type="button" aria-label="Nieuw leerdoel sluiten" onclick="closeGoalWizard()">×</button>
               <div class="goals-panel-heading">
@@ -791,7 +806,7 @@
               <div class="reflection-table-heading"><span>Reflectie</span><span>Type</span><span>Leeruitkomst (koppeling)</span><span>Status</span><span>Datum</span></div>
               <div id="reflectionList" class="reflection-list" aria-live="polite"></div>
             </div>
-            {{-- Dit verborgen formulier wordt geopend via de knop en opgeslagen door reflections.js. --}}
+            {{-- Hetzelfde formulier dient voor nieuwe en bestaande reflecties. --}}
             <form id="reflectionForm" class="card reflection-form reflection-modal hidden" onsubmit="saveReflection(event)">
               <div class="form-heading">
                 <span class="step-number">1</span>
@@ -888,7 +903,6 @@
           </div>
           <div class="reflection-layout"><div><div class="reflection-table-heading"><span>Feedback</span><span>Type</span><span>Leeruitkomst (koppeling)</span><span>Van / aan</span><span>Datum</span></div><div id="feedbackList" class="reflection-list" aria-live="polite"></div></div></div>
 
-          {{-- Het formulier blijft verborgen totdat de student ervoor kiest feedback toe te voegen. --}}
           <form id="feedbackForm" class="card feedback-form feedback-modal hidden" onsubmit="saveFeedback(event)">
             <div class="form-heading">
               <span class="step-number">1</span>

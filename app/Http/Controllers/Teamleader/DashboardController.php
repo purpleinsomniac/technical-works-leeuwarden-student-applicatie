@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Teamleader;
 
 use App\Http\Controllers\RoleDashboardController;
 use App\Models\Group;
+use App\Models\LearningOutcome;
 use App\Models\Progress;
 use App\Models\StudyPhase;
 use App\Models\User;
+use App\Services\LearningProgress;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -75,28 +77,28 @@ class DashboardController extends RoleDashboardController
      */
     private function overview(): array
     {
-        $progress = Progress::with('learningOutcome.studyPhase')->get();
-        $percentages = $progress
-            ->filter(fn (Progress $item): bool => $this->numericTarget($item) !== null)
-            ->map(function (Progress $item): int {
-                $target = $this->numericTarget($item);
+        $catalog = LearningOutcome::with('studyPhase')->get();
+        $service = app(LearningProgress::class);
+        $totals = [];
+        $earned = $target = $attention = $studentCount = 0;
 
-                return min(100, (int) round(($item->gevalideerde_uren / $target) * 100));
-            });
+        foreach (User::where('rol', 'student')->lazyById() as $student) {
+            $studentCount++;
+            $scores = $service->snapshot($student, $catalog)['outcomes'];
+            foreach ($catalog as $outcome) {
+                $score = $scores[$outcome->id];
+                $phase = $outcome->studyPhase?->naam ?? 'Onbekend';
+                $totals[$phase]['earned'] = ($totals[$phase]['earned'] ?? 0) + $score['earned'];
+                $totals[$phase]['target'] = ($totals[$phase]['target'] ?? 0) + $score['target'];
+                $earned += $score['earned'];
+                $target += $score['target'];
+                if ($score['target'] > 0 && $score['percentage'] < 55 && ($score['review'] || $score['earned'] > 0)) {
+                    $attention++;
+                }
+            }
+        }
 
-        $phasePercentages = $progress
-            ->groupBy(fn (Progress $item): string => $item->learningOutcome->studyPhase?->naam ?? 'Onbekend')
-            ->map(function ($items): int {
-                $values = $items
-                    ->filter(fn (Progress $item): bool => $this->numericTarget($item) !== null)
-                    ->map(function (Progress $item): int {
-                        $target = $this->numericTarget($item);
-
-                        return min(100, (int) round(($item->gevalideerde_uren / $target) * 100));
-                    });
-
-                return (int) round($values->avg() ?? 0);
-            });
+        $phasePercentages = array_map(fn ($row) => $row['target'] ? (int) round(100 * $row['earned'] / $row['target']) : 0, $totals);
 
         $phaseNames = StudyPhase::orderBy('id')->pluck('naam');
         $groups = Group::query()
@@ -113,7 +115,9 @@ class DashboardController extends RoleDashboardController
             ->map(fn (Group $group): array => $this->groupOverview($group, $phaseNames));
 
         return [
-            'studentCount' => User::where('rol', 'student')->count(),
+            'studentCount' => $studentCount,
+            'averagePercentage' => $target ? (int) round(100 * $earned / $target) : 0,
+            'attentionCount' => $attention,
             'groups' => $groups,
             'coaches' => User::query()
                 ->where(function ($query): void {
@@ -152,8 +156,6 @@ class DashboardController extends RoleDashboardController
                     ];
                 })
                 ->values(),
-            'averagePercentage' => (int) round($percentages->avg() ?? 0),
-            'attentionCount' => $progress->whereIn('status', ['niet_gestart', 'gestart'])->count(),
             'phases' => $phasePercentages,
         ];
     }

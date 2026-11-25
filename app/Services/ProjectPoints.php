@@ -12,21 +12,32 @@ class ProjectPoints
         return $this->allocation($user)['outcomes'];
     }
 
-    public function allocation(User $user): array
+    public function allocation(User $user, array $outcomeTargets = []): array
     {
         $points = [];
         $projects = [];
         $maxProjects = [];
+        $startedOutcomes = [];
+        $registrations = [];
         foreach ($user->assignments()->with('learningOutcomes.studyPhase')->orderBy('id')->get() as $project) {
             $linked = $project->learningOutcomes->sortBy('id')->values();
             $phaseId = $linked->first()?->studiefase_id;
             $linked = $linked->where('studiefase_id', $phaseId)->values();
             $projects[$project->id] = 0;
             if ($linked->isEmpty()) continue;
+            if (in_array($project->status, ['active', 'review', 'completed'], true)) {
+                foreach ($linked as $outcome) {
+                    $startedOutcomes[$outcome->id] = true;
+                }
+            }
             $maximum = min(80, (int) $linked->sum(fn ($outcome) => min(20, $outcome->pivot->max_points)));
             $maxProjects[$project->id] = $maximum;
             // Punten tellen pas mee nadat het project is afgerond.
             if ($project->status !== 'completed') continue;
+            $registrations[$project->id] = [
+                'phase' => $linked->first()->studyPhase?->naam,
+                'date' => $project->completed_at ?? $project->updated_at,
+            ];
             $total = max(0, min((int) $project->gevalideerde_uren, $maximum));
             if ($maximum > 0) {
                 $shares = [];
@@ -40,7 +51,8 @@ class ProjectPoints
                 foreach ($shares as &$share) { if ($remaining > 0) { $share['points']++; $remaining--; } }
                 unset($share);
                 foreach ($linked as $outcome) {
-                    $amount = min($shares[$outcome->id]['points'], max(0,$this->norm($outcome)-($points[$outcome->id]??0)));
+                    $target = $outcomeTargets[$outcome->id] ?? $this->norm($outcome);
+                    $amount = min($shares[$outcome->id]['points'], max(0, $target - ($points[$outcome->id] ?? 0)));
                     $points[$outcome->id] = ($points[$outcome->id]??0)+$amount;
                     $projects[$project->id] += $amount;
                 }
@@ -59,7 +71,8 @@ class ProjectPoints
                 }
             }
         }
-        return ['outcomes' => $points, 'projects' => $projects, 'maximums'=>$maxProjects];
+        return ['outcomes' => $points, 'projects' => $projects, 'maximums'=>$maxProjects, 'startedOutcomes' => $startedOutcomes,
+            'registrations' => $registrations];
     }
 
     public function norm($outcome): int

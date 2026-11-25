@@ -51,12 +51,10 @@
             @csrf
             <button class="nav" type="submit">Uitloggen</button>
           </form>
-          <p class="product-credit">
-            <span>Product of</span>
-            <strong>Technical Works Leeuwarden</strong>
-          </p>
+          @include('components.team-credits-trigger')
         </div>
       </aside>
+      @include('components.team-credits')
       <main class="main role-{{ $user->rol }}">
         {{-- Gedeelde header voor alle rollen. --}}
         <header class="topbar">

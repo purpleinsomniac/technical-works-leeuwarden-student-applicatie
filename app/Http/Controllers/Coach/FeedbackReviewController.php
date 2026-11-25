@@ -20,8 +20,8 @@ class FeedbackReviewController extends Controller
         abort_unless($coach->canUseRole('coach') || $coach->canUseRole('beheerder'), 403);
         abort_unless(Feedback::reviewableBy($coach)->whereKey($feedback->id)->exists(), 403);
         $data = $request->validate([
-            'hours' => ['required', 'integer', 'min:0', 'max:10000'],
-        ], ['hours.required' => 'Vul het aantal toe te kennen uren in.', 'hours.integer' => 'Gebruik hele uren.']);
+            'hours' => ['required', 'integer', 'min:0', 'max:80', 'multiple_of:10'],
+        ], ['hours' => 'Kies 0 (geen punten) of 10, 20, 30, 40, 50, 60, 70 of 80 punten.']);
 
         $changed = DB::transaction(function () use ($feedback, $coach, $data, $challenges): bool {
             // Serialize awards for this student, including their XP synchronization.

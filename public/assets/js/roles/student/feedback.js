@@ -1,19 +1,11 @@
 // Feedback tonen, toevoegen en verwijderen.
 
-// -----------------------------------------------------------------------------
-// Feedback
-// -----------------------------------------------------------------------------
-let feedbackItems = Array.isArray(window.LARAVEL_DATA?.feedback)
-  ? [...window.LARAVEL_DATA.feedback]
-  : [];
+let feedbackItems = copyStudentList("feedback");
 
-function getFeedback() {
-  return feedbackItems;
-}
-
+// Toon de feedback die bij de geopende leeruitkomst hoort.
 function renderOutcomeFeedback() {
   if (!currentOutcomeCode) return;
-  const list = getFeedback().filter((item) => item.code === currentOutcomeCode),
+  const list = feedbackItems.filter((item) => item.code === currentOutcomeCode),
     container = document.getElementById("outcomeFeedbackList");
   container.innerHTML = list.length
     ? list
@@ -38,8 +30,9 @@ function renderOutcomeFeedback() {
 }
 
 let feedbackDetailTrigger = null;
+// Toon het feedbackbericht en onthoud vanwaar het venster is geopend.
 function openOutcomeFeedbackDetail(id, fromList = false) {
-  const item = getFeedback().find((feedback) => String(feedback.id) === String(id));
+  const item = feedbackItems.find((feedback) => String(feedback.id) === String(id));
   if (!item) return;
   feedbackDetailTrigger = document.activeElement;
   const type = document.getElementById("feedbackDetailType");
@@ -93,12 +86,14 @@ function openOutcomeFeedbackDetail(id, fromList = false) {
   requestAnimationFrame(() => modal.querySelector('.modal-close').focus({preventScroll:true}));
 }
 
+// Sluit het feedbackbericht en keer zo nodig terug naar de overzichtslijst.
 function closeOutcomeFeedbackDetail() {
   document.getElementById("outcomeFeedbackDetailModal").classList.add("hidden");
   document.body.classList.remove("modal-open");
   feedbackDetailTrigger?.focus({preventScroll:true});
 }
 
+// Open het formulier met de huidige leeruitkomst geselecteerd.
 function openFeedbackForCurrentOutcome() {
   const outcome = outcomes.find((o) => o.code === currentOutcomeCode);
   show("feedback");
@@ -111,30 +106,26 @@ function openFeedbackForCurrentOutcome() {
   openFeedbackForm(true);
 }
 
-function feedbackCountForPhase(list, phaseCode) {
-  if (phaseCode === "all") return list.length;
-  return list.filter((item) => {
-    const outcome = outcomes.find((o) => o.code === item.code);
-    return outcome && outcome.phase === phaseCode;
-  }).length;
-}
-
+// Selecteer de fase en vernieuw de feedbacklijst.
 function filterFeedbackByPhase(phaseCode) {
   feedbackPhaseFilter = phaseCode;
   renderFeedback();
 }
 
+// Stel het vaardigheidsfilter voor de leeruitkomst in.
 function selectFeedbackOutcomeFilter(kind) {
   document.getElementById(kind === 'Softskills' ? 'feedbackHardOutcome' : 'feedbackSoftOutcome').value = 'all';
   renderFeedback();
 }
+// Open het geselecteerde recente feedbackbericht.
 function openLatestFeedback() {
-  const item = getFeedback().find((item) => outcomes.find((o) => o.code === item.code)?.phase === feedbackPhaseFilter);
+  const item = feedbackItems.find((item) => outcomes.find((o) => o.code === item.code)?.phase === feedbackPhaseFilter);
   if (item) openOutcomeFeedbackDetail(item.id, true);
 }
+// Toon de feedback voor de gekozen fase en bereken de aantallen per fase.
 function renderFeedback() {
   if (feedbackPhaseFilter === 'all') feedbackPhaseFilter = 'OF';
-  const all = getFeedback();
+  const all = feedbackItems;
   const current = all.filter((item) => outcomes.find((o) => o.code === item.code)?.phase === feedbackPhaseFilter);
   for (const [kind,id] of [['Softskills','feedbackSoftOutcome'],['Hardskills','feedbackHardOutcome']]) {
     const select = document.getElementById(id), previous = select.value;
@@ -147,7 +138,7 @@ function renderFeedback() {
   const skill = ['feedbackSoftOutcome','feedbackHardOutcome'].map((id) => document.getElementById(id).value).find((v) => v !== 'all');
   const list = current.filter((item) => (type === 'all' || item.type === type) && (!skill || skill === item.code) && [item.title,item.person,item.code,outcomes.find((o) => o.code === item.code)?.short,item.positive,item.improve,item.action].join(' ').toLowerCase().includes(search));
   document.getElementById('feedbackCount').textContent = all.length + ' ' + (all.length === 1 ? 'feedbackmoment' : 'feedbackmomenten');
-  document.getElementById('feedbackPhaseFilter').innerHTML = phases.map(([code,name]) => '<button type="button" aria-pressed="' + (code === feedbackPhaseFilter) + '" class="reflection-filter-button ' + (code === feedbackPhaseFilter ? 'active' : '') + '" data-feedback-phase="' + code + '"><i class="reflection-phase-icon" aria-hidden="true">' + (code === 'OF' ? '✓' : code === 'VF' ? '◇' : '⚑') + '</i><span class="reflection-phase-copy"><strong>' + esc(name) + '</strong><small>' + feedbackCountForPhase(all,code) + ' feedbackmomenten</small></span><i class="reflection-phase-indicator" aria-hidden="true"></i></button>').join('');
+  document.getElementById('feedbackPhaseFilter').innerHTML = phases.map(([code,name]) => '<button type="button" aria-pressed="' + (code === feedbackPhaseFilter) + '" class="reflection-filter-button ' + (code === feedbackPhaseFilter ? 'active' : '') + '" data-feedback-phase="' + code + '"><i class="reflection-phase-icon" aria-hidden="true">' + (code === 'OF' ? '✓' : code === 'VF' ? '◇' : '⚑') + '</i><span class="reflection-phase-copy"><strong>' + esc(name) + '</strong><small>' + countItemsInPhase(all,code) + ' feedbackmomenten</small></span><i class="reflection-phase-indicator" aria-hidden="true"></i></button>').join('');
   document.getElementById('feedbackLatestTitle').textContent = current[0]?.title || 'Nog geen feedback';
   document.getElementById('feedbackLatestDate').textContent = current[0] ? current[0].date + ' · ' + current[0].person : 'Voeg je eerste feedbackmoment toe.';
   document.getElementById('feedbackLatestButton').disabled = !current.length;
@@ -158,6 +149,7 @@ function renderFeedback() {
   }).join('') || '<div class="empty-state"><h2>Geen feedback gevonden</h2><p>Pas je filters aan of voeg feedback toe.</p></div>';
 }
 
+// Vul de keuzelijst met leeruitkomsten die aan het filter voldoen.
 function updateFeedbackOutcomeOptions() {
   const phaseCode = document.getElementById("feedbackPhase").value,
     select = document.getElementById("feedbackOutcome"),
@@ -174,6 +166,7 @@ function updateFeedbackOutcomeOptions() {
   showFeedbackOutcomePreview();
 }
 
+// Toon een samenvatting van de gekozen leeruitkomst.
 function showFeedbackOutcomePreview() {
   const outcome = outcomes.find((o) => o.code === document.getElementById("feedbackOutcome").value),
     preview = document.getElementById("feedbackOutcomePreview");
@@ -191,6 +184,7 @@ function showFeedbackOutcomePreview() {
     "</p>";
 }
 
+// Bereid het formulier voor en onthoud waar de student vandaan komt.
 function openFeedbackForm(returnToOutcome = false) {
   feedbackReturnToOutcome = returnToOutcome;
   if (!returnToOutcome) {
@@ -202,12 +196,14 @@ function openFeedbackForm(returnToOutcome = false) {
   requestAnimationFrame(() => document.getElementById("feedbackPerson").focus());
 }
 
+// Sluit het formulier en keer terug naar de vorige weergave.
 function closeFeedbackForm() {
   document.getElementById("feedbackForm").classList.add("hidden");
   document.body.classList.remove("modal-open");
   feedbackReturnToOutcome = false;
 }
 
+// Sla het bericht op en gebruik de gegevens die de API terugstuurt.
 async function saveFeedback(event) {
   event.preventDefault();
   const type = document.getElementById("feedbackType").value,
@@ -244,6 +240,7 @@ async function saveFeedback(event) {
   }
 }
 
+// Haal het bericht pas uit de lijst nadat de server het heeft verwijderd.
 async function deleteFeedback(id) {
   try {
     await apiRequest(apiUrl(window.LARAVEL_API.feedbackDelete, id), { method: "DELETE" });

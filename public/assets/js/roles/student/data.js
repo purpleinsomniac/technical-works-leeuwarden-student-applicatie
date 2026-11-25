@@ -1,46 +1,61 @@
-// Zet de door Laravel opgehaalde databasegegevens om naar studentweergaven.
-// In dit bestand staan bewust geen onderwijs- of demogegevens meer hardcoded.
+// Bereid de door Laravel aangeleverde gegevens voor op gebruik in de studentweergaven.
 
 const studentData = window.LARAVEL_DATA || {};
+const phasePointTarget = studentData.phasePointTarget || 1200;
 
-let outcomes = Array.isArray(studentData.outcomes) ? [...studentData.outcomes] : [];
-let phases = Array.isArray(studentData.phases) ? [...studentData.phases] : [];
-let assignments = Array.isArray(studentData.assignments) ? [...studentData.assignments] : [];
-let records = Array.isArray(studentData.records) ? [...studentData.records] : [];
-// Elk project en zijn urenregistratie horen bij precies één fase.
-assignments.forEach((project) => { project.phases = [project.phase || project.phases?.[0] || "OF"]; });
-records.forEach((record) => {
-  const project = assignments.find((item) => Number(item.id) === Number(record.assignmentId));
-  record.phases = [project?.phases[0] || record.phases?.[0] || "OF"];
-});
-let hoursByYear = studentData.hoursByYear || {};
-const hourApprovals = Array.isArray(studentData.hourApprovals) ? [...studentData.hourApprovals] : [];
-
-// De huidige opdracht wordt afgeleid uit de opdrachten en leeruitkomsten uit MySQL.
-const currentWorkByPhase = {};
-for (const phaseItem of phases) {
-  const phaseCode = phaseItem[0];
-  const assignment = assignments.find((item) => item.phase === phaseCode && item.status !== "completed")
-    || assignments.find((item) => item.phase === phaseCode);
-  const firstOutcome = outcomes.find((item) => item.phase === phaseCode);
-  const linkedOutcome = assignment
-    ? outcomes.find((item) => assignment.outcomeCodes.includes(item.code))
-    : firstOutcome;
-
-  currentWorkByPhase[phaseCode] = {
-    title: assignment?.title || "Nog geen opdracht",
-    type: assignment?.type || "Geen actieve opdracht",
-    code: assignment?.outcomeCodes?.[0] || firstOutcome?.code || "",
-    pct: linkedOutcome?.pct || 0,
-  };
+// Rond voor weergave af op stappen van vijf procent.
+function displayPointPercent(value) {
+  const percentage = Math.max(0, Math.min(100, Number(value) || 0));
+  return Math.round(percentage / 5) * 5;
 }
 
-const assignmentStatuses = {
-  active: "Actief",
-  review: "Beoordeling",
-  completed: "Afgerond",
-};
+// Geef het afgeronde percentage weer met een procentteken.
+function pointPercentLabel(value) {
+  return displayPointPercent(value) + "%";
+}
 
-function isOutcomeCompleted(outcome) {
-  return outcome.status === "behaald" || Number(outcome.hours) >= Number(outcome.target) && Number(outcome.target) > 0;
+// Bepaal de vaardigheidsstatus bij het percentage.
+function competencyLevel(percentage) {
+  if (percentage >= 75) return { key: "completed", label: "Bekwaam", detail: "Voldoende zelfstandig beheerst" };
+  if (percentage >= 55) return { key: "active", label: "In ontwikkeling", detail: "Basis aanwezig, verbetering nodig" };
+  return { key: "todo", label: "Aandacht nodig", detail: "Extra ontwikkeling nodig" };
+}
+
+// Kopieer de lijst zodat een andere sortering de bronlijst niet wijzigt.
+function copyStudentList(key) {
+  const items = studentData[key];
+  return Array.isArray(items) ? [...items] : [];
+}
+
+const outcomes = copyStudentList("outcomes");
+const phases = copyStudentList("phases");
+const assignments = copyStudentList("assignments");
+const records = copyStudentList("records");
+
+// Elk project en zijn urenregistratie horen bij precies één fase.
+for (const project of assignments) {
+  project.phases = [project.phase || project.phases?.[0] || "OF"];
+}
+for (const record of records) {
+  const project = assignments.find((item) => Number(item.id) === Number(record.assignmentId));
+  record.phases = [project?.phases[0] || record.phases?.[0] || "OF"];
+}
+const hourApprovals = copyStudentList("hourApprovals");
+
+// Bewaar de bestaande keuze per fase, ook wanneer een projectstatus later verandert.
+const currentWorkByPhase = Object.fromEntries(phases.map(([phaseCode]) => {
+  const assignment = assignments.find((item) => item.phase === phaseCode && item.status !== "completed")
+    || assignments.find((item) => item.phase === phaseCode);
+  return [phaseCode, assignment];
+}));
+
+// Zoek de naam bij de fasecode en gebruik zo nodig de opgegeven terugvalwaarde.
+function studentPhaseName(code, fallback = code) {
+  return phases.find(([phaseCode]) => phaseCode === code)?.[1] || fallback;
+}
+
+// Tel de berichten of reflecties die aan leeruitkomsten in de gekozen fase hangen.
+function countItemsInPhase(items, phaseCode) {
+  if (phaseCode === "all") return items.length;
+  return items.filter((item) => outcomes.find((outcome) => outcome.code === item.code)?.phase === phaseCode).length;
 }

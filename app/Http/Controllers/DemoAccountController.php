@@ -12,18 +12,29 @@ class DemoAccountController extends Controller
 {
     public function switchAccount(Request $request): RedirectResponse
     {
+        // Laat alleen ingelogde gebruikers in een ingeschakelde lokale demo wisselen.
         abort_unless(app()->environment('local') && config('demo.account_switcher'), 404);
         abort_unless($request->user(), 403);
-        $accounts = config('demo.accounts');
-        $data = $request->validate(['role'=>['required', Rule::in(array_keys($accounts))]]);
-        $choice = $accounts[$data['role']];
-        $account = User::where('email', $choice['email'])->where('rol', $choice['role'] ?? $data['role'])->firstOrFail();
 
+        // De gekozen sleutel verwijst naar een ingesteld account, nooit naar een vrij e-mailadres.
+        $accounts = config('demo.accounts');
+        $validated = $request->validate([
+            'role' => ['required', Rule::in(array_keys($accounts))],
+        ]);
+        $accountKey = $validated['role'];
+        $choice = $accounts[$accountKey];
+        $account = User::query()
+            ->where('email', $choice['email'])
+            ->where('rol', $choice['role'] ?? $accountKey)
+            ->firstOrFail();
+
+        // Leeg de oude sessie volledig voordat het gekozen account wordt ingelogd.
+        $session = $request->session();
         Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $session->invalidate();
+        $session->regenerateToken();
         Auth::login($account, false);
-        $request->session()->regenerate();
+        $session->regenerate();
 
         return redirect()->route('home');
     }

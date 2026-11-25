@@ -508,6 +508,22 @@
       </section>
 
       <section class="admin-panel">
+        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
+        <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
+        <input class="input" id="max-upload-size" name="max_upload_size_mb" type="number" min="1" max="50" value="{{ old('max_upload_size_mb', $roleData['applicationSettings']->max_upload_size_mb) }}" required>
+        <fieldset class="admin-upload-types">
+          <legend>Toegestane bestandstypen</legend>
+          @php($allowedExtensions = session()->hasOldInput('_allowed_upload_extensions_submitted') ? old('allowed_upload_extensions', []) : $roleData['applicationSettings']->allowed_upload_extensions)
+          @php($allowedExtensions = is_array($allowedExtensions) ? $allowedExtensions : [])
+          <input type="hidden" name="_allowed_upload_extensions_submitted" value="1">
+          @foreach (['pdf' => 'PDF', 'docx' => 'Word (DOCX)', 'jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG'] as $extension => $label)
+            <label><input type="checkbox" name="allowed_upload_extensions[]" value="{{ $extension }}" @checked(in_array($extension, $allowedExtensions, true))> {{ $label }}</label>
+          @endforeach
+        </fieldset>
+        <p class="dim small">De serverconfiguratie kan een lagere maximale uploadgrootte afdwingen.</p>
+      </section>
+
+      <section class="admin-panel">
         <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">⚙</span><div><h2>Onderhoudsmodus</h2><p>Beperk tijdelijk de toegang voor studenten, docenten en teamleiders.</p></div></div>
         <label class="admin-maintenance-option">
           <input type="checkbox" name="maintenance_mode" value="1" @checked(old('maintenance_mode', $roleData['applicationSettings']->maintenance_mode))>

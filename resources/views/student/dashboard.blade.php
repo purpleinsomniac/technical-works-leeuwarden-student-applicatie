@@ -486,7 +486,7 @@
                     <span>+ Bestand toevoegen</span>
                   </label>
                 </div>
-                <p id="assignmentFileHelp" class="assignment-file-help">Maximaal 10 MB per bestand.</p>
+                <p id="assignmentFileHelp" class="assignment-file-help" data-max-upload-size="{{ $roleData['applicationSettings']->max_upload_size_mb }}">Maximaal {{ $roleData['applicationSettings']->max_upload_size_mb }} MB per bestand.</p>
                 <div id="assignmentFileList" class="assignment-file-list"></div>
               </section>
               <div class="assignment-detail-information">

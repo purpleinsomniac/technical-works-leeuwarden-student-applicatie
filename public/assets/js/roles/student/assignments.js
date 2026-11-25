@@ -200,8 +200,9 @@ function renderAssignmentFiles(assignment) {
   const files = Array.isArray(assignment.files) ? assignment.files : [];
   const editable = assignment.status === "active" || assignment.status === "concept";
   document.getElementById("assignmentFileUploadLabel").classList.toggle("hidden", !editable);
+  const maxUploadSizeMb = document.getElementById("assignmentFileHelp").dataset.maxUploadSize;
   document.getElementById("assignmentFileHelp").textContent = editable
-    ? "Maximaal 10 MB per bestand. PDF, Office, afbeeldingen en ZIP zijn toegestaan."
+    ? `Maximaal ${maxUploadSizeMb} MB per bestand. PDF, Office, afbeeldingen en ZIP zijn toegestaan.`
     : assignment.status === "review"
       ? "Zet de project terug naar Projecten om bestanden toe te voegen of te verwijderen."
       : "Bij een afgeronde project kunnen bestanden alleen worden bekeken.";

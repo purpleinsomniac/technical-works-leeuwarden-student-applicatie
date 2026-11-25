@@ -107,8 +107,8 @@ function login() {
         page +
         '" onclick="show(\'' +
         page +
-        "')\"><span class=\"nav-icon\">" +
-        uiIcon(icon) +
+        "')\"><span class=\"nav-icon\" aria-hidden=\"true\">" +
+        window.RoleApp.sidebarIcon(icon) +
         '</span><span class="nav-label">' +
         label +
         "</span></button>",

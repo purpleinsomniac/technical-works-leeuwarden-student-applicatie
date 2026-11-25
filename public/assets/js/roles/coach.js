@@ -71,15 +71,6 @@ const coachPageRoutes = {
   coachSettings: "settings",
 };
 const coachNav = document.getElementById("nav");
-const coachNavIcons = {
-  coachOverview: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"></rect>',
-  coachGroups: '<path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"></path><circle cx="10" cy="7.5" r="3.5"></circle><path d="M16 4.2a3.5 3.5 0 0 1 0 6.6M20 20v-1.5a3.5 3.5 0 0 0-2.7-3.4"></path>',
-  coachActivities: '<path d="M5 3.5h10l4 4V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z"></path><path d="M14.5 3.5V8H19M8 12h8M8 16h8"></path>',
-  coachGoals: '<circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="4.5"></circle><circle cx="12" cy="12" r="1"></circle>',
-  coachProjects: '<path d="M3.5 7.5h7l2 2H20a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8.5a1 1 0 0 1 .5-1Z"></path><path d="M3.5 10h17"></path>',
-  coachFeedback: '<path d="M20.5 11.5a7.8 7.8 0 0 1-.9 3.6 8 8 0 0 1-7.1 4.4 7.8 7.8 0 0 1-3.6-.9L3 20l1.4-5.9a7.8 7.8 0 0 1-.9-3.6 8 8 0 0 1 4.4-7.1 7.8 7.8 0 0 1 3.6-.9h.5a8 8 0 0 1 7.6 7.6v.5Z"></path><path d="M8 11.5h8M8 15h5"></path>',
-  coachSettings: '<circle cx="12" cy="12" r="3"></circle><path d="m19.4 15 .1.1a1.8 1.8 0 0 1-2.5 2.5l-.1-.1a1.8 1.8 0 0 0-3 .8v.2a1.8 1.8 0 0 1-3.6 0v-.2a1.8 1.8 0 0 0-3-.8l-.1.1a1.8 1.8 0 0 1-2.5-2.5l.1-.1a1.8 1.8 0 0 0-.8-3h-.2a1.8 1.8 0 0 1 0-3.6h.2a1.8 1.8 0 0 0 .8-3l-.1-.1a1.8 1.8 0 0 1 2.5-2.5l.1.1a1.8 1.8 0 0 0 3-.8v-.2a1.8 1.8 0 0 1 3.6 0v.2a1.8 1.8 0 0 0 3 .8l.1-.1a1.8 1.8 0 0 1 2.5 2.5l-.1.1a1.8 1.8 0 0 0 .8 3h.2a1.8 1.8 0 0 1 0 3.6h-.2a1.8 1.8 0 0 0-.8 3Z"></path>',
-};
 coachNav.querySelectorAll("[data-route]").forEach((button) => {
   const routeKey = coachPageRoutes[button.dataset.route];
   const url = window.LARAVEL_COACH_ROUTES?.[routeKey];
@@ -95,14 +86,7 @@ coachNav.querySelectorAll("[data-route]").forEach((button) => {
     coachProjects: window.LARAVEL_DATA?.projects?.length,
     coachFeedback: window.LARAVEL_DATA?.pendingFeedback?.length,
   };
-  const icon = document.createElement("span");
-  icon.className = "coach-nav-icon";
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${coachNavIcons[button.dataset.route] || ""}</svg>`;
-  const title = document.createElement("span");
-  title.className = "coach-nav-label";
-  title.textContent = button.textContent;
-  link.append(icon, title);
+  link.innerHTML = button.innerHTML;
   const count = counts[button.dataset.route];
   if (Number.isFinite(count)) {
     const badge = document.createElement("span");

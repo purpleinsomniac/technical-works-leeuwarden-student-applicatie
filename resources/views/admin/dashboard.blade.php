@@ -203,7 +203,7 @@
                 @endif
               </td>
               <td>
-                @if ($managedUserRole === 'admin')
+                 @if ($managedUserRole === 'admin')
                   <button class="button admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden gewijzigd.">Wijzigen</button>
                   <button class="button admin-user-delete admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden verwijderd.">Verwijderen</button>
                 @else
@@ -485,22 +485,6 @@
           <option value="sharp" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'sharp')>Strak</option>
         </select>
         <p class="dim small">De kleurkiezer toont de hexcode. De laatst gewijzigde kleur geldt: een nieuwere globale kleur wordt op alle accounts gebruikt; een latere persoonlijke wijziging alleen op dat account.</p>
-      </section>
-
-      <section class="admin-panel">
-        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
-        <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
-        <input class="input" id="max-upload-size" name="max_upload_size_mb" type="number" min="1" max="50" value="{{ old('max_upload_size_mb', $roleData['applicationSettings']->max_upload_size_mb) }}" required>
-        <fieldset class="admin-upload-types">
-          <legend>Toegestane bestandstypen</legend>
-          @php($allowedExtensions = session()->hasOldInput('_allowed_upload_extensions_submitted') ? old('allowed_upload_extensions', []) : $roleData['applicationSettings']->allowed_upload_extensions)
-          @php($allowedExtensions = is_array($allowedExtensions) ? $allowedExtensions : [])
-          <input type="hidden" name="_allowed_upload_extensions_submitted" value="1">
-          @foreach (['pdf' => 'PDF', 'docx' => 'Word (DOCX)', 'jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG'] as $extension => $label)
-            <label><input type="checkbox" name="allowed_upload_extensions[]" value="{{ $extension }}" @checked(in_array($extension, $allowedExtensions, true))> {{ $label }}</label>
-          @endforeach
-        </fieldset>
-        <p class="dim small">De serverconfiguratie kan een lagere maximale uploadgrootte afdwingen.</p>
       </section>
 
       <section class="admin-panel">

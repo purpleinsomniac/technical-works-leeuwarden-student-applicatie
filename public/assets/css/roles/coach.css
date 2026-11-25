@@ -111,27 +111,6 @@
   content: none;
 }
 
-.app.role-coach .side #nav .coach-nav-icon {
-  display: grid;
-  width: 19px;
-  height: 19px;
-  flex: none;
-  place-items: center;
-  color: currentColor;
-  opacity: 0.78;
-}
-
-.app.role-coach .side #nav .coach-nav-icon svg {
-  display: block;
-  width: 18px;
-  height: 18px;
-}
-
-.app.role-coach .side #nav .coach-nav-label {
-  min-width: 0;
-  flex: 1;
-}
-
 .app.role-coach .side #nav .nav:hover {
   background: rgba(255, 255, 255, 0.07);
   color: #fff;
@@ -142,10 +121,6 @@
   color: #fff;
   font-weight: 600;
   box-shadow: inset 3px 0 #67e3cb, 0 8px 18px rgb(5 24 29 / 12%);
-}
-
-.app.role-coach .side #nav .nav.active .coach-nav-icon {
-  opacity: 1;
 }
 
 .app.role-coach .side .foot {

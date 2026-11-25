@@ -55,6 +55,8 @@ h3 { font-size: 16px; margin: 0 0 7px; }
 
 p { margin: 0 0 10px; }
 
+.name { border: 1px solid #d2d2d2; background: #fff; border-radius: 8px; padding: 6px; margin: 2px 0; }
+
 .notice { border: 1px solid #d0d0d0; background: #ebebeb; border-radius: 7px; padding: 13px 16px; margin: 18px 0; }
 
 .card { border: 1px solid #d2d2d2; background: #fff; border-radius: 8px; padding: 21px; margin: 16px 0; }
@@ -208,12 +210,9 @@ textarea:focus-visible,
 .nav { min-height: 38px; border: 0; background: transparent; color: #e8f0f4; border-radius: 9px; padding: 8px 15px; font-size: 15px; font-weight: 650; }
 .nav:hover { background: rgba(16, 95, 119, 0.5); color: #fff; }
 .nav.active { background: linear-gradient(90deg, #08768f, #08a8b2); color: #fff; box-shadow: none; }
-.role-beheerder .side #nav [data-route="adminPreferencesSettings"],
-.role-teamleider .side #nav [data-route="managerPreferencesSettings"] { position: relative; margin-top: auto; border-radius: 0; }
-.role-beheerder .side #nav [data-route="adminPreferencesSettings"]::before,
-.role-teamleider .side #nav [data-route="managerPreferencesSettings"]::before { position: absolute; top: -3px; right: 7px; left: 7px; height: 1px; background: rgba(177, 220, 229, 0.22); content: ""; }
-.role-beheerder .side #nav [data-route="adminPreferencesSettings"]:is(:hover, .active),
-.role-teamleider .side #nav [data-route="managerPreferencesSettings"]:is(:hover, .active) { border-radius: 9px; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"] { position: relative; margin-top: auto; border-radius: 0; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"]::before { position: absolute; top: -3px; right: 7px; left: 7px; height: 1px; background: rgba(177, 220, 229, 0.22); content: ""; }
+.role-beheerder .side #nav [data-route="adminPreferencesSettings"]:is(:hover, .active) { border-radius: 9px; }
 .side .foot { flex: none; margin-top: 9px; border-top: 1px solid rgba(177, 220, 229, 0.22); padding: 13px 0 0; }
 .side .foot > .small { margin-bottom: 5px; }
 .side .foot form .nav { padding-top: 8px; padding-bottom: 8px; }
@@ -247,6 +246,7 @@ body.account-modal-open { overflow: hidden; }
 .account-modal-data dd { min-width: 0; margin: 0; overflow-wrap: anywhere; color: #294a5d; font-size: 11px; font-weight: 750; }
 .account-modal-data a { color: #167f74; text-decoration: none; }
 .account-modal-data a:hover { text-decoration: underline; }
+.theme-dark .name { border: solid #29434f; background: #ffffff00; }
 .theme-dark .account-modal-dialog { border-color: #2a4855; background: #132833; }
 .theme-dark .account-modal-header,
 .theme-dark .account-modal-data > div { border-color: #29434f; }
@@ -257,7 +257,8 @@ body.account-modal-open { overflow: hidden; }
 .theme-dark .account-modal-person { background: linear-gradient(110deg, #153b39, #162f38); }
 .theme-dark .account-modal-person small,
 .theme-dark .account-modal-data dt { color: #9eb1ba; }
-.product-credit { display: flex; flex-direction: column; gap: 1px; margin: 8px 6px 0; padding: 10px 3px 0; border-top: 1px solid rgba(175, 198, 213, 0.2); color: #91a9b7; font-size: 7px; line-height: 1.35; letter-spacing: 0.1px; }
+.product-credit { display: flex; width: 100%; flex-direction: column; align-items: flex-start; gap: 1px; margin: 8px 6px 0; padding: 10px 3px 0; border: 0; border-top: 1px solid rgba(175, 198, 213, 0.2); background: transparent; color: #91a9b7; text-align: left; font-size: 7px; line-height: 1.35; letter-spacing: 0.1px; }
+.product-credit:hover { color: #b9dde1; }
 .product-credit strong { color: #d2e1e9; font-size: 8px; font-weight: 650; }
 button.product-credit { width:calc(100% - 12px); border-right:0; border-bottom:0; border-left:0; background:transparent; text-align:left; cursor:pointer; }
 button.product-credit:hover strong { color:#65e0ce; }
@@ -351,9 +352,6 @@ p.dim,
 .card { border: 1px solid #e1e8ef; border-radius: 14px; box-shadow: 0 3px 10px #16334a03; padding: 23px; }
 .grid3 { gap: 20px; }
 .grid3 .card { position: relative; overflow: hidden; }
-.grid3 .card:first-child { background: #e5f4ef; border-color: #c9e5da; }
-.grid3 .card:nth-child(2) { background: #eef0fc; border-color: #e0e3f5; }
-.grid3 .card:nth-child(3) { background: #fff8eb; border-color: #f0e7d4; }
 .metric-label { font-weight: 650; font-size: 12px; }
 .big { font-size: 37px; line-height: 1.35; letter-spacing: -1.5px; margin: 13px 0 4px; color: #193b48; }
 .grid3 .bar { margin-top: 18px; }
@@ -410,24 +408,23 @@ p.dim,
 .theme-dark .role-dashboard-settings .settings-page-head .back-link { color: #7cdfcf; }
 .app.dashboard-compact .admin-stat,
 .app.dashboard-compact .admin-panel,
-.app.dashboard-compact #managerGroups .card,
+.app.dashboard-compact #managerTeachers .card,
 .app.dashboard-compact #managerReports .card { padding: 14px; }
 .theme-dark .admin-dashboard .admin-panel,
 .theme-dark .admin-dashboard .admin-stat,
-.theme-dark #managerGroups .card,
+.theme-dark #managerTeachers .card,
 .theme-dark #managerReports .card { border-color: #2c4755; background: #152d38; color: #eef7f9; }
 .theme-dark .admin-dashboard .admin-stat strong,
 .theme-dark .admin-dashboard .admin-panel-heading h3,
 .theme-dark .admin-dashboard .admin-detail strong { color: #eef7f9; }
 .theme-dark .admin-dashboard .admin-detail { border-color: #29434f; color: #9eb1ba; }
-.theme-dark #managerGroups h1,
 .theme-dark #managerReports h1,
-.theme-dark #managerGroups h2,
+.theme-dark #managerTeachers h1,
 .theme-dark #managerReports h2 { color: #eef7f9; }
 .theme-dark .admin-dashboard .admin-hero h1,
 .theme-dark .admin-dashboard .admin-hero p,
 .theme-dark .admin-dashboard .admin-section-heading h2,
-.theme-dark #managerGroups .dim,
+.theme-dark #managerTeachers .dim,
 .theme-dark #managerReports .dim { color: #c4d2d9; }
 @media (max-width: 900px) {
   .role-dashboard-settings .settings-layout { grid-template-columns: 1fr; }
@@ -435,9 +432,6 @@ p.dim,
 @media (max-width: 600px) {
   .role-dashboard-settings .settings-footer { align-items: stretch; flex-direction: column; }
   .role-dashboard-settings .settings-save-copy { margin-right: 0; }
-}
-@media (max-width: 680px) {
-  .teamleader-account-shortcut { width: 100%; margin-top: 12px; }
 }
 .row {
   grid-template-columns: minmax(120px, 0.9fr) minmax(190px, 1.7fr) minmax(

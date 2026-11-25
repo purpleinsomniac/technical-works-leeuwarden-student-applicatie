@@ -52,11 +52,23 @@ class StateController extends Controller
             ]);
         }
 
+        $state = UserState::firstOrNew(['gebruiker_id' => $request->user()->id]);
         if (isset($data['ontwikkeling-dashboard-instellingen'])) {
-            $this->validateDashboardSettings($data['ontwikkeling-dashboard-instellingen']);
+            $instellingen = $data['ontwikkeling-dashboard-instellingen'];
+            $this->validateDashboardSettings($instellingen);
+
+            $currentPreferences = $state->gegevens['ontwikkeling-dashboard-instellingen'] ?? [];
+            $currentPreferences = is_array($currentPreferences) ? $currentPreferences : [];
+            // Alleen een expliciete kleurwijziging krijgt een nieuwe persoonlijke versie.
+            $accentChanged = ($instellingen['accent_changed'] ?? false) === true;
+            unset($instellingen['accent_changed']);
+            $instellingen['accent_updated_at'] = $accentChanged
+                ? now()->valueOf()
+                : ($currentPreferences['accent_updated_at'] ?? null);
+            $data['ontwikkeling-dashboard-instellingen'] = $instellingen;
         }
 
-        // Controleer archiefcodes tegen de vaste lijst van leeruitkomsten.
+        // Controleer of de archiefcodes bij bestaande leeruitkomsten horen.
         $outcomes = json_decode(file_get_contents(base_path('database/outcomes.json')), true);
         $validCodes = array_column($outcomes, 'code');
 
@@ -65,8 +77,6 @@ class StateController extends Controller
                 throw ValidationException::withMessages(['data' => 'Ongeldige leeruitkomst.']);
             }
         }
-
-        $state = UserState::firstOrNew(['gebruiker_id' => $request->user()->id]);
 
         // Alleen de gewijzigde onderdelen vervangen. Andere voorkeuren blijven bewaard.
         $settings = array_replace($state->gegevens ?? [], $data);
@@ -80,7 +90,7 @@ class StateController extends Controller
         $state->gegevens = $settings;
         $state->save();
 
-        return response()->json(['saved' => true]);
+        return response()->json(['saved' => true, 'data' => $data]);
     }
 
     // Controleer keuzelijsten, schakelaars en vrije accentkleuren.
@@ -91,7 +101,7 @@ class StateController extends Controller
             'accent' => ['teal', 'blue', 'purple', 'pink', 'orange', 'amber', 'green'],
             'density' => ['compact', 'standard', 'spacious'],
         ];
-        $allowedKeys = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines', ...array_keys($choices)];
+        $allowedKeys = ['compact', 'darkMode', 'outcomes', 'goals', 'actions', 'feedback', 'deadlines', 'accent_changed', ...array_keys($choices)];
 
         if (! is_array($settings) || array_diff(array_keys($settings), $allowedKeys)) {
             throw ValidationException::withMessages(['data' => 'Ongeldige dashboardinstellingen.']);

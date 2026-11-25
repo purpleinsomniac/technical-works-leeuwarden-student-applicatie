@@ -128,6 +128,7 @@ document.addEventListener("student-state-saved", ({ detail: { keys } }) => {
   // Een bevestiging voor een eerdere wijziging mag de nieuwste opslagstatus niet overschrijven.
   if (settingsStateKeys.some((key) => pendingStateChanges.has(key))) return;
   setSettingsSaveStatus("saved");
+  if (keys.includes(dashboardSettingsKey)) applyDashboardPreferences();
   if (keys.includes(notificationSettingsKey)) {
     const { email_notifications, platform_notifications } = notificationPreferences;
     document.dispatchEvent(new CustomEvent("notification-preferences-saved", {
@@ -153,13 +154,17 @@ function setSettingsSaveStatus(status) {
 }
 
 // Vul ontbrekende voorkeuren aan en lees ook instellingen uit oudere versies.
-function getDashboardPreferences() {
+function getDashboardPreferences(forDisplay = true) {
   try {
     const saved = JSON.parse(loadLocalState(dashboardSettingsKey) || "{}");
     const preferences = { ...defaultDashboardPreferences, ...(saved && typeof saved === "object" ? saved : {}) };
     if (!saved?.theme) preferences.theme = saved?.darkMode ? 'dark' : 'light';
     if (!saved?.density) preferences.density = saved?.compact ? 'compact' : 'standard';
-    preferences.accent = normalizeAccentColor(preferences.accent);
+    if (forDisplay) {
+      preferences.accent = normalizeAccentColor(preferences.accent, preferences.accent_updated_at, preferences.accent_changed);
+    } else {
+      delete preferences.accent_updated_at;
+    }
     return preferences;
   } catch {
     return { ...defaultDashboardPreferences };
@@ -203,10 +208,16 @@ function renderDashboardSettings() {
 }
 
 const settingsAccentColors = {teal:'#009b87', blue:'#168bed', purple:'#6840e8', pink:'#df238b', orange:'#fa7900', amber:'#efb014', green:'#78b915'};
-// Controleer of de accentkleur de verwachte notatie heeft.
-function normalizeAccentColor(value) {
-  if (Object.prototype.hasOwnProperty.call(settingsAccentColors, value)) return settingsAccentColors[value];
-  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : defaultDashboardPreferences.accent;
+// Toon de persoonlijke kleur als die nieuwer is dan de algemene kleur.
+function normalizeAccentColor(value, updatedAt, pending) {
+  const globalAccentUpdatedAt = Number(window.LARAVEL_APPLICATION_THEME?.globalAccentUpdatedAt || 0);
+  const accent = Object.prototype.hasOwnProperty.call(settingsAccentColors, value)
+    ? settingsAccentColors[value]
+    : typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value.toLowerCase() : null;
+  // Persoonlijke kleuren gelden alleen zolang ze nieuwer zijn dan de globale kleur.
+  return accent && (pending || Number(updatedAt || 0) > globalAccentUpdatedAt)
+    ? accent
+    : window.LARAVEL_APPLICATION_THEME?.accentColor || defaultDashboardPreferences.accent;
 }
 let settingsActiveTab = 'appearance';
 // Open het gekozen tabblad in de instellingen.
@@ -221,7 +232,8 @@ function selectSettingsTab(tab) {
 }
 // Bewaar de wijziging en pas de weergave meteen aan.
 function updateAppearanceSetting(key, value) {
-  const preferences = {...getDashboardPreferences(), [key]:value};
+  const preferences = {...getDashboardPreferences(false), [key]:value};
+  if (key === 'accent') preferences.accent_changed = true;
   preferences.darkMode = preferences.theme === 'dark';
   preferences.compact = preferences.density === 'compact';
   saveLocalState(dashboardSettingsKey, JSON.stringify(preferences));
@@ -251,7 +263,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 // Bewaar de keuze voor een dashboardonderdeel en werk de weergave bij.
 function updateDashboardPreference(key, enabled) {
   if (!(key in defaultDashboardPreferences)) return;
-  const preferences = { ...getDashboardPreferences(), [key]: Boolean(enabled) };
+  const preferences = { ...getDashboardPreferences(false), [key]: Boolean(enabled) };
   if (key === 'compact') preferences.density = enabled ? 'compact' : 'standard';
   if (key === 'darkMode') preferences.theme = enabled ? 'dark' : 'light';
   saveLocalState(dashboardSettingsKey, JSON.stringify(preferences));

@@ -248,8 +248,8 @@
   /* Houd de accountnaam en uitlogknop ook op telefoon en smalle vensters bereikbaar. */
   .side .foot { display: flex; width: 100%; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 13px; padding-top: 13px; }
   .side .foot .sidebar-account { width: auto; flex: 1; }
-  .side .foot > .small,
-  .side .foot .product-credit { display: none; }
+  .side .foot > .small { display: none; }
+  .side .foot .product-credit { width: 100%; order: 2; margin: 2px 0 0; }
   .side .foot form { margin-left: auto; order: 1; }
   .side .foot form .nav { width: auto; min-height: 40px; padding: 9px 14px; }
   .main { padding: 0 18px 25px; }

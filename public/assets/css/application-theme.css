@@ -43,3 +43,286 @@
 #app[data-application-style="sharp"] :is(.card, .admin-panel, .settings-panel, .settings-card, .settings-choice, .settings-menu, .settings-account-banner, .settings-account-security, .settings-save-copy, .notification-setting-row, .notice, .topbar, .profile-card, .admin-stat, .admin-outcome-tile, .button, .nav, .tab, .input, select, textarea, .sidebar-account, .admin-class-student-option, .admin-role-row, .settings-menu button, .settings-panel > header > span, .notification-setting-icon) {
   border-radius: 3px;
 }
+
+/* Reapply the shared sidebar visuals after role-specific stylesheets load. */
+#app .side,
+#app.role-coach > .side {
+  width: 252px;
+  min-width: 0;
+  max-width: none;
+  flex: 0 0 252px;
+  gap: 0;
+  padding: 17px 9px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(160deg, #042d40 0%, #00364a 62%, #00485b 100%);
+  color: #eff8ff;
+  border: 0;
+  box-shadow: 8px 0 30px rgba(7, 31, 45, 0.08);
+}
+
+#app .side .brand {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 0;
+  padding: 0 10px;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.45px;
+}
+
+#app .side .brand::before {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin-right: 12px;
+  border: 2px solid #2fe0df;
+  content: "";
+  transform: rotate(45deg);
+}
+
+#app .side #roleLabel {
+  padding: 0 10px;
+  color: #64c7d1;
+  font-size: 11px;
+}
+
+#app .side hr {
+  width: calc(100% - 20px);
+  margin: 10px 10px 11px;
+  border: 0;
+  border-top: 1px solid rgba(183, 222, 232, 0.22);
+}
+
+#app .side #nav {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#app .side #nav .nav {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 13px;
+  padding: 8px 15px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #e8f0f4;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  box-shadow: none;
+}
+
+#app .side #nav .nav:hover {
+  background: rgba(16, 95, 119, 0.5);
+  color: #fff;
+}
+
+#app .side #nav .nav.active {
+  background: var(--application-accent);
+  border-color: var(--application-accent);
+  color: #fff;
+  box-shadow: none;
+}
+
+#app .side #nav .nav.active::after {
+  content: none;
+}
+
+#app .side .nav-icon {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  flex: none;
+  place-items: center;
+}
+
+#app .side .nav-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#app .side #nav .nav-label {
+  min-width: 0;
+  flex: 1;
+}
+
+#app .side #nav :is(
+  [data-route="dashboardSettings"],
+  [data-route="coachSettings"],
+  [data-route="managerPreferencesSettings"],
+  [data-route="adminPreferencesSettings"]
+) {
+  margin-top: auto;
+  border-radius: 0;
+}
+
+#app .side #nav :is(
+  [data-route="dashboardSettings"],
+  [data-route="coachSettings"],
+  [data-route="managerPreferencesSettings"],
+  [data-route="adminPreferencesSettings"]
+)::before {
+  position: absolute;
+  top: -3px;
+  right: 7px;
+  left: 7px;
+  height: 1px;
+  background: rgba(177, 220, 229, 0.22);
+  content: "";
+}
+
+#app .side #nav :is(
+  [data-route="dashboardSettings"],
+  [data-route="coachSettings"],
+  [data-route="managerPreferencesSettings"],
+  [data-route="adminPreferencesSettings"]
+):is(:hover, .active) {
+  border-radius: 9px;
+}
+
+#app .side .foot {
+  margin-top: 9px;
+  border-top: 1px solid rgba(177, 220, 229, 0.22);
+  padding: 13px 0 0;
+}
+
+#app .side .sidebar-account {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  gap: 11px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(11, 84, 107, 0.72);
+  color: inherit;
+  padding: 8px 13px;
+  text-align: left;
+}
+
+#app .side .sidebar-account:hover,
+#app .side .sidebar-account[aria-expanded="true"] {
+  background: rgba(13, 100, 124, 0.86);
+}
+
+#app .side .sidebar-avatar {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #14a7b7, #087b91);
+  color: #eafffb;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+#app .side .sidebar-account-copy b {
+  color: #fff;
+  font-size: 12px;
+}
+
+#app .side .sidebar-account-copy small {
+  color: #a9cbd5;
+  font-size: 10px;
+}
+
+#app .side .sidebar-account-arrow {
+  color: #a9cbd5;
+}
+
+#app .side .sidebar-account-arrow svg {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+#app .side .foot form .nav {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 13px;
+  margin-top: 5px;
+  padding: 8px 15px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #e8f0f4;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+}
+
+#app .side .foot form .nav:hover {
+  background: rgba(16, 95, 119, 0.5);
+  color: #fff;
+}
+
+#app .side .product-credit {
+  margin: 8px 6px 0;
+  padding: 10px 3px 0;
+  border-top: 1px solid rgba(175, 198, 213, 0.2);
+  color: #91a9b7;
+  font-size: 7px;
+}
+
+#app .side .product-credit strong {
+  color: #d2e1e9;
+  font-size: 8px;
+}
+
+#app[data-application-style="rounded"] .side #nav .nav,
+#app[data-application-style="rounded"] .side .foot form .nav {
+  border-radius: 12px;
+}
+
+#app[data-application-style="sharp"] .side #nav .nav,
+#app[data-application-style="sharp"] .side .foot form .nav {
+  border-radius: 3px;
+}
+
+@media (max-width: 980px) {
+  #app .side,
+  #app.role-coach > .side {
+    width: 200px;
+    min-width: 0;
+    max-width: none;
+    flex-basis: 200px;
+  }
+}
+
+@media (max-width: 760px) {
+  #app:not(.role-coach) .side {
+    width: auto;
+    flex: none;
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  #app.role-coach > .side {
+    width: 100%;
+    flex: none;
+    position: relative;
+    height: auto;
+    min-height: 60px;
+    overflow: visible;
+    padding: 10px 16px;
+  }
+}

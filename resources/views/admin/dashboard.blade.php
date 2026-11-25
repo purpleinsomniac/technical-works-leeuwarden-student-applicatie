@@ -203,7 +203,7 @@
                 @endif
               </td>
               <td>
-                @if ($managedUserRole === 'admin')
+                 @if ($managedUserRole === 'admin')
                   <button class="button admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden gewijzigd.">Wijzigen</button>
                   <button class="button admin-user-delete admin-user-protected-action" type="button" disabled title="Adminaccounts kunnen niet worden verwijderd.">Verwijderen</button>
                 @else
@@ -297,6 +297,15 @@
         <div><label for="new-group-name">Groepsnaam</label><input class="input" id="new-group-name" name="naam" value="{{ $groupForm === 'create' ? old('naam') : '' }}" maxlength="120" required></div>
         <div><label for="new-group-schoolyear">Schooljaar</label><input class="input" id="new-group-schoolyear" name="schooljaar" value="{{ $groupForm === 'create' ? old('schooljaar') : '' }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
         <div>
+          <label for="new-group-phase">Fase</label>
+          <select class="input" id="new-group-phase" name="studiefases_id">
+            <option value="">Geen fase ingesteld</option>
+            @foreach ($roleData['studyPhases'] as $phase)
+              <option value="{{ $phase->id }}" @selected($groupForm === 'create' && (string) old('studiefases_id') === (string) $phase->id)>{{ $phase->naam }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div>
           <label for="new-group-coach">Docent / SLB'er</label>
           <select class="input" id="new-group-coach" name="coach_id" required>
             <option value="">Kies een docent — die ziet deze groep</option>
@@ -305,6 +314,7 @@
             @endforeach
           </select>
         </div>
+        <div><label for="new-group-goal">Doel (procent)</label><input class="input" id="new-group-goal" name="doel" type="number" min="0" max="100" value="{{ $groupForm === 'create' ? old('doel') : '' }}" placeholder="Bijv. 100"></div>
         <div class="admin-class-description-field"><label for="new-group-description">Omschrijving (optioneel)</label><textarea class="input" id="new-group-description" name="omschrijving" rows="2" maxlength="2000">{{ $groupForm === 'create' ? old('omschrijving') : '' }}</textarea></div>
       </div>
       <fieldset class="admin-class-members">
@@ -336,7 +346,7 @@
     @forelse ($roleData['groups'] as $group)
       <article class="admin-panel admin-class-card">
         <div class="admin-class-card-heading">
-          <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p></div>
+          <div><span class="admin-eyebrow">{{ $group->schooljaar ?: 'Schooljaar niet ingesteld' }}</span><h2>{{ $group->naam }}</h2><p>{{ $group->students->count() }} {{ $group->students->count() === 1 ? 'student' : 'studenten' }} · {{ $group->coach?->naam ?? 'Geen docent gekoppeld' }}</p><p>Fase: {{ $group->studyPhase?->naam ?: 'Niet ingesteld' }} · Doel: {{ $group->doel !== null ? $group->doel.'%' : 'Niet ingesteld' }}</p></div>
           <div class="admin-class-actions">
             <details class="admin-class-edit" @if ($groupForm === 'update' && (string) old('_group_id') === (string) $group->id) open @endif>
               <summary class="button">Wijzigen</summary>
@@ -349,6 +359,15 @@
                   <div><label for="group-{{ $group->id }}-name">Groepsnaam</label><input class="input" id="group-{{ $group->id }}-name" name="naam" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('naam', $group->naam) : $group->naam }}" maxlength="120" required></div>
                   <div><label for="group-{{ $group->id }}-schoolyear">Schooljaar</label><input class="input" id="group-{{ $group->id }}-schoolyear" name="schooljaar" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('schooljaar', $group->schooljaar) : $group->schooljaar }}" maxlength="20" placeholder="Bijv. 2026-2027"></div>
                   <div>
+                    <label for="group-{{ $group->id }}-phase">Fase</label>
+                    <select class="input" id="group-{{ $group->id }}-phase" name="studiefases_id">
+                      <option value="">Geen fase ingesteld</option>
+                      @foreach ($roleData['studyPhases'] as $phase)
+                        <option value="{{ $phase->id }}" @selected($groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? (string) old('studiefases_id') === (string) $phase->id : $group->studiefases_id === $phase->id)>{{ $phase->naam }}</option>
+                      @endforeach
+                    </select>
+                  </div>
+                  <div>
                     <label for="group-{{ $group->id }}-coach">Docent / SLB'er</label>
                     <select class="input" id="group-{{ $group->id }}-coach" name="coach_id" required>
                       <option value="">Kies een docent — die ziet deze groep</option>
@@ -357,6 +376,7 @@
                       @endforeach
                     </select>
                   </div>
+                  <div><label for="group-{{ $group->id }}-goal">Doel (procent)</label><input class="input" id="group-{{ $group->id }}-goal" name="doel" type="number" min="0" max="100" value="{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('doel', $group->doel) : $group->doel }}"></div>
                   <div class="admin-class-description-field"><label for="group-{{ $group->id }}-description">Omschrijving</label><textarea class="input" id="group-{{ $group->id }}-description" name="omschrijving" rows="2" maxlength="2000">{{ $groupForm === 'update' && (string) old('_group_id') === (string) $group->id ? old('omschrijving', $group->omschrijving) : $group->omschrijving }}</textarea></div>
                 </div>
                 <fieldset class="admin-class-members">
@@ -484,23 +504,7 @@
           <option value="rounded" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'rounded')>Afgerond</option>
           <option value="sharp" @selected(old('application_style', $roleData['applicationSettings']->application_style) === 'sharp')>Strak</option>
         </select>
-        <p class="dim small">De kleurkiezer toont de hexcode. Bestaande persoonlijke accentvoorkeuren blijven behouden.</p>
-      </section>
-
-      <section class="admin-panel">
-        <div class="admin-panel-heading"><span class="admin-panel-icon" aria-hidden="true">↥</span><div><h2>Bestandsinstellingen</h2><p>Bepaal welke bestanden studenten bij opdrachten mogen inleveren.</p></div></div>
-        <label for="max-upload-size">Maximale bestandsgrootte (MB)</label>
-        <input class="input" id="max-upload-size" name="max_upload_size_mb" type="number" min="1" max="50" value="{{ old('max_upload_size_mb', $roleData['applicationSettings']->max_upload_size_mb) }}" required>
-        <fieldset class="admin-upload-types">
-          <legend>Toegestane bestandstypen</legend>
-          @php($allowedExtensions = session()->hasOldInput('_allowed_upload_extensions_submitted') ? old('allowed_upload_extensions', []) : $roleData['applicationSettings']->allowed_upload_extensions)
-          @php($allowedExtensions = is_array($allowedExtensions) ? $allowedExtensions : [])
-          <input type="hidden" name="_allowed_upload_extensions_submitted" value="1">
-          @foreach (['pdf' => 'PDF', 'docx' => 'Word (DOCX)', 'jpg' => 'JPG', 'jpeg' => 'JPEG', 'png' => 'PNG'] as $extension => $label)
-            <label><input type="checkbox" name="allowed_upload_extensions[]" value="{{ $extension }}" @checked(in_array($extension, $allowedExtensions, true))> {{ $label }}</label>
-          @endforeach
-        </fieldset>
-        <p class="dim small">De serverconfiguratie kan een lagere maximale uploadgrootte afdwingen.</p>
+        <p class="dim small">De kleurkiezer toont de hexcode. De laatst gewijzigde kleur geldt: een nieuwere globale kleur wordt op alle accounts gebruikt; een latere persoonlijke wijziging alleen op dat account.</p>
       </section>
 
       <section class="admin-panel">

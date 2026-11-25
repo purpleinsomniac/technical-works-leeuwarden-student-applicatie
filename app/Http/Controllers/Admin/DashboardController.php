@@ -38,7 +38,7 @@ class DashboardController extends RoleDashboardController
         return [
             'userCount' => User::count(),
             'studentCount' => User::where('rol', 'student')->count(),
-            'groups' => Group::with(['coach', 'students'])
+            'groups' => Group::with(['coach', 'studyPhase', 'students'])
                 ->orderBy('naam')
                 ->orderBy('schooljaar')
                 ->get(),

@@ -78,7 +78,7 @@ function initializeStudentNavigation() {
       const settingsClass = page === "dashboardSettings" ? "settings-nav" : "";
       return '<button class="nav ' + settingsClass + '" data-route="' + page +
         '" onclick="show(\'' + page + '\')">' +
-        '<span class="nav-icon">' + uiIcon(icon) + '</span>' +
+        '<span class="nav-icon" aria-hidden="true">' + window.RoleApp.sidebarIcon(icon) + '</span>' +
         '<span class="nav-label">' + label + '</span></button>';
     })
     .join("");

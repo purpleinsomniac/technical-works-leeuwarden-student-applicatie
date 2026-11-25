@@ -13,8 +13,10 @@ use App\Models\Reflection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class DataController extends Controller
 {
@@ -177,22 +179,25 @@ class DataController extends Controller
         ]);
 
         $upload = $request->file('file');
-        $directory = storage_path('app/private/opdrachten/'.$assignment->id);
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
-
         // Gebruik een unieke opslagnaam en bewaar de originele naam voor de student.
         $extension = strtolower($upload->getClientOriginalExtension());
         $storedName = (string) Str::uuid().($extension ? '.'.$extension : '');
-        $upload->move($directory, $storedName);
+        $disk = Storage::disk('local');
+        // Schrijf naar privéopslag. Een OneDrive-map kan schrijfbaar zijn ondanks het alleen-lezenkenmerk.
+        $path = $disk->putFileAs('opdrachten/'.$assignment->id, $upload, $storedName);
+        abort_if($path === false, 503, 'Het bestand kon niet worden opgeslagen. Probeer het opnieuw.');
 
-        $file = $assignment->files()->create([
-            'originele_naam' => $upload->getClientOriginalName(),
-            'opslagpad' => 'opdrachten/'.$assignment->id.'/'.$storedName,
-            'mime_type' => $upload->getClientMimeType(),
-            'bestandsgrootte' => filesize($directory.DIRECTORY_SEPARATOR.$storedName),
-        ]);
+        try {
+            $file = $assignment->files()->create([
+                'originele_naam' => $upload->getClientOriginalName(),
+                'opslagpad' => $path,
+                'mime_type' => $upload->getClientMimeType(),
+                'bestandsgrootte' => $upload->getSize(),
+            ]);
+        } catch (Throwable $exception) {
+            $disk->delete($path);
+            throw $exception;
+        }
 
         return response()->json(StudentPayload::assignmentFile($file), 201);
     }

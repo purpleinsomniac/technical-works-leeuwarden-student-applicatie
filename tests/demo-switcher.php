@@ -25,6 +25,14 @@ $wesley = App\Models\User::create(['naam'=>'Wesley Rinsma','email'=>'student2@ex
 $request->merge(['role'=>'student2']);
 $controller->switchAccount($request);
 if (Illuminate\Support\Facades\Auth::id() !== $wesley->id) throw new RuntimeException('Tweede student is geen aparte accountkeuze.');
+$adminSeeder = new Database\Seeders\DemoAdminSeeder();
+$adminSeeder->run();
+$admin = App\Models\User::where('email', config('demo.accounts.beheerder.email'))->firstOrFail();
+$adminSeeder->run();
+if ($admin->password !== $admin->fresh()->password) throw new RuntimeException('De seeder heeft een bestaand account gewijzigd.');
+$request->merge(['role'=>'beheerder']);
+$controller->switchAccount($request);
+if (Illuminate\Support\Facades\Auth::id() !== $admin->id || ! $admin->canUseRole('beheerder')) throw new RuntimeException('Het demobeheeraccount kan niet worden gebruikt.');
 foreach (['production','testing'] as $environment) {
     $app->instance('env',$environment);
     try { $controller->switchAccount($request); throw new RuntimeException('Wisselen mag niet buiten local.'); }

@@ -9,6 +9,6 @@ return [
         'student2' => ['email' => 'student2@example.test', 'role' => 'student', 'label' => 'Student · Wesley'],
         'coach' => ['email' => 'coach@example.test', 'label' => 'Docent / coach'],
         'teamleider' => ['email' => 'manager@example.test', 'label' => 'Teamleider'],
-        'beheerder' => ['email' => 'admin@ITIG.edu', 'label' => 'Applicatiebeheerder'],
+        'beheerder' => ['email' => 'admin@example.test', 'label' => 'Applicatiebeheerder'],
     ],
 ];

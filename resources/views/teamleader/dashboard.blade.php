@@ -1,8 +1,12 @@
 @extends('layouts.application')
 
 @section('role-content')
+{{-- Instelt welke teamleiderpagina wordt weergegeven: overzicht, groep of individuele student. --}}
 @php($teamleaderPage = $teamleaderPage ?? 'overview')
+
+{{-- Teamleiderdashboard: overzicht van groepen, studenten en leeruitkomsten. --}}
 <section id="managerGroups" class="view hidden" data-role-section="groups">
+  {{-- Koptekst: titel en terugknop voor het gekozen overzicht, groep of student. --}}
   <div class="head">
     <div>
       @if ($teamleaderPage === 'student')
@@ -23,8 +27,10 @@
     @endif
   </div>
 
+  {{-- Groepenlijst: bevat alle groepen en hun statusinformatie. --}}
   <div class="teamleader-groups-list">
     @forelse ($roleData['groups'] as $group)
+    {{-- Berekeningen voor de kleuren van groep, rode studenten en rode leeruitkomsten. --}}
     @php($groupSummaryProgressClass = $group['goal'] === null ? 'teamleader-progress-NVT' : ($group['displayAveragePercentage'] >= $group['goal'] ? 'teamleader-progress-high' : ($group['displayAveragePercentage'] >= $group['goal'] - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
     @php($groupSummaryStudentPercentage = $group['studentCount'] > 0 ? ($group['redStudentCount'] / $group['studentCount']) * 100 : 0)
     @php($groupSummaryStudentClass = $group['redStudentCount'] === 0 ? 'teamleader-progress-high' : ($groupSummaryStudentPercentage <= 20 ? 'teamleader-progress-medium' : 'teamleader-progress-low'))
@@ -32,6 +38,7 @@
     @if ($teamleaderPage === 'student')
     <div id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card teamleader-group-card-attention-{{ $group['attentionColor'] }}">
     @else
+    {{-- Samenvatting van een groep. --}}
     <details id="teamleader-group-card-{{ $group['id'] }}" class="teamleader-group-card teamleader-group-card-attention-{{ $group['attentionColor'] }}" @if ($teamleaderPage === 'group') open @endif>
       <summary class="teamleader-group-summary" aria-labelledby="teamleader-group-{{ $group['id'] }}" data-teamleader-group-summary="{{ $group['id'] }}">
         <span class="teamleader-group-name" id="teamleader-group-{{ $group['id'] }}">{{ $group['name'] }}</span>
@@ -53,8 +60,10 @@
       </summary>
     @endif
 
+      {{-- Uitgebreide groepsinformatie na het openen van de groepskaart. --}}
       <div class="teamleader-group-details">
         @if ($teamleaderPage !== 'student')
+        {{-- Groepsstatistieken: omschrijving, aantal studenten en voortgangsstatuut. --}}
         <p>{{ $group['description'] ?: 'Geen omschrijving.' }}</p>
         <div class="grid2">
           <div class="card"><div class="big">{{ $group['studentCount'] }}</div><span class="dim">studenten</span></div>
@@ -67,6 +76,7 @@
           <div class="card teamleader-status-card teamleader-status-card-{{ $redOutcomeStatus }}"><div class="big">{{ $group['redOutcomeCount'] }}</div><span class="dim">leeruitkomsten in het rood</span></div>
         </div>
 
+        {{-- Gemiddelde voortgang per studiefase binnen deze groep. --}}
         <div class="card">
           <h3>Gemiddelde per fase</h3>
           @forelse ($group['phases'] as $fase => $percentage)
@@ -87,6 +97,7 @@
         </div>
         @endif
 
+        {{-- kaartweergave van studenten die bij de groep horen. --}}
         <div class="card">
           @if ($teamleaderPage !== 'student')
             <h3>Studenten in deze groep</h3>
@@ -105,6 +116,7 @@
               @endforelse
             </div>
           @else
+          {{-- Filter- en sorteervoorwaarden plus leeruitkomsten van de individuele student. --}}
           @forelse ($group['students'] as $student)
             @php($studentOverallProgressClass = $group['goal'] === null ? 'teamleader-progress-NVT' : ($student['percentage'] >= $group['goal'] ? 'teamleader-progress-high' : ($student['percentage'] >= $group['goal'] - 15 ? 'teamleader-progress-medium' : 'teamleader-progress-low')))
             @if ($teamleaderPage !== 'student')
@@ -116,6 +128,7 @@
               </summary>
             @endif
               @if ($student['outcomes']->isNotEmpty())
+                {{-- Besturing voor het filteren op fase en sorteren op percentage. --}}
                 <div class="actions card">
                   <label class="label">
                     Filter voortgang op fase
@@ -152,6 +165,7 @@
               @if ($student['outcomes']->isEmpty())
                 <p class="dim">Er is nog geen voortgang geregistreerd.</p>
               @elseif ($teamleaderPage === 'student')
+                {{-- Leeruitkomsten van de student, gesplitst in hard- en softskills. --}}
                 <div class="teamleader-outcome-columns">
                   @foreach (['Hardskills' => 'Hardskills', 'Softskills' => 'Softskills'] as $kind => $heading)
                     <section class="teamleader-outcome-column">
@@ -184,6 +198,7 @@
                   @endforeach
                 </div>
               @else
+                {{-- Leeruitkomstenweergave voor het groepsoverzicht. --}}
                 <div class="teamleader-outcome-grid" data-teamleader-outcome-grid>
                   @foreach ($student['outcomes'] as $outcome)
                     <article
@@ -228,13 +243,16 @@
   </div>
 </section>
 
+{{-- Teamleiderdashboard: overzicht van alle docenten en hun gekoppelde groepen. --}}
 <section id="managerTeachers" class="view hidden" data-role-section="teachers">
+  {{-- Koptekst van het docentenoverzicht. --}}
   <div class="head">
     <div>
       <h1>Docenten</h1>
       <p class="dim">Overzicht van alle Docenten.</p>
     </div>
   </div>
+  {{-- Docententabel met statuskleurcodes en aantal gekoppelde groepen. --}}
   <div class="card manager-teachers-table-wrap">
     <table class="manager-teachers-table">
       <thead><tr><th>Naam</th><th>E-mailadres</th><th>Groep status</th><th>Groepen</th></tr></thead>
@@ -274,6 +292,7 @@
             </td>
             <td>{{ $coach['groups']->count() }}</td>
           </tr>
+          {{-- Uitklapbare rij met de groepen van de geselecteerde docent. --}}
           <tr id="teamleader-teacher-groups-{{ $coach['id'] }}" class="hidden teamleader-teacher-groups-row">
             <td colspan="4">
               @if ($coach['groups']->isNotEmpty())
@@ -306,7 +325,7 @@
   </div>
 </section>
 
-{{-- Report view reuses the same totals and explains why export is not yet available. --}}
+{{-- Rapportageweergave: toont de actuele totaalcijfers en legt de ontbrekende exportfunctie uit. --}}
 <section id="managerReports" class="view hidden" data-role-section="reports">
   <h1>Rapportages</h1>
   <p class="dim">Dezelfde actuele databasecijfers in een compact overzicht.</p>
@@ -322,6 +341,7 @@
   </div>
 </section>
 
+{{-- Instellingen voor het dashboard en voorkeuren van de teamleider. --}}
 @include('components.role-dashboard-settings', [
   'preferencesPageId' => 'managerPreferencesSettings',
 ])
